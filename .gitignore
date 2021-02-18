@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# General
+.DS_Store
+.AppleDouble
+.ipynb_checkpoints
+
 # Distribution / packaging
 .Python
 build/
