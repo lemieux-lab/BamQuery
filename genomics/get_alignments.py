@@ -182,6 +182,7 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 	try:
 		with open(path_to_lib+'/snps_dics/dbsnp149_all_'+chr+'.dic', 'rb') as fp:
 			chromosome = pickle.load(fp)
+		print ('Charging chrs ', chr)
 	except IOError:
 		chromosome = {}
 

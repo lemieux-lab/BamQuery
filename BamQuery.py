@@ -1,14 +1,20 @@
-import warnings, time, sys, os, datetime, getopt, logging
+import warnings, time, sys, os, datetime, getopt, logging, _thread
 warnings.filterwarnings("ignore")
 from os import listdir
 from os.path import isfile, join
 
 from readers.read_input import ReadInputFile
+from readers.info_transcripts_annotation import InfoTranscripts
+from readers.intersection_alignments_annotations import IntersectAnnotations
+
 from utils.primary_read_count import GetPrimaryReadCountBamFiles
 from utils.reverse_translation import ReverseTranslation
+
 from genomics.alignments import Alignments
 from genomics.get_counts import GetCounts
 from genomics.normalization import Normalization
+from genomics.get_biotype import BiotypeAssignation
+
 import plotting.heat_maps as heat_maps
 
 __author__ = "Maria Virginia Ruiz Cuevas"
@@ -27,12 +33,14 @@ class BamQuery:
 		else:
 			self.run_bam_query_filter_mode()
 
+		self.get_annotations()
 
 	def run_bam_query_normal_mode(self):
 		self.common_to_modes()
 		
+		self.perfect_alignments = self.res_star[0]
 		get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.input_file_treatment.manual_mode, self.mode)
-		df_counts = get_counts.get_counts(self.res_star[0], self.bam_files_info.bam_files_list)
+		df_counts = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
 		heat_maps.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, 'get_counts')
 
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
@@ -51,7 +59,9 @@ class BamQuery:
 		def_norm = normalization.get_normalization(df_counts, '_filter_norm.csv')
 		heat_maps.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, 'filter_norm')
 
-		df_counts = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
+		self.perfect_alignments = perfect_alignments_to_return
+
+		df_counts = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
 		heat_maps.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_counts')
 
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
@@ -72,6 +82,17 @@ class BamQuery:
 		self.alignments = Alignments(self.path_to_output_folder, self.name_exp)
 		self.res_star = self.alignments.alignment_cs_to_genome()
 
+	
+	def get_annotations(self):
+		get_info_transcripts = InfoTranscripts()
+		get_info_transcripts.set_values()
+
+		intsersect_to_annotations = IntersectAnnotations(self.perfect_alignments, self.path_to_output_folder, self.name_exp)
+		intsersect_to_annotations.generate_BED_files()
+		intsersect_to_annotations.perform_intersection_with_annotation()
+
+		get_biotype = BiotypeAssignation(self.path_to_output_folder)
+		get_biotype.get_information_from_BED_intersection()
 
 def main(argv):
 
@@ -153,6 +174,14 @@ def main(argv):
 		logging.info("The %s directory already exists. ", path_to_res_folder)
 	else:
 		logging.info("Successfully created the directory %s " , path_to_res_folder)
+
+	path_to_res_bed_files_folder = path_to_output_folder+'res/BED_files/'
+	try:
+		os.mkdir(path_to_res_bed_files_folder)
+	except OSError:
+		logging.info("The %s directory already exists. ", path_to_res_bed_files_folder)
+	else:
+		logging.info("Successfully created the directory %s " , path_to_res_bed_files_folder)
 
 
 	logging.info('Path to input folder : %s ', path_to_input_folder)
