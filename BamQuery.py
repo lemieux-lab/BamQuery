@@ -93,6 +93,25 @@ class BamQuery:
 
 		get_biotype = BiotypeAssignation(self.path_to_output_folder)
 		get_biotype.get_information_from_BED_intersection()
+		get_biotype.get_biotype_from_intersected_transcripts()
+		
+		print (self.input_file_treatment.peptides_by_type)
+		
+		info_peptide_alignments = self.get_info_peptide_alignments()
+		print (info_peptide_alignments)
+		print (get_biotype.information_final_biotypes_peptides)
+
+
+	def get_info_peptide_alignments(self):
+		info_peptide_alignments = {}
+		for peptide_alignment in self.perfect_alignments:
+			peptide = peptide_alignment.split('_')[0]
+			alignment = peptide_alignment.split('_')[1]
+			try:
+				info_peptide_alignments[peptide].append(alignment)
+			except KeyError:
+				info_peptide_alignments[peptide] = [alignment]
+		return info_peptide_alignments
 
 def main(argv):
 

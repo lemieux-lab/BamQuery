@@ -18,12 +18,14 @@ class ReadInputFile:
 		self.peptide_mode = {}
 		self.CS_mode = {}
 		self.manual_mode = {}
+		self.peptides_by_type = {}
 		
 		peptides_list = self.path_to_input_folder+'peptides.tsv'
 
 		with open(peptides_list) as f:
 			for index, line in enumerate(f):
 				line = line.strip().split('\t')
+				peptide_type = 'NormPeptide'
 				if len(line) <= 2: 
 					try:
 						peptide = line[0].strip()
@@ -31,7 +33,7 @@ class ReadInputFile:
 						self.peptide_mode[peptide] = ['','','',peptide_type]
 					except:
 						peptide = line[0].strip()
-						self.peptide_mode[peptide] = ['','','','NormPeptide']						
+						self.peptide_mode[peptide] = ['','','',peptide_type]						
 				elif len(line) <= 3:
 					try:
 						peptide = line[0].strip()
@@ -45,7 +47,7 @@ class ReadInputFile:
 						cs = line[1].strip()
 						if self.evaluate_cs_ntd(cs):
 							raise Exception("Sorry, You must enter an appropriate Coding Sequence for peptide ", peptide)
-						self.CS_mode[peptide] = [cs,'','','NormPeptide']
+						self.CS_mode[peptide] = [cs,'','',peptide_type]
 				elif len(line) > 3:
 					try:
 						peptide = line[0].strip()
@@ -71,7 +73,11 @@ class ReadInputFile:
 						strand = line[3].strip()
 						if '+' not in strand and '-' not in strand:
 							raise Exception("Sorry, You must enter an appropriate strand, either + (Forward) or - (Backward) for peptide ", peptide)
-						self.manual_mode[peptide] = [cs,position,strand,'NormPeptide']
+						self.manual_mode[peptide] = [cs,position,strand,peptide_type]
+				try:
+					self.peptides_by_type[peptide_type].append(peptide)
+				except KeyError:
+					self.peptides_by_type[peptide_type] = [peptide]
 
 		logging.info('Peptides to evaluate in Peptide Mode : %d', len(self.peptide_mode))
 		logging.info('Peptides to evaluate in Coding Sequence (CS) Mode : %d', len(self.CS_mode))
