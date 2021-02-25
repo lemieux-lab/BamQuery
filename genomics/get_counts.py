@@ -10,15 +10,14 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class GetCounts:
 
-	def __init__(self, path_to_output_folder, name_exp, manual_mode, mode):
+	def __init__(self, path_to_output_folder, name_exp, mode):
 		self.path_to_output_folder = path_to_output_folder+'res/'
 		self.name_exp = name_exp
-		self.manual_mode = manual_mode
 		self.mode = mode
-		if self.mode == 'filter':
-			self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
+		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 
-	def filter_counts(self, res_star, bam_files_list):
+
+	def filter_counts(self, perfect_alignments, bam_files_list):
 
 		df_counts = pd.DataFrame({'A' : []})
 		exist = os.path.exists(self.path_to_output_folder+self.name_exp+'_filter_count.csv')
@@ -28,16 +27,9 @@ class GetCounts:
 			logging.info('Filtering the alignments based on ribosome profiling information ')
 
 			to_write = 'Peptide\tPosition\tStrand\tName_Sample\tCount\n'
-			perfect_alignments = res_star
+			
 			perfect_alignments_to_return = {} 
 
-			for peptide, info_peptide in self.manual_mode.items() :
-				coding_sequence = info_peptide[0]
-				position = info_peptide[1]
-				strand = info_peptide[2]
-				key = peptide+'_'+position
-				perfect_alignments[key] = [strand, coding_sequence, peptide, ['Peptide Manual Mode']]
-			
 			keys = []
 			values = []
 			data = []
@@ -86,7 +78,7 @@ class GetCounts:
 		return perfect_alignments_to_return, df_counts
 
 
-	def get_counts(self, res_star, bam_files_list):
+	def get_counts(self, perfect_alignments, bam_files_list):
 
 		df_counts = pd.DataFrame({'A' : []})
 		exist = os.path.exists(self.path_to_output_folder+self.name_exp+'_count.csv')
@@ -94,15 +86,6 @@ class GetCounts:
 		if not exist:
 			t_0 = time.time()
 			to_write = 'Peptide\tPosition\tStrand\tName_Sample\tCount\n'
-			perfect_alignments = res_star
-
-			if self.mode == 'normal':
-				for peptide, info_peptide in self.manual_mode.items() :
-					coding_sequence = info_peptide[0]
-					position = info_peptide[1]
-					strand = info_peptide[2]
-					key = peptide+'_'+position
-					perfect_alignments[key] = [strand, coding_sequence, peptide, ['Peptide Manual Mode']]
 			
 			keys = []
 			values = []
@@ -128,6 +111,15 @@ class GetCounts:
 				if len(res[1]) > 0:
 					to_write += res[0]
 					data.extend(res[1])
+					for count_align in res[1]: 
+						key = count_align[0]+'_'+count_align[1]
+						count = count_align[3]
+						perfect_alignments[key][-1] = count
+
+			# Replace dic
+			name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+			with open(name_path, 'wb') as handle:
+				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			if len(data) > 0 :
 				df_counts = pd.DataFrame(data, columns=['Peptides', 'Alignments', 'BAM Files', 'Read Counts'])
@@ -141,8 +133,10 @@ class GetCounts:
 		else:
 			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder+self.name_exp+'_count.csv')
 			df_counts = pd.read_csv(self.path_to_output_folder+self.name_exp+'_count.csv', index_col=0)
-		
-		return df_counts
+			with open(self.path_to_output_folder_alignments+'/Alignments_information.dic', 'rb') as fp:
+				perfect_alignments = pickle.load(fp)
+
+		return df_counts, perfect_alignments
 
 	def get_counts_sample(self, bams, peptide_alignment, info_alignment):
 		to_return = []

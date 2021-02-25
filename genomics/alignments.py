@@ -68,27 +68,33 @@ class Alignments:
 		else:
 			logging.info('Alignment file already exists in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Aligned.out.sam')
 		
-		res_star = self.get_alignments()
-		logging.info('Total perfect aligments : %s ', str(len(res_star[0])))
-		return res_star
+		perfect_alignments = self.get_alignments()
+		
+		return perfect_alignments
 
 	def get_alignments(self):
 		t_0 = time.time()
 		sam_file = self.path_to_output_folder_genome_alignments+'/Aligned.out.sam'
 		
 		exist = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information.dic')
+		perfect_alignments = {}
+
 		if not exist:
 			res_star = get_alig.get_alignments(sam_file)
+			
 			t_2 = time.time()
 			total = t_2-t_0
 			print ("Total time run function get_alignments End : %s " % (total/60.0))
 			logging.info('Total time run function get_alignments to end : %f min', (total/60.0))
 			logging.info('Total perfect aligments : %s ', str(len(res_star[0])))
 			
-			_thread.start_new_thread(self.save_info, (res_star, ) )
+			perfect_alignments = res_star[0]
+
 			_thread.start_new_thread(self.save_output_info, (res_star[0], '_info_perfect_alignments.csv',))
 			_thread.start_new_thread(self.save_output_info, (res_star[1], '_info_variants_alignments.csv',))
 			_thread.start_new_thread(self.save_output_info, (res_star[2], '_info_out_alignments.csv',))
+			_thread.start_new_thread(self.save_info, (res_star[0], ) )
+			
 		else:
 			logging.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
 			files_already_collected = [os.path.exists(self.path_to_output_folder_alignments+self.name_exp+'_info_perfect_alignments.csv'),
@@ -96,19 +102,21 @@ class Alignments:
 										os.path.exists(self.path_to_output_folder_alignments+self.name_exp+'_info_out_alignments.csv')]
 
 			with open(self.path_to_output_folder_alignments+'/Alignments_information.dic', 'rb') as fp:
-					res_star = pickle.load(fp)
+				perfect_alignments = pickle.load(fp)
 
+			logging.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
+			
 			if sum(files_already_collected) > 0 :
 
 				if not files_already_collected[0]:
-					logging.info('Total perfect aligments : %s ', str(len(res_star[0])))
-					_thread.start_new_thread(self.save_output_info, (res_star[0], '_info_perfect_alignments.csv',))
-				if not files_already_collected[1]:
-					_thread.start_new_thread(self.save_output_info, (res_star[1], '_info_variants_alignments.csv',))
-				if not files_already_collected[2]:
-					_thread.start_new_thread(self.save_output_info, (res_star[2], '_info_out_alignments.csv',))
+					logging.info('Total perfect aligments : %s ', str(len(res_star)))
+					_thread.start_new_thread(self.save_output_info, (res_star, '_info_perfect_alignments.csv',))
+				# if not files_already_collected[1]:
+				# 	_thread.start_new_thread(self.save_output_info, (res_star[1], '_info_variants_alignments.csv',))
+				# if not files_already_collected[2]:
+				# 	_thread.start_new_thread(self.save_output_info, (res_star[2], '_info_out_alignments.csv',))
 
-		return res_star
+		return perfect_alignments
 
 	def save_info(self, res_star):
 		name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
