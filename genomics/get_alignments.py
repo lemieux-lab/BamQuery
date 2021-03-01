@@ -221,37 +221,37 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 				continue
 			if key == key_local:
 				if local_translation_peptide == peptide:
-					positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_reference_local, local_translation_peptide, [],0]
+					positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_reference_local, local_translation_peptide, [],0,0]
 				else:
 					if 'S' not in operators : #'D' not in operators and 'I' not in operators and 
 						perfect_sequences_to_return, variant_sequences_to_return, peptide_with_snps_local_reference, seq_alignment_2, out_sequences_to_return = get_snps_information(chr, chromosome, peptide, pep_translation_seq_reference, seqReference, strand, rang)
 						if peptide_with_snps_local_reference == peptide:
-							positions_mcs_peptides_perfect_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0]
+							positions_mcs_peptides_perfect_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0,0]
 
 						if len(variant_sequences_to_return) > 0 and '*' not in peptide_with_snps_local_reference:
-							positions_mcs_peptides_variants_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, variant_sequences_to_return,0]
+							positions_mcs_peptides_variants_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, variant_sequences_to_return,0,0]
 								
 						if len(out_sequences_to_return) > 0:
-							positions_mcs_peptides_out_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, out_sequences_to_return,0]
+							positions_mcs_peptides_out_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, out_sequences_to_return,0,0]
 			else:
 				if local_translation_peptide == peptide:
-					positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_reference_local, local_translation_peptide, [],0]
+					positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_reference_local, local_translation_peptide, [],0,0]
 				else:
 					if not (parfait_alignment_local or variant_alignment_local or out_alignment_local):
 						perfect_sequences_to_return, variant_sequences_to_return, peptide_with_snps_local_reference, seq_alignment_2, out_sequences_to_return = get_snps_information(chr, chromosome, peptide, local_translation_peptide, seq_reference_local, strand, rang_local_ref)
 						if peptide_with_snps_local_reference == peptide:
-							positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0]
+							positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0,0]
 					
 				if 'S' not in operators : # 'D' not in operators and 'I' not in operators and 
 					perfect_sequences_to_return, variant_sequences_to_return, peptide_with_snps_local_reference, seq_alignment_2, out_sequences_to_return = get_snps_information(chr, chromosome, peptide, pep_translation_seq_reference, seqReference, strand, rang)
 					if peptide_with_snps_local_reference == peptide:
-						positions_mcs_peptides_perfect_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0]
+						positions_mcs_peptides_perfect_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0,0]
 
 					if len(variant_sequences_to_return) > 0 and '*' not in peptide_with_snps_local_reference:
-						positions_mcs_peptides_variants_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, variant_sequences_to_return,0]
+						positions_mcs_peptides_variants_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, variant_sequences_to_return,0,0]
 							
 					if len(out_sequences_to_return) > 0:
-						positions_mcs_peptides_out_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, out_sequences_to_return,0]
+						positions_mcs_peptides_out_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, out_sequences_to_return,0,0]
 		
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, positions_mcs_peptides_out_alignment
 

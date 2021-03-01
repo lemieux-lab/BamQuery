@@ -92,8 +92,8 @@ def reverseComplement(seq):
 def complement(seq) :
 	"""returns the complementary sequence without inversing it"""
 	tb = str.maketrans("ACGTRYMKWSBDHVNacgtrymkwsbdhvn",
-						  "TGCAYRKMWSVHDBNtgcayrkmwsvhdbn")
-	
+							  "TGCAYRKMWSVHDBNtgcayrkmwsvhdbn")
+
 	#just to be sure that seq isn't unicode
 	return str(seq).translate(tb)
 

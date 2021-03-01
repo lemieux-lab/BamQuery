@@ -40,31 +40,35 @@ class BamQuery:
 		self.common_to_modes()
 		
 		get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode)
-		df_counts, self.perfect_alignments = get_counts.get_counts(self.res_star, self.bam_files_info.bam_files_list)
-		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, 'get_counts')
+		df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
+		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
 
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
-		def_norm = normalization.get_normalization(df_counts, '_norm.csv')
-		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, 'get_norm')
+		def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
+		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
 
 
 	def run_bam_query_filter_mode(self):
 		self.common_to_modes()
 
 		get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode)
-		perfect_alignments_to_return, df_counts = get_counts.filter_counts(self.res_star, self.bam_files_info.bam_ribo_files_list)
-		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, 'filter_counts')
+		perfect_alignments_to_return, df_counts = get_counts.ribo_counts(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list)
+		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_ribo_counts')
 		
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.mode)
-		def_norm = normalization.get_normalization(df_counts, '_filter_norm.csv')
-		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, 'filter_norm')
+		def_norm = normalization.get_normalization(df_counts, '_ribo_norm.csv')
+		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_ribo_norm')
 
-		df_counts, self.perfect_alignments = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
-		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_counts')
+		df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
+		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
+		plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts')
 
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
-		def_norm = normalization.get_normalization(df_counts, '_norm.csv')
-		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_norm')
+		def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
+		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
+
+		def_norm = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
+		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm')
 
 
 	def common_to_modes(self):
@@ -78,7 +82,7 @@ class BamQuery:
 		self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
 		
 		self.alignments = Alignments(self.path_to_output_folder, self.name_exp)
-		self.res_star = self.alignments.alignment_cs_to_genome()
+		self.perfect_alignments = self.alignments.alignment_cs_to_genome()
 
 		if len(self.input_file_treatment.manual_mode) > 0 :
 			for peptide, info_peptide in self.input_file_treatment.manual_mode.items() :
@@ -86,7 +90,7 @@ class BamQuery:
 				position = info_peptide[1]
 				strand = info_peptide[2]
 				key = peptide+'_'+position
-				self.res_star[key] = [strand, coding_sequence, peptide, ['Peptide Manual Mode'],0]
+				self.perfect_alignments[key] = [strand, coding_sequence, peptide, ['Peptide Manual Mode'],0,0]
 
 
 	def get_annotations(self):
@@ -97,128 +101,27 @@ class BamQuery:
 		intsersect_to_annotations.generate_BED_files()
 		intsersect_to_annotations.perform_intersection_with_annotation()
 
-		get_biotype = BiotypeAssignation(self.path_to_output_folder)
+		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode)
 		get_biotype.get_information_from_BED_intersection()
 		get_biotype.get_biotype_from_intersected_transcripts()
 		
 		info_peptide_alignments = self.get_info_peptide_alignments()
-		self.prepare_info_to_draw_biotypes(info_peptide_alignments, get_biotype.information_final_biotypes_peptides)
+		get_biotype.prepare_info_to_draw_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
 	
-
-
-	def prepare_info_to_draw_biotypes(self, info_peptide_alignments, information_final_biotypes_peptides):
-
-		biotypes_peptides = {}
-		data = []
-		for type_peptide, peptides in self.input_file_treatment.peptides_by_type.items():
-			biotypes_peptides[type_peptide] = {'gene_level_biotype':{}, 'transcript_level_biotype':{}, 'genomic_position_biotype':{}}
-			for peptide in peptides:
-				try:
-					alignments = info_peptide_alignments[peptide]
-					count = 0
-					for alignment in alignments:
-						key = peptide+'_'+alignment[0]
-						count = alignment[-1]
-						alignment = alignment[0]
-						
-						try:
-							transcripts_intersected = information_final_biotypes_peptides[key]
-							for position, transcript in transcripts_intersected.items():
-								gene_level_biotype = transcript[0]
-								transcript_level_biotype = transcript[1]
-								genomic_position_biotype = transcript[2]
-								to_add = [type_peptide, peptide, alignment, position, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, count]
-						except KeyError:
-							biotype_type = 'Intergenic'
-							gene_level_biotype = biotype_type
-							transcript_level_biotype = biotype_type
-							genomic_position_biotype = biotype_type
-							to_add = [type_peptide, peptide, alignment, 'No Annotation', gene_level_biotype, transcript_level_biotype, genomic_position_biotype, count]
-						
-						data.append(to_add)
-						if count > 0:
-							try:
-								biotypes_peptides[type_peptide]['gene_level_biotype'][gene_level_biotype] += 1
-							except KeyError:
-								biotypes_peptides[type_peptide]['gene_level_biotype'][gene_level_biotype] = 1
-
-							try:
-								biotypes_peptides[type_peptide]['transcript_level_biotype'][transcript_level_biotype] += 1
-							except KeyError:
-								biotypes_peptides[type_peptide]['transcript_level_biotype'][transcript_level_biotype] = 1
-
-							try:
-								biotypes_peptides[type_peptide]['genomic_position_biotype'][genomic_position_biotype] += 1
-							except KeyError:
-								biotypes_peptides[type_peptide]['genomic_position_biotype'][genomic_position_biotype] = 1
-
-				except KeyError:
-					pass
-		self.draw_biotypes(biotypes_peptides)
-		df = pd.DataFrame(data, columns=['Peptide Type', 'Peptide','Alignment','Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'reads count'])
-		df.to_csv(self.path_to_output_folder+'/res/annotation_biotypes.csv', index=False, header=True)
-
-
-	def draw_biotypes(self, biotypes_peptides):
-
-		#others = 'retained_intron', 'IG_V_gene', 'TEC', 'bidirectional_promoter_lncRNA', 'transcribed_unitary_pseudogene', 'transcribed_unprocessed_pseudogene', 'sense_overlapping','processed_pseudogene', 'unprocessed_pseudogene'
-		organisation_labels = {'Protein-coding genes':['5UTR', '3UTR', 'In_frame', 'Frameshift', 'protein_coding', 'CDS'], 
-							'Non-coding genes':['processed_transcript', 'nonsense_mediated_decay', 'antisense', 'Exons', 'lincRNA', 'Others'], 
-							'Intergenic':['Intergenic'], 
-							'Intronic':['Introns']}
-
-		for type_peptide, level_biotypes in biotypes_peptides.items():
-
-			for level_biotype, info_level_biotype in level_biotypes.items():
-
-				labels_in_type_peptide = {'Protein-coding genes':{}, 'Non-coding genes': {}, 'Intergenic':{}, 'Intronic':{}}
-				outer_labels = []
-				outer_sizes = []
-				intra_labels = []
-				intra_sizes = []
-				
-				if len(info_level_biotype.values()) > 0:
-					title = level_biotype+' '+type_peptide+' peptides'
-
-					for biotype, total_biotype in info_level_biotype.items():
-						in_ = False
-						for type_, types in organisation_labels.items():
-							if biotype in types:
-								labels_in_type_peptide[type_][biotype] = total_biotype 
-								in_ = True
-								break
-						if not in_:
-							labels_in_type_peptide['Non-coding genes']['Others'] = total_biotype 
-
-					for outer_label_type, intra_labels_type in organisation_labels.items():
-						values_in = 0
-						for intra_label in intra_labels_type:
-							try:
-								value = labels_in_type_peptide[outer_label_type][intra_label]
-								intra_labels.append(intra_label)
-								intra_sizes.append(value)
-								values_in += value
-							except:
-								pass
-						if values_in > 0:
-							outer_labels.append(outer_label_type)
-							outer_sizes.append(values_in)
-					
-					plots.plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes,  self.path_to_output_folder, self.name_exp, type_peptide+'_'+level_biotype)
-
 
 	def get_info_peptide_alignments(self):
 		info_peptide_alignments = {}
 		for peptide_alignment in self.perfect_alignments:
 			peptide = peptide_alignment.split('_')[0]
 			alignment = peptide_alignment.split('_')[1]
-			count = self.perfect_alignments[peptide_alignment][-1]
+			count_rna = self.perfect_alignments[peptide_alignment][-2]
+			count_ribo = self.perfect_alignments[peptide_alignment][-1]
+			strand = self.perfect_alignments[peptide_alignment][0]
 			try:
-				info_peptide_alignments[peptide].append((alignment, count))
+				info_peptide_alignments[peptide].append((alignment, count_rna, count_ribo, strand))
 			except KeyError:
-				info_peptide_alignments[peptide] = [(alignment, count)]
+				info_peptide_alignments[peptide] = [(alignment, count_rna, count_ribo, strand)]
 		return info_peptide_alignments
-
 
 
 
@@ -297,6 +200,14 @@ def main(argv):
 		logging.info("The %s directory already exists. ", path_to_plots_biotypes_folder)
 	else:
 		logging.info("Successfully created the directory %s " , path_to_plots_biotypes_folder)
+
+	path_to_plots_correlation_folder = path_to_output_folder+'plots/correlation/'
+	try:
+		os.mkdir(path_to_plots_correlation_folder)
+	except OSError:
+		logging.info("The %s directory already exists. ", path_to_plots_correlation_folder)
+	else:
+		logging.info("Successfully created the directory %s " , path_to_plots_correlation_folder)
 
 
 	path_to_genome_alignment_folder = path_to_output_folder+'genome_alignments/'

@@ -4,6 +4,7 @@ import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
 
+
 NUM_WORKERS =  multiprocessing.cpu_count()
 __author__ = "Maria Virginia Ruiz Cuevas"
 
@@ -17,14 +18,14 @@ class GetCounts:
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 
 
-	def filter_counts(self, perfect_alignments, bam_files_list):
+	def ribo_counts(self, perfect_alignments, bam_files_list):
 
 		df_counts = pd.DataFrame({'A' : []})
-		exist = os.path.exists(self.path_to_output_folder+self.name_exp+'_filter_count.csv')
+		exist = os.path.exists(self.path_to_output_folder+self.name_exp+'_ribo_count.csv')
 		
 		if not exist:
 			t_0 = time.time()
-			logging.info('Filtering the alignments based on ribosome profiling information ')
+			logging.info('Alignments on ribosome profiling information ')
 
 			to_write = 'Peptide\tPosition\tStrand\tName_Sample\tCount\n'
 			
@@ -52,38 +53,53 @@ class GetCounts:
 					for count_align in res[1]: 
 						if count_align[-1] > 0:
 							key = count_align[0]+'_'+count_align[1]
+							count = count_align[3]
+							perfect_alignments[key][-1] = count 
 							perfect_alignments_to_return[key] = perfect_alignments[key]
+
 
 			if len(data) > 0 :
 				df_counts = pd.DataFrame(data, columns=['Peptides', 'Alignments', 'BAM Files', 'Read Counts'])
 				df_counts = df_counts.groupby(['Peptides', 'BAM Files'])['Read Counts'].sum().reset_index()
 				df_counts = df_counts.pivot("Peptides", "BAM Files", "Read Counts")
-				_thread.start_new_thread(self.save_info_counts, (df_counts, to_write, '_filter_count.csv'))
+				_thread.start_new_thread(self.save_info_counts, (df_counts, to_write, '_ribo_count.csv'))
 			
-			name_path = self.path_to_output_folder_alignments+'Alignments_filtered_information.dic'
+			name_path = self.path_to_output_folder_alignments+'Alignments_ribo_information.dic'
 			with open(name_path, 'wb') as handle:
 				pickle.dump(perfect_alignments_to_return, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+			name_path = self.path_to_output_folder_alignments+'Alignments_information.dic'
+			with open(name_path, 'wb') as handle:
+				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			t_2 = time.time()
 			total = t_2-t_0
 			logging.info('Total time run function get_counts to end : %f min', (total/60.0))
 		else:
-			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder+self.name_exp+'_filter_mode_count.csv')
+			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder+self.name_exp+'_ribo_count.csv')
 			
-			df_counts = pd.read_csv(self.path_to_output_folder+self.name_exp+'_filter_count.csv', index_col=0)
+			df_counts = pd.read_csv(self.path_to_output_folder+self.name_exp+'_ribo_count.csv', index_col=0)
 
-			with open(self.path_to_output_folder_alignments+'Alignments_filtered_information.dic', 'rb') as fp:
-				perfect_alignments_to_return = pickle.load(fp)
+			with open(self.path_to_output_folder_alignments+'Alignments_information.dic', 'rb') as fp:
+				perfect_alignments = pickle.load(fp)
 
-		return perfect_alignments_to_return, df_counts
+		return perfect_alignments, df_counts
 
 
 	def get_counts(self, perfect_alignments, bam_files_list):
 
-		df_counts = pd.DataFrame({'A' : []})
-		exist = os.path.exists(self.path_to_output_folder+self.name_exp+'_count.csv')
-		
-		if not exist:
+		df_counts = pd.DataFrame()
+		df_counts_filtered = pd.DataFrame()
+		exist_rna = os.path.exists(self.path_to_output_folder+self.name_exp+'_rna_count.csv')
+		exist_ribo = True
+
+		if self.mode == 'filter':
+			with open(self.path_to_output_folder_alignments+'Alignments_ribo_information.dic', 'rb') as fp:
+				perfect_alignments_ribo = pickle.load(fp)
+			data_filtered = []
+			exist_ribo = os.path.exists(self.path_to_output_folder+self.name_exp+'_rna_ribo_count.csv')
+
+		if not exist_rna and not exist_ribo:
 			t_0 = time.time()
 			to_write = 'Peptide\tPosition\tStrand\tName_Sample\tCount\n'
 			
@@ -114,29 +130,45 @@ class GetCounts:
 					for count_align in res[1]: 
 						key = count_align[0]+'_'+count_align[1]
 						count = count_align[3]
-						perfect_alignments[key][-1] = count
+						perfect_alignments[key][-2] = count
+						if self.mode == 'filter':
+							try:
+								count_ribo = perfect_alignments_ribo[key][-1]
+								if count_ribo > 0:
+									data_filtered.extend(res[1])
+							except KeyError:
+								pass
 
 			# Replace dic
 			name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
 			with open(name_path, 'wb') as handle:
 				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+
 			if len(data) > 0 :
 				df_counts = pd.DataFrame(data, columns=['Peptides', 'Alignments', 'BAM Files', 'Read Counts'])
 				df_counts = df_counts.groupby(['Peptides', 'BAM Files'])['Read Counts'].sum().reset_index()
 				df_counts = df_counts.pivot("Peptides", "BAM Files", "Read Counts")
-				_thread.start_new_thread(self.save_info_counts, (df_counts, to_write, '_count.csv'))
+				_thread.start_new_thread(self.save_info_counts, (df_counts, to_write, '_rna_count.csv'))
+				if self.mode == 'filter':
+					df_counts_filtered = pd.DataFrame(data_filtered, columns=['Peptides', 'Alignments', 'BAM Files', 'Read Counts'])
+					df_counts_filtered = df_counts_filtered.groupby(['Peptides', 'BAM Files'])['Read Counts'].sum().reset_index()
+					df_counts_filtered = df_counts_filtered.pivot("Peptides", "BAM Files", "Read Counts")
+					_thread.start_new_thread(self.save_info_counts, (df_counts_filtered, to_write, '_rna_ribo_count.csv'))
 			
 			t_2 = time.time()
 			total = t_2-t_0
 			logging.info('Total time run function get_counts to end : %f min', (total/60.0))
 		else:
-			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder+self.name_exp+'_count.csv')
-			df_counts = pd.read_csv(self.path_to_output_folder+self.name_exp+'_count.csv', index_col=0)
+			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder+self.name_exp+'_rna_count.csv')
+			df_counts = pd.read_csv(self.path_to_output_folder+self.name_exp+'_rna_count.csv', index_col=0)
+			
 			with open(self.path_to_output_folder_alignments+'/Alignments_information.dic', 'rb') as fp:
 				perfect_alignments = pickle.load(fp)
 
-		return df_counts, perfect_alignments
+			df_counts_filtered = pd.read_csv(self.path_to_output_folder+self.name_exp+'_rna_ribo_count.csv', index_col=0)
+			
+		return df_counts, perfect_alignments, df_counts_filtered
 
 	def get_counts_sample(self, bams, peptide_alignment, info_alignment):
 		to_return = []
