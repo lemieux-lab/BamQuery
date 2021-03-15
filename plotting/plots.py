@@ -39,19 +39,38 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 
 
 def get_heat_map(df, path_to_output_folder, name_exp, name):
+	peptides_total = len(df.index)
+	bam_files = len(df.columns)
+
+	width = 10
+	heigth = 6
 	fontsize = 12
-	fig = plt.figure(figsize=(10, 6), dpi=300)
+	annot = True
+
+	if peptides_total > 30 :
+		heigth = 20
+		fontsize = 8
+		annot = False
+
+	if bam_files > 30 :
+		width = 20
+		fontsize = 8
+		annot = False
+
+	fig = plt.figure(figsize=(width, heigth), dpi=300)
 	ax = fig.add_subplot(111)
 	ax.grid(False)
+	
 	if 'norm' not in name :
-		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=True, fmt='g') #cmap="YlGnBu"
+		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='g') #cmap="YlGnBu"
 	else:
-		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=True, fmt='.1f') #cmap="YlGnBu"
+		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='.1f') #cmap="YlGnBu"
 	plt.yticks(rotation=0)
 	plt.tight_layout()
 	plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+'_'+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape')
 	plt.show()
 
+	
 
 def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
 	
@@ -115,7 +134,6 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 
 def correlation(path_to_output_folder, name_exp, dataframe):
 
-	print (dataframe)
 	slope, intercept, r, p, stderr = scipy.stats.linregress(dataframe['Read count RNA'], dataframe['Read count Ribo'])
 	rho, p = scipy.stats.pearsonr(dataframe['Read count RNA'], dataframe['Read count Ribo'])
 	x = dataframe['Read count RNA']
@@ -134,9 +152,9 @@ def correlation(path_to_output_folder, name_exp, dataframe):
 	line_1 = ax.plot(x, intercept + slope * x, color='b', label = corr)
 
 	handles, labels = ax.get_legend_handles_labels()
-	print (labels)
 	new_handles = []
 	new_labels = []
+	
 	for i,h in enumerate(handles):
 		new_handles.append(h)
 		new_labels.append(labels[i])

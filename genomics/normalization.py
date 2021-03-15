@@ -17,9 +17,9 @@ class Normalization:
 
 	def get_normalization(self, df_counts, type_save):
 
-		exist = os.path.exists(self.path_to_output_folder+self.name_exp+type_save)
+		exists = os.path.exists(self.path_to_output_folder+self.name_exp+type_save)
 		
-		if not exist:
+		if not exists:
 		
 			t_0 = time.time()
 			count_reads = {}

@@ -1,6 +1,7 @@
 import warnings, time, logging, os
 warnings.filterwarnings("ignore")
 import concurrent.futures
+from pathos.multiprocessing import ProcessPool
 import multiprocessing
 
 NUM_WORKERS =  multiprocessing.cpu_count()
@@ -38,8 +39,42 @@ class ReverseTranslation:
 
 	def reverse_translation(self, peptide_mode, CS_mode, path_to_output_folder, name_exp):
 		
-		exist = os.path.exists(path_to_output_folder+'genome_alignments/'+name_exp+'.fastq')
-		if not exist:
+		exists = os.path.exists(path_to_output_folder+'genome_alignments/'+name_exp+'.fastq')
+		
+		if not exists:
+			t_0 = time.time()
+			to_write_reverse_translation = ''
+			total_reads_to_align = 0
+	
+			pool = ProcessPool(nodes=NUM_WORKERS)
+			results = pool.map(self.translate_reserve_peptide, list(peptide_mode.keys()))
+			for res in results:
+				total_reads_to_align += int(res[0])
+				to_write_reverse_translation += res[1]
+
+			for peptide, info_peptide in CS_mode.items():
+				total_reads_to_align += 1
+				sequence = info_peptide[0]
+				to_write_reverse_translation+= '>'+peptide+'_'+str(total_reads_to_align)+'\n'+sequence+'\n'
+
+			logging.info('Total Coding Sequences : %d', total_reads_to_align)
+			file_to_open = open(path_to_output_folder+'genome_alignments/'+name_exp+'.fastq', 'w')
+			file_to_open.write(to_write_reverse_translation)
+			file_to_open.close()
+			t_2 = time.time()
+			total = t_2-t_0
+
+			print ("Total time run function reverse_translation End : %s min" % (total/60.0))
+			logging.info('Total time run function reverse_translation to end : %f min', (total/60.0))
+		else:
+			logging.info('Fasta file with all the coding sequences already exists in the output path : %s --> Skipping this step! ', path_to_output_folder+'genome_alignments/'+name_exp+'.fastq')
+
+
+	def reverse_translation_2(self, peptide_mode, CS_mode, path_to_output_folder, name_exp):
+		
+		exists = os.path.exists(path_to_output_folder+'genome_alignments/'+name_exp+'.fastq')
+
+		if not exists:
 			t_0 = time.time()
 			to_write_reverse_translation = ''
 			total_reads_to_align = 0

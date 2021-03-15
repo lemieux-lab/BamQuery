@@ -21,9 +21,9 @@ class GetCounts:
 	def ribo_counts(self, perfect_alignments, bam_files_list):
 
 		df_counts = pd.DataFrame({'A' : []})
-		exist = os.path.exists(self.path_to_output_folder+self.name_exp+'_ribo_count.csv')
+		exists = os.path.exists(self.path_to_output_folder+self.name_exp+'_ribo_count.csv')
 		
-		if not exist:
+		if not exists:
 			t_0 = time.time()
 			logging.info('Alignments on ribosome profiling information ')
 
@@ -93,7 +93,7 @@ class GetCounts:
 		exist_rna = os.path.exists(self.path_to_output_folder+self.name_exp+'_rna_count.csv')
 		exist_ribo = True
 
-		if self.mode == 'filter':
+		if self.mode == 'translation':
 			with open(self.path_to_output_folder_alignments+'Alignments_ribo_information.dic', 'rb') as fp:
 				perfect_alignments_ribo = pickle.load(fp)
 			data_filtered = []
@@ -131,7 +131,7 @@ class GetCounts:
 						key = count_align[0]+'_'+count_align[1]
 						count = count_align[3]
 						perfect_alignments[key][-2] = count
-						if self.mode == 'filter':
+						if self.mode == 'translation':
 							try:
 								count_ribo = perfect_alignments_ribo[key][-1]
 								if count_ribo > 0:
@@ -150,7 +150,7 @@ class GetCounts:
 				df_counts = df_counts.groupby(['Peptides', 'BAM Files'])['Read Counts'].sum().reset_index()
 				df_counts = df_counts.pivot("Peptides", "BAM Files", "Read Counts")
 				_thread.start_new_thread(self.save_info_counts, (df_counts, to_write, '_rna_count.csv'))
-				if self.mode == 'filter':
+				if self.mode == 'translation':
 					df_counts_filtered = pd.DataFrame(data_filtered, columns=['Peptides', 'Alignments', 'BAM Files', 'Read Counts'])
 					df_counts_filtered = df_counts_filtered.groupby(['Peptides', 'BAM Files'])['Read Counts'].sum().reset_index()
 					df_counts_filtered = df_counts_filtered.pivot("Peptides", "BAM Files", "Read Counts")

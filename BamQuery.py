@@ -32,9 +32,10 @@ class BamQuery:
 		if self.mode == 'normal':
 			self.run_bam_query_normal_mode()
 		else:
-			self.run_bam_query_filter_mode()
+			self.run_bam_query_translation_mode()
 
 		self.get_annotations()
+
 
 	def run_bam_query_normal_mode(self):
 		self.common_to_modes()
@@ -48,41 +49,59 @@ class BamQuery:
 		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
 
 
-	def run_bam_query_filter_mode(self):
+	def run_bam_query_translation_mode(self):
 		self.common_to_modes()
 
 		get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode)
 		perfect_alignments_to_return, df_counts = get_counts.ribo_counts(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list)
 		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_ribo_counts')
 		
+		print ('Get Count Ribo : Done!')
+
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.mode)
 		def_norm = normalization.get_normalization(df_counts, '_ribo_norm.csv')
 		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_ribo_norm')
 
+		print ('Get Norm Ribo : Done!')
+
 		df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
 		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
+		
 		plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts')
+
+		print ('Get Count RNA : Done!')
 
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
 		def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
 		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
 
+		print ('Get Norm RNA : Done!')
+
 		def_norm = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
 		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm')
+		print ('Get Norm Ribo-RNA : Done!')
 
 
 	def common_to_modes(self):
 		self.bam_files_info = GetPrimaryReadCountBamFiles()
 		self.bam_files_info.get_all_counts(self.path_to_input_folder, self.path_to_output_folder)
 
+		print ('Get all Counts : Done!')
+
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder)
 		self.input_file_treatment.treatment_file()
 		
+		print ('Treatment File : Done!')
+
 		self.reverse_translation = ReverseTranslation()
 		self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
 		
+		print ('Reverse Translation : Done!')
+
 		self.alignments = Alignments(self.path_to_output_folder, self.name_exp)
 		self.perfect_alignments = self.alignments.alignment_cs_to_genome()
+
+		print ('Alignment : Done!')
 
 		if len(self.input_file_treatment.manual_mode) > 0 :
 			for peptide, info_peptide in self.input_file_treatment.manual_mode.items() :
@@ -91,6 +110,7 @@ class BamQuery:
 				strand = info_peptide[2]
 				key = peptide+'_'+position
 				self.perfect_alignments[key] = [strand, coding_sequence, peptide, ['Peptide Manual Mode'],0,0]
+		print ('common_to_modes : Done!')
 
 
 	def get_annotations(self):
@@ -110,19 +130,22 @@ class BamQuery:
 	
 
 	def get_info_peptide_alignments(self):
+
 		info_peptide_alignments = {}
+
 		for peptide_alignment in self.perfect_alignments:
 			peptide = peptide_alignment.split('_')[0]
 			alignment = peptide_alignment.split('_')[1]
 			count_rna = self.perfect_alignments[peptide_alignment][-2]
 			count_ribo = self.perfect_alignments[peptide_alignment][-1]
 			strand = self.perfect_alignments[peptide_alignment][0]
+
 			try:
 				info_peptide_alignments[peptide].append((alignment, count_rna, count_ribo, strand))
 			except KeyError:
 				info_peptide_alignments[peptide] = [(alignment, count_rna, count_ribo, strand)]
-		return info_peptide_alignments
 
+		return info_peptide_alignments
 
 
 def main(argv):
@@ -130,17 +153,17 @@ def main(argv):
 	path_to_input_folder = ''
 	path_to_output_folder = ''
 	name_exp = ''
-	mode = 'normal'
+	mode = 'translation'
 
 	try:
 		opts, args = getopt.getopt(argv,"hi:n:m:",["path_to_input_folder=", "name_exp=", "mode="])
 	except getopt.GetoptError:
-		print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/filter>')
+		print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/translation>')
 		sys.exit(2)
 
 	for opt, arg in opts:
 		if opt == '-h':
-			print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/filter>')
+			print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/translation>')
 			sys.exit()
 		elif opt in ("-i", "--path_to_input_folder"):
 			path_to_input_folder = arg
@@ -150,8 +173,8 @@ def main(argv):
 			mode = arg
 			if mode == '':
 				mode = 'normal'
-			elif mode != 'normal' and mode != 'filter':
-				print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/filter>')
+			elif mode != 'normal' and mode != 'translation':
+				print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/translation>')
 				sys.exit()
 	
 	print ('Running BamQuery in mode ', mode)

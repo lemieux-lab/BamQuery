@@ -129,7 +129,7 @@ def read_sam_file(sam_file):
 				readStart = int(splitLine[3])
 				strand = set_strand_read(splitLine[1])
 				peptide = queryname.split('_')[0]
-				number_hit = int(line.strip().split('NH')[1].split(':')[2].split('\t')[0])
+				number_hit = int(splitLine[11].split('NH')[1].split(':')[2].split('\t')[0])
 				MCS = splitLine[9]
 				lenSeq = len(MCS)
 				

@@ -18,9 +18,9 @@ class IntersectAnnotations:
 
 	def generate_BED_files(self):
 
-		exist = os.path.exists(self.path_to_output_folder+ 'to_intersect_to_annotations.bed')
+		exists = os.path.exists(self.path_to_output_folder+ 'to_intersect_to_annotations.bed')
 		
-		if not exist:
+		if not exists:
 			logging.info('Generating BED file to intersect with annotations. ')
 
 			t_0 = time.time()
@@ -61,9 +61,9 @@ class IntersectAnnotations:
 
 	def perform_intersection_with_annotation(self):
 
-		exist = os.path.exists(self.path_to_output_folder+ 'intersection_with_annotations.bed')
+		exists = os.path.exists(self.path_to_output_folder+ 'intersection_with_annotations.bed')
 		
-		if not exist:
+		if not exists:
 			t_0 = time.time()
 
 			logging.info('Using bedtools to intersect alignments to annotations.')

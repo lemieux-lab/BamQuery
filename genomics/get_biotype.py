@@ -24,6 +24,7 @@ class BiotypeAssignation:
 		self.name_exp = name_exp
 		self.mode = mode
 		
+
 	def get_information_from_BED_intersection(self):
 
 		file_to_read = self.path_to_output_folder_bed_files+'intersection_with_annotations.bed'
@@ -117,8 +118,6 @@ class BiotypeAssignation:
 			
 			transcripts_information[transcript] = info_transcript
 
-		#print (self.information_biotypes_peptides['TTRPALQEL_chr8:53784711-53784737']['chr8:53784711-53784737'].keys())
-		#print (self.information_biotypes_peptides)
 		self.set_final_transcript_level_biotype(transcripts_information)
 
 
@@ -389,7 +388,8 @@ class BiotypeAssignation:
 		df.to_csv(self.path_to_output_folder+'/res/annotation_biotypes.csv', index=False, header=True)
 		self.draw_biotypes(biotypes_peptides_rna, True)
 		self.draw_biotypes(biotypes_peptides_ribo, False)
-		if self.mode == 'filter':
+		
+		if self.mode == 'translation':
 			self.draw_correlation(data)
 			
 
