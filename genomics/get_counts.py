@@ -189,7 +189,6 @@ class GetCounts:
 			strand = info_alignment[0]
 			sequence = info_alignment[1]
 			
-			#if peptide == 'ALLERGYSL':
 			chr = alignment.split(':')[0]
 			region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
 			
@@ -210,42 +209,6 @@ class GetCounts:
 		file_to_open.close()
 		df.to_csv(self.path_to_output_folder+self.name_exp+type_save, index=True, header=True)
 		logging.info('Counts Information saved to : %s ', self.path_to_output_folder+self.name_exp+type_save)
-
-
-	def get_depth_with_view_2(self, region_to_query, bam_file, library, sens, strand, seq):
-		contReads = 0
-		library = library.lower()
-		sens = sens.lower()
-		
-		if strand == '-':
-			seq = uf.reverseComplement(seq)
-		
-		command = self.set_command_samtools(library, sens, strand, region_to_query, bam_file, seq)
-		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		out, err = p_1.communicate()
-		contReads = int(out.strip())
-		return contReads
-
-	def set_command_samtools(self, library, sens, strand, region_to_query, bam_file, seq):
-
-		command = ''
-		rcmcs = uf.reverseComplement(seq)
-			
-		if library == 'unstranded':
-			command = 'command_1=$(samtools view -F0x100 '+bam_file+' '+region_to_query+ '); c=$(echo "${command_1}"); echo "$c" | awk \'/'+seq+'/ || /'+rcmcs+'/\' | wc -l '
-			
-		if library == 'single-end':
-			if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
-				command='samtools view -F0x110 '+bam_file+' '+region_to_query+' | grep '+seq+' | wc -l'
-			elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
-				command='samtools view -F0x100 -f0X10 '+bam_file+' '+region_to_query+' | grep '+seq+' | wc -l'
-		if library == 'pair-end':
-			if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
-				command = 'command_1=$(samtools view -F0x100 -f0X60 '+bam_file+' '+region_to_query+ ' | grep '+seq+' ); c=$(echo "${command_1}"); command_2=$(samtools view -F0x100 -f0X90 '+bam_file+' '+region_to_query+ ' | grep '+rcmcs+' ); d=$(echo "${command_2}"); e="$c""$d" ; echo "$e" | uniq -f1 | wc -l'
-			elif ((strand == '-' and sens == 'forward') or(strand == '+' and sens == 'reverse')):
-				command = 'command_1=$(samtools view -F0x100 -f0X50 '+bam_file+' '+region_to_query+ ' | grep '+seq+' ); c=$(echo "${command_1}"); command_2=$(samtools view -F0x100 -f0XA0 '+bam_file+' '+region_to_query+ ' | grep '+rcmcs+' ); d=$(echo "${command_2}"); e="$c""$d" ; echo "$e" | uniq -f1 | wc -l'
-		
-		return command
 
 
 	def get_depth_with_view(self, region_to_query, bam_file, library, sens, strand, seq):
@@ -298,76 +261,6 @@ class GetCounts:
 
 			contReads = count_1.count(seq)
 		
-		return contReads
-
-
-	def get_depth_with_view_3(self, region_to_query, bam_file, library, sens, strand, seq):
-
-		contReads = 0
-		contReads_2 = 0
-		library = library.lower()
-		sens = sens.lower()
-		
-		if strand == '-':
-			seq = uf.reverseComplement(seq)
-
-		reads_name = set()
-		reads_name_2 = set()
-		rcmcs = uf.reverseComplement(seq)
-			
-		if library == 'unstranded':
-			count_1 = pysam.view("-F0X100", bam_file, region_to_query)
-			count_1_split = count_1.split('\n')
-			
-			for read in count_1_split:
-				if seq in read or rcmcs in read:
-					name = read.split('\t')[0]
-					reads_name.add(name)
-
-			command = 'command_1=$(samtools view -F0X100 '+bam_file+' '+region_to_query+ '); c=$(echo "${command_1}"); echo "$c" | awk \'/'+seq+'/ || /'+rcmcs+'/\' '
-			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-			out, err = p_1.communicate()
-			count_1_split = out.split('\n')
-
-			for read in count_1_split:
-				if seq in read or rcmcs in read:
-					name = read.split('\t')[0]
-					reads_name_2.add(name)
-
-		elif library == 'single-end':
-
-			if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
-				count_1 = pysam.view("-F0X110", bam_file, region_to_query)
-				command='samtools view -F0x110 '+bam_file+' '+region_to_query +' | grep '+seq+' | sort -k1 | uniq -f1 '
-			elif ((strand == '-' and sens == 'forward') or(strand == '+' and sens == 'reverse')):
-				count_1 = pysam.view("-F0X100", "-f0X10", bam_file, region_to_query)
-				command='samtools view -F0x100 -f0X10 '+bam_file+' '+region_to_query +' | grep '+seq+' | sort -k1  '
-
-			count_1_split = count_1.split('\n')
-
-			for read in count_1_split:
-				if seq in read :
-					name = read.split('\t')[0]
-					reads_name.add(name)
-
-			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-			out, err = p_1.communicate()
-			count_1_split = out.split('\n')
-
-			for read in count_1_split:
-				if seq in read :
-					name = read.split('\t')[0]
-					reads_name_2.add(name)
-
-		contReads = len(reads_name)	
-		contReads_2 = len(reads_name_2)
-		
-		if contReads != contReads_2:
-			print (command)
-			print (out)
-			print (region_to_query, bam_file, contReads, contReads_2)
-			print (reads_name-reads_name_2)	
-			return
 		return contReads
 
 	
