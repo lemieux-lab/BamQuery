@@ -1,5 +1,4 @@
-import warnings, time, sys, os, datetime, getopt, logging, _thread
-warnings.filterwarnings("ignore")
+import time, sys, os, datetime, argparse, logging, _thread
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
@@ -10,6 +9,7 @@ from readers.intersection_alignments_annotations import IntersectAnnotations
 
 from utils.primary_read_count import GetPrimaryReadCountBamFiles
 from utils.reverse_translation import ReverseTranslation
+from utils.paths_arrangements import *
 
 from genomics.alignments import Alignments
 from genomics.get_counts import GetCounts
@@ -19,14 +19,16 @@ from genomics.get_biotype import BiotypeAssignation
 import plotting.plots as plots
 
 __author__ = "Maria Virginia Ruiz Cuevas"
+__email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
+		self.strandedness = strandedness
 		self.mode = mode
 
 		if self.mode == 'normal':
@@ -34,19 +36,19 @@ class BamQuery:
 		else:
 			self.run_bam_query_translation_mode()
 
-		self.get_annotations()
+		#self.get_annotations()
 
 
 	def run_bam_query_normal_mode(self):
 		self.common_to_modes()
 		
-		get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode)
-		df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
-		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
+		# get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode)
+		# df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
+		# plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
 
-		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
-		def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
-		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
+		# normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
+		# def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
+		# plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
 
 
 	def run_bam_query_translation_mode(self):
@@ -56,51 +58,56 @@ class BamQuery:
 		perfect_alignments_to_return, df_counts = get_counts.ribo_counts(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list)
 		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_ribo_counts')
 		
+		logging.info('========== Get Count Ribo : Done! ============ ')
 		print ('Get Count Ribo : Done!')
 
-		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.mode)
-		def_norm = normalization.get_normalization(df_counts, '_ribo_norm.csv')
-		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_ribo_norm')
+		# normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.mode)
+		# def_norm = normalization.get_normalization(df_counts, '_ribo_norm.csv')
+		# plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_ribo_norm')
 
-		print ('Get Norm Ribo : Done!')
+		# print ('Get Norm Ribo : Done!')
 
-		df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
-		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
+		# df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
+		# plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
 		
-		plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts')
+		# plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts')
 
-		print ('Get Count RNA : Done!')
+		# print ('Get Count RNA : Done!')
 
-		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
-		def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
-		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
+		# normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
+		# def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
+		# plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
 
-		print ('Get Norm RNA : Done!')
+		# print ('Get Norm RNA : Done!')
 
-		def_norm = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
-		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm')
-		print ('Get Norm Ribo-RNA : Done!')
+		# def_norm = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
+		# plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm')
+		# print ('Get Norm Ribo-RNA : Done!')
 
 
 	def common_to_modes(self):
 		self.bam_files_info = GetPrimaryReadCountBamFiles()
-		self.bam_files_info.get_all_counts(self.path_to_input_folder, self.path_to_output_folder)
+		self.bam_files_info.get_all_counts(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness)
 
+		logging.info('========== Get all Counts : Done! ============ ')
 		print ('Get all Counts : Done!')
 
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder)
 		self.input_file_treatment.treatment_file()
 		
+		logging.info('========== Treatment File : Done! ============ ')
 		print ('Treatment File : Done!')
 
 		self.reverse_translation = ReverseTranslation()
 		self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
 		
+		logging.info('========== Reverse Translation : Done! ============ ')
 		print ('Reverse Translation : Done!')
 
 		self.alignments = Alignments(self.path_to_output_folder, self.name_exp)
 		self.perfect_alignments = self.alignments.alignment_cs_to_genome()
 
+		logging.info('========== Alignment : Done! ============ ')
 		print ('Alignment : Done!')
 
 		if len(self.input_file_treatment.manual_mode) > 0 :
@@ -110,6 +117,8 @@ class BamQuery:
 				strand = info_peptide[2]
 				key = peptide+'_'+position
 				self.perfect_alignments[key] = [strand, coding_sequence, peptide, ['Peptide Manual Mode'],0,0]
+
+		logging.info('========== Common_to_modes : Done! ============ ')
 		print ('common_to_modes : Done!')
 
 
@@ -150,132 +159,32 @@ class BamQuery:
 
 def main(argv):
 
-	path_to_input_folder = ''
-	path_to_output_folder = ''
-	name_exp = ''
-	mode = 'translation'
-
-	try:
-		opts, args = getopt.getopt(argv,"hi:n:m:",["path_to_input_folder=", "name_exp=", "mode="])
-	except getopt.GetoptError:
-		print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/translation>')
-		sys.exit(2)
-
-	for opt, arg in opts:
-		if opt == '-h':
-			print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/translation>')
-			sys.exit()
-		elif opt in ("-i", "--path_to_input_folder"):
-			path_to_input_folder = arg
-		elif opt in ("-n", "--name_exp"):
-			name_exp = arg
-		elif opt in ("-m", "--mode"):
-			mode = arg
-			if mode == '':
-				mode = 'normal'
-			elif mode != 'normal' and mode != 'translation':
-				print ('BamQuery.py -i <path_to_input_folder> -n <name_experience> -m <normal/translation>')
-				sys.exit()
+	parser = argparse.ArgumentParser(description='======== BamQuery ========')
 	
-	print ('Running BamQuery in mode ', mode)
+	parser.add_argument('path_to_input_folder', type=str,
+						help='Path to the input folder where to find BAM_directories.tsv and peptides.tsv')
+	parser.add_argument('name_exp', type=str,
+						help='BamQuery search Id')
+	parser.add_argument('--mode', type=str, default = 'normal',
+						help='BamQuery search mode : normal / translation')
+	parser.add_argument('--strandedness', action='store_true',
+						help='Take into account strandedness of the samples')
+
+	args = parser.parse_args()
+	
+	path_to_input_folder = args.path_to_input_folder
+	name_exp = args.name_exp
+	mode = args.mode
+	strandedness = args.strandedness
+
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
 
-	path_to_output_folder = '/'.join(path_to_input_folder.split('/')[:-2])+'/output/'
-	
-	try:
-		os.mkdir(path_to_output_folder)
-	except OSError:
-		print ("The output directory already exist in this path. BamQuery analysis will continue where it left." )
-	else:
-		print ("Successfully created the directory ", path_to_output_folder)
-	
-	path_to_logs_folder = path_to_output_folder+'logs/'
-	try:
-		os.mkdir(path_to_logs_folder)
-	except OSError:
-		pass
-
-	nameLog = path_to_logs_folder+'BamQuery_Res_'+name_exp+'.log'
-	logging.basicConfig(filename=nameLog, filemode='w', level=logging.INFO, format='%(asctime)s %(message)s')
-	logging.info('Running BamQuery on experience %s on mode %s ', name_exp, mode)
-
-	path_to_plots_folder = path_to_output_folder+'plots/'
-	try:
-		os.mkdir(path_to_plots_folder)
-	except OSError:
-		logging.info("The %s directory already exists. ", path_to_plots_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_plots_folder)
-
-	path_to_plots_heat_maps_folder = path_to_output_folder+'plots/heat_maps/'
-	try:
-		os.mkdir(path_to_plots_heat_maps_folder)
-	except OSError:
-		logging.info("The %s directory already exists. ", path_to_plots_heat_maps_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_plots_heat_maps_folder)
-
-	path_to_plots_biotypes_folder = path_to_output_folder+'plots/biotypes/'
-	try:
-		os.mkdir(path_to_plots_biotypes_folder)
-	except OSError:
-		logging.info("The %s directory already exists. ", path_to_plots_biotypes_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_plots_biotypes_folder)
-
-	path_to_plots_correlation_folder = path_to_output_folder+'plots/correlation/'
-	try:
-		os.mkdir(path_to_plots_correlation_folder)
-	except OSError:
-		logging.info("The %s directory already exists. ", path_to_plots_correlation_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_plots_correlation_folder)
-
-
-	path_to_genome_alignment_folder = path_to_output_folder+'genome_alignments/'
-	try:
-		os.mkdir(path_to_genome_alignment_folder)
-	except OSError:
-		logging.info("The %s directory already exists. ", path_to_genome_alignment_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_genome_alignment_folder)
-
-	path_to_alignment_folder = path_to_output_folder+'alignments/'
-	try:
-		os.mkdir(path_to_alignment_folder)
-	except OSError:
-		logging.info("The %s directory already exists. ", path_to_alignment_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_alignment_folder)
-
-	path_to_res_folder = path_to_output_folder+'res/'
-	try:
-		os.mkdir(path_to_res_folder)
-	except OSError:
-		logging.info("The %s directory already exists. ", path_to_res_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_res_folder)
-
-	path_to_res_bed_files_folder = path_to_output_folder+'res/BED_files/'
-	try:
-		os.mkdir(path_to_res_bed_files_folder)
-	except OSError:
-		logging.info("The %s directory already exists. ", path_to_res_bed_files_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_res_bed_files_folder)
-
-
-	logging.info('Path to input folder : %s ', path_to_input_folder)
-	logging.info('Path to output folder : %s ', path_to_output_folder)
-	logging.info('Path to plots folder : %s ', path_to_plots_folder)
-	logging.info('Path to genomic alignments STAR folder : %s ', path_to_genome_alignment_folder)
-	logging.info('Path to alignments RES folder : %s ', path_to_alignment_folder)
-	logging.info('Path to res folder : %s ', path_to_res_folder)
+	path_to_output_folder = directories_creation(path_to_input_folder, name_exp, mode, strandedness)
 
 	t0 = time.time()
 
-	BamQuery_obj = BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode)
+	BamQuery_obj = BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness)
 	
 	t2 = time.time()
 	total = t2-t0
@@ -290,8 +199,11 @@ if __name__ == "__main__":
 #python /u/ruizma/BAM_Query/Scripts/Python/BamQuery_class.py -p /u/ruizma/BAM_Query/Res/BamQuery_exp_class/peptides.tsv -b /u/ruizma/BAM_Query/Res/BamQuery_exp_class/BAM_directories.tsv -s /u/ruizma/BAM_Query/Res/BamQuery_exp_class/ -n First_Exp
 # time python /u/ruizma/BAM_Query/Scripts/Python/BamQuery_class.py -p /u/ruizma/BAM_Query/Res/BamQuery_exp_class/peptides.tsv -b /u/ruizma/BAM_Query/Res/BamQuery_exp_class/BAM_directories.tsv -s /u/ruizma/BAM_Query/Res/BamQuery_exp_class/ -n First_Exp > /u/ruizma/BAM_Query/Res/BamQuery_exp_class/test_reads.reads
 # time python /u/ruizma/BAM_Query/Scripts/Python/BamQuery_class.py -p /u/ruizma/BAM_Query/Res/BamQuery_exp_class/peptides.tsv -b /u/ruizma/BAM_Query/Res/BamQuery_exp_class/BAM_directories.tsv -s /u/ruizma/BAM_Query/Res/BamQuery_exp_class/ -n First_Exp
+
 #jupyter3
-#time python /u/ruizma/BAM_Query/Scripts/Python/BamQuery/BamQuery.py -i /u/ruizma/BAM_Query/Res/BamQuery_exp_class/Input  -n First_Exp
+#time python /u/ruizma/BAM_Query/Scripts/Python/BamQuery/BamQuery.py -i /u/ruizma/BAM_Query/Res/BamQuery_exp_class_2/Input -n First_Exp
 
 
 # time /u/ruizma/BAM_Query/BamQuery/BamQuery_normalisations_5.sh -x full -o /u/ruizma/BAM_Query/Res/BamQuery_exp/ -n test
+
+

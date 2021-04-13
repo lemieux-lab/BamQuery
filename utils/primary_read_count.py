@@ -1,16 +1,17 @@
-import os, logging, threading, time, subprocess, concurrent.futures, getpass, pickle, sys, getopt, os
+import os, logging, threading, time, subprocess, concurrent.futures, getpass, pickle, sys, getopt, os, pysam
 from os import listdir
 from os.path import isfile, join
 
 __author__ = "Maria Virginia Ruiz"
+__email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
+
 
 class GetPrimaryReadCountBamFiles:
 
 	def __init__(self):
 		pass
 
-
-	def get_all_counts(self, path_to_input_folder, path_to_output_folder):
+	def get_all_counts(self, path_to_input_folder, path_to_output_folder, mode, strandedness):
 
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		path_to_all_counts_file = path_to_lib+"allcounts.dic"
@@ -26,93 +27,64 @@ class GetPrimaryReadCountBamFiles:
 		self.bam_ribo_files_list = {}
 
 		try:
-			
 			bam_files = path_to_input_folder+'BAM_directories.tsv'
-
-			with open(bam_files) as f:
-
-				for index, line in enumerate(f):
-					line = line.strip().split('\t')
-					name = line[0]
-					path = line[1]
-					sequencing = line[2]
-
-					try:
-						library = line[3]
-					except:
-						library = ''
-
-					if '.bam' not in path:
-						bam_file_paths = self.search_bam_files(path)
-
-						for bam_file in bam_file_paths:
-							if library == '':
-								library = self.get_type_library(sequencing, bam_file)
-							name_bam_file = "_".join(bam_file.split('/')[:-1][-2:])
-							self.bam_files_list[name_bam_file] = [bam_file, sequencing, library, name]
-					else:
-						if library == '':
-							library = self.get_type_library(sequencing, path)
-						name_bam_file = "_".join(path.split('/')[:-1][-2:])
-						self.bam_files_list[name_bam_file] = [path, sequencing, library, name]
-			
-			get_read_counts_path = os.path.abspath(__file__)
-			command = 'python '+get_read_counts_path+' -i '+bam_files+' -o '+ path_to_output_folder
-			subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
-			logging.info('Total Bam Files to Query : %d', len(self.bam_files_list))
+			self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
 
 		except FileNotFoundError:
 			logging.info('Bam File %s doesn\'t exist ', path_to_input_folder+'BAM_directories.tsv')
 
-		try:
-			bam_files = path_to_input_folder+'BAM_Ribo_directories.tsv'
+		if mode == 'translation':
+			try:
+				bam_files = path_to_input_folder+'BAM_Ribo_directories.tsv'
+				self.bam_ribo_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
 
-			with open(bam_files) as f:
+			except FileNotFoundError:
+				logging.info('If running translation mode you must include a list of Ribo Bam Files. Bam File %s doesn\'t exist ', path_to_input_folder+'BAM_Ribo_directories.tsv')
+
+
+	def get_info_bamfiles(self, bam_files, strandedness, path_to_output_folder):
+
+		bam_files_list = {}
+
+		with open(bam_files) as f:
+
+			for index, line in enumerate(f):
+				line = line.strip().split('\t')
+				name = line[0]
+				path = line[1]
 				
-				for index, line in enumerate(f):
-					line = line.strip().split('\t')
-					name = line[0]
-					path = line[1]
-					sequencing = line[2]
+				if '.bam' not in path:
+					bam_file_paths = self.search_bam_files(path)
 
-					try:
-						library = line[3]
-					except:
-						library = ''
-
-					if '.bam' not in path:
-						bam_file_paths = self.search_bam_files(path)
-
-						for bam_file in bam_file_paths:
-							if library == '':
-								library = self.get_type_library(sequencing, bam_file)
-							name_bam_file = "_".join(bam_file.split('/')[:-1][-2:])
-							self.bam_ribo_files_list[name_bam_file] = [bam_file, sequencing, library, name]
+					for bam_file in bam_file_paths:
+						if strandedness:
+							library, sequencing = self.get_type_library(bam_file)
+						else:
+							library = 'unstranded' 
+							sequencing = 'unstranded' 
+						name_bam_file = "_".join(bam_file.split('/')[:-1][-2:])
+						bam_files_list[name_bam_file] = [bam_file, sequencing, library, name]
+				else:
+					if strandedness:
+						library, sequencing = self.get_type_library(bam_file)
 					else:
-						if library == '':
-							library = self.get_type_library(sequencing, path)
-						name_bam_file = "_".join(path.split('/')[:-1][-2:])
-						self.bam_ribo_files_list[name_bam_file] = [path, sequencing, library, name]
-
-
-			get_read_counts_path = os.path.abspath(__file__)
-			command = 'python '+get_read_counts_path+' -i '+bam_files+' -o '+ path_to_output_folder
-			subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
-			logging.info('Total Ribo Bam Files to Query : %d', len(self.bam_ribo_files_list))
-
-		except FileNotFoundError:
-			logging.info('If running translation mode you must include a list of Ribo Bam Files. ')
-
+						library = 'unstranded' 
+						sequencing = 'unstranded' 
+					name_bam_file = "_".join(path.split('/')[:-1][-2:])
+					bam_files_list[name_bam_file] = [path, sequencing, library, name]
+		
+		get_read_counts_path = os.path.abspath(__file__)
+		command = 'python '+get_read_counts_path+' -i '+bam_files+' -o '+ path_to_output_folder
+		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
+		logging.info('Total Bam Files to Query : %d', len(bam_files_list))
+		return bam_files_list
 
 	def get_all_counts_bam_file(self, bam_file_info):
 		
 		path = bam_file_info
 		name_bam_file = "_".join(path.split('/')[:-1][-2:])
 		contReads = -1
-		command = 'samtools view -F 256 '+path+' | wc -l'
-		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-		out, err = p_1.communicate()
-		contReads = int(out.strip())
+		count = pysam.view("-F0X100",'-c', name_bam_file) 
 		bam_file_info_to_return = [name_bam_file, path, contReads]
 		logging.info('BAM file : %s Path: %s Cont Reads: %s ', name_bam_file, path, str(contReads))
 
@@ -213,29 +185,39 @@ class GetPrimaryReadCountBamFiles:
 			logging.info('You don\'t have permission to read the files contained in %s !', path)
 
 
-	def get_type_library(self, sequencing, path):
+	def get_type_library(self, path):
+
+		count_1 = int(pysam.view("-f1",'-c', path, 'chr12:6,537,097-6,537,227'))
+
+		if count_1 == 0 :
+			sequencing = 'single-end'
+			count_1 = int(pysam.view("-f0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
+			count_2 = int(pysam.view("-F0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
+		else:
+			sequencing = 'pair-end'
+			count_1 = int(pysam.view("-f0X50",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f80 to hexa
+			count_2 = int(pysam.view("-f0X60",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f96 to hexa
+
+		ratio = 0
+		try:
+			ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
+		except :
+			pass
 		
-		if sequencing == 'single-end':
-			command_1 = 'samtools view -f16 '+path+' chr12:6,537,097-6,537,227 | wc -l'
-			command_2 = 'samtools view -F16 '+path+' chr12:6,537,097-6,537,227 | wc -l'
+		type_library = ''
+		
+		if ratio > 2 :
+			type_library = 'unstranded'
 		else:
-			command_1 = 'samtools view -f80 '+path+' chr12:6,537,097-6,537,227 | wc -l'
-			command_2 = 'samtools view -f96 '+path+' chr12:6,537,097-6,537,227 | wc -l'
+			if count_1 > count_2:
+				type_library = 'reverse'
+			elif count_2 > count_1:
+				type_library = 'forward'
+			elif count_1 == count_2 and count_1 == 0:
+				logging.info('Guessing library for this Bam file %s fail. Adding forward library ! ' , path)
+				type_library = 'forward'
 
-		p_1 = subprocess.Popen(command_1, shell=True, stdout=subprocess.PIPE)
-		out, err = p_1.communicate()
-		p_2 = subprocess.Popen(command_2, shell=True, stdout=subprocess.PIPE)
-		out2, err2 = p_2.communicate()
-		p1_count = int(out.strip().decode("utf-8"))
-		p2_count = int(out2.strip().decode("utf-8"))
-
-		if p1_count == p2_count and p1_count == 0:
-			logging.info('Guessing library for this Bam file %s fail. Adding forward library ! ' , path)
-
-		if p1_count > p2_count:
-			return 'reverse'
-		else:
-			return 'forward'
+		return type_library, sequencing
 
 
 def main(argv):

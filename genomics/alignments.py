@@ -3,6 +3,7 @@ import genomics.get_alignments as get_alig
 import collections
 
 __author__ = "Maria Virginia Ruiz Cuevas"
+__email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 NUM_WORKERS =  multiprocessing.cpu_count()
 
@@ -28,35 +29,11 @@ class Alignments:
 			maxMulti = 2000 						
 			dbSNPFile = self.path_to_lib+'dbSNP149_all.vcf'
 
-			# Seed = 15, winAnchorMultimapNmax = 2000, outFilterMultimapNmax = 2000, sjdbScore = 0, outFilterMatchNmin = 20, sjdbOverhang = 32
-			# command='module add star/2.7.1a; STAR --runThreadN 16 --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+
-			# ' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 0 --winAnchorMultimapNmax '+str(anchor)+' --outFilterMultimapNmax '
-			# +str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+dbSNPFile+' --outReadsUnmapped Fastx 
-			# --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+outputFile
-
 			command='module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
 					' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
-					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 3 --alignSJoverhangMin 20 --outFilterMismatchNmax 2 --winAnchorMultimapNmax '+\
+					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 0 --alignSJDBoverhangMin 3 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
 					str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+\
 					dbSNPFile+' --readFilesIn  '+inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+self.path_to_output_folder_genome_alignments # 3286 #3276
-
-			# command='module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
-			# 		' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
-			# 		' --alignEndsType EndToEnd --alignIntronMax 1 --alignSJDBoverhangMin 1 --alignSJoverhangMin 1000 --outFilterMismatchNmax 2 --winAnchorMultimapNmax '+\
-			# 		str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+\
-			# 		dbSNPFile+' --readFilesIn  '+inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+self.path_to_output_folder #3276
-
-			# command ='STAR --runThreadN 16 --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+' --alignEndsType EndToEnd 
-			# --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 1000 --winAnchorMultimapNmax '+str(anchor)+
-			# ' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+dbSNPFile+
-			# ' --readFilesIn  '+inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+outputFile
-
-# 			#if you are not interested in short spliced fragments of mRNA, I would recommend prohibiting splicing: then you set --alingIntronMax 1 and do not use any --sjdb* parameters
-# --outFilterMatchNmin 25 is probably too harsh, I would set it to the minimum mapped length you want to keep.
-# I would not use --genomeConsensusFile initially, this is still an experimental option. 
-# I have not tested it for small RNAs, but it would be interesting to see how much effect it has on alignments.
-# You may also want to set a hard limit on mismatches with --outFilterMismatchNmax 1 . 
-# I would not recommend allowing more than one mismatch for short RNAs. Even with 1MM it's not guaranteed that you will find all possible alignments with one mismatch.
 			
 			logging.info('Command to Align using STAR : %s ', command)
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
