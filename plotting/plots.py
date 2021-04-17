@@ -67,10 +67,13 @@ def get_heat_map(df, path_to_output_folder, name_exp, name):
 		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='.1f') #cmap="YlGnBu"
 	plt.yticks(rotation=0)
 	plt.tight_layout()
-	plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+'_'+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape')
+	plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape')
 	plt.show()
 
-	
+	script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/average_tissues_mode.R'
+	command = 'Rscript '+script_R_path+' '+path_to_output_folder+'res/AUX_files/processed/'+' '+path_to_output_folder+'plots/heat_maps/'+' 8.55 '+name_exp+name
+	subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
+
 
 def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
 	
@@ -126,7 +129,7 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 			kw["arrowprops"].update({"connectionstyle": connectionstyle})
 			
 			ax.annotate(outer_labels[i], xy=(x,y), xytext=(1.2*np.sign(x), 1.2*y), horizontalalignment=horizontalalignment, fontsize = fontsize, fontweight = 'normal', **kw)
-			plt.savefig(path_to_output_folder+'plots/biotypes/'+name_exp+'_'+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
+			plt.savefig(path_to_output_folder+'plots/biotypes/'+name_exp+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
 			plt.show()
 	except :
 		print ('It was not possible to save the figure for ', title )
@@ -162,6 +165,8 @@ def correlation(path_to_output_folder, name_exp, dataframe):
 	first_legend = ax.legend(handles=new_handles, labels=new_labels, fancybox=True, fontsize = fontsize-4, frameon=True, shadow=True)
 	plt.savefig(path_to_output_folder+'plots/correlation/'+name_exp+'_correlation_ribo_rna.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.3)
 	plt.show()
+
+
 
 	
 

@@ -15,7 +15,7 @@ class Alignments:
 		self.name_exp = name_exp
 		self.path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
-	def alignment_cs_to_genome(self):
+	def alignment_cs_to_genome(self, set_peptides):
 
 		exist = os.path.exists(self.path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 
@@ -31,7 +31,7 @@ class Alignments:
 
 			command='module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
 					' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
-					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 0 --alignSJDBoverhangMin 3 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
+					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 3 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
 					str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+\
 					dbSNPFile+' --readFilesIn  '+inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+self.path_to_output_folder_genome_alignments # 3286 #3276
 			
@@ -45,11 +45,11 @@ class Alignments:
 		else:
 			logging.info('Alignment file already exists in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Aligned.out.sam')
 		
-		perfect_alignments = self.get_alignments()
+		perfect_alignments = self.get_alignments(set_peptides)
 		
 		return perfect_alignments
 
-	def get_alignments(self):
+	def get_alignments(self, set_peptides):
 		t_0 = time.time()
 		sam_file = self.path_to_output_folder_genome_alignments+'/Aligned.out.sam'
 		
@@ -67,11 +67,13 @@ class Alignments:
 			
 			perfect_alignments = res_star[0]
 
+			peptides_with_alignments = res_star[3]
+
 			_thread.start_new_thread(self.save_output_info, (res_star[0], '_info_perfect_alignments.csv',))
 			_thread.start_new_thread(self.save_output_info, (res_star[1], '_info_variants_alignments.csv',))
 			_thread.start_new_thread(self.save_output_info, (res_star[2], '_info_out_alignments.csv',))
 			_thread.start_new_thread(self.save_info, (res_star[0], ) )
-			
+
 		else:
 			logging.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
 			files_already_collected = [os.path.exists(self.path_to_output_folder_alignments+self.name_exp+'_info_perfect_alignments.csv'),
@@ -83,6 +85,19 @@ class Alignments:
 
 			logging.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
 			
+			peptides_with_alignments = set()
+			
+			try:
+				with open(self.path_to_output_folder_alignments+'alignments/missed_peptides.info') as f:
+					for index, line in enumerate(f):
+						peptide = line.strip()
+						peptides_with_alignments.add(peptide)
+			except :
+				peptides_keys = list(perfect_alignments.keys())
+				for key in peptides_keys:
+					peptides_with_alignments.add(key.split('_')[0])
+
+
 			if sum(files_already_collected) > 0 :
 
 				if not files_already_collected[0]:
@@ -93,7 +108,7 @@ class Alignments:
 				# if not files_already_collected[2]:
 				# 	_thread.start_new_thread(self.save_output_info, (res_star[2], '_info_out_alignments.csv',))
 
-		return perfect_alignments
+		return perfect_alignments, peptides_with_alignments
 
 	def save_info(self, res_star):
 		name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'

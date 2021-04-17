@@ -61,28 +61,33 @@ class BamQuery:
 		logging.info('========== Get Count Ribo : Done! ============ ')
 		print ('Get Count Ribo : Done!')
 
-		# normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.mode)
-		# def_norm = normalization.get_normalization(df_counts, '_ribo_norm.csv')
-		# plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_ribo_norm')
+		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.input_file_treatment.all_mode_peptide, self.mode)
+		def_norm = normalization.get_normalization(df_counts, '_ribo_norm.csv')
+		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_ribo_norm')
 
-		# print ('Get Norm Ribo : Done!')
+		logging.info('========== Get Norm Ribo : Done! ============ ')
+		print ('Get Norm Ribo : Done!')
 
-		# df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
-		# plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
+		df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
+		plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
 		
-		# plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts')
+		plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts')
 
-		# print ('Get Count RNA : Done!')
+		logging.info('========== Get Count RNA : Done! ============ ')
+		print ('Get Count RNA : Done!')
 
-		# normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
-		# def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
-		# plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
+		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode)
+		def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
+		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
 
-		# print ('Get Norm RNA : Done!')
+		logging.info('========== Get Norm RNA : Done! ============ ')
+		print ('Get Norm RNA : Done!')
 
-		# def_norm = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
-		# plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm')
-		# print ('Get Norm Ribo-RNA : Done!')
+		def_norm = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
+		plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm')
+
+		logging.info('========== Get Norm Ribo-RNA : Done! ============ ')
+		print ('Get Norm Ribo-RNA : Done!')
 
 
 	def common_to_modes(self):
@@ -104,8 +109,10 @@ class BamQuery:
 		logging.info('========== Reverse Translation : Done! ============ ')
 		print ('Reverse Translation : Done!')
 
+		set_peptides = set(list(self.input_file_treatment.all_mode_peptide.keys()))
+
 		self.alignments = Alignments(self.path_to_output_folder, self.name_exp)
-		self.perfect_alignments = self.alignments.alignment_cs_to_genome()
+		self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(set_peptides)
 
 		logging.info('========== Alignment : Done! ============ ')
 		print ('Alignment : Done!')
@@ -116,7 +123,16 @@ class BamQuery:
 				position = info_peptide[1]
 				strand = info_peptide[2]
 				key = peptide+'_'+position
+				peptides_with_alignments.add(peptide)
 				self.perfect_alignments[key] = [strand, coding_sequence, peptide, ['Peptide Manual Mode'],0,0]
+
+		missed_peptides = list(set_peptides - peptides_with_alignments)
+
+		with open(self.path_to_output_folder+'alignments/missed_peptides.info', 'w') as f:
+			for item in missed_peptides:
+				f.write("%s\t\n" % item)
+		logging.info('Total missed_peptides : %s. Find the list in : %s.', str(len(missed_peptides)), self.path_to_output_folder+'alignments/missed_peptides.info')
+
 
 		logging.info('========== Common_to_modes : Done! ============ ')
 		print ('common_to_modes : Done!')

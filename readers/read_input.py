@@ -18,6 +18,7 @@ class ReadInputFile:
 		self.peptide_mode = {}
 		self.CS_mode = {}
 		self.manual_mode = {}
+		self.all_mode_peptide = {}
 		self.peptides_by_type = {}
 		
 		peptides_list = self.path_to_input_folder+'peptides.tsv'
@@ -32,6 +33,7 @@ class ReadInputFile:
 					if not self.evaluate_cs_ntd(peptide_type):
 						raise Exception("You must provide the peptide type for peptide in the peptide mode instead of the Coding sequence. Otherwise, add the peptide type to evaluate the peptide in CS mode. ", peptide)
 					self.peptide_mode[peptide] = ['','','',peptide_type]
+					self.all_mode_peptide[peptide] = peptide_type
 											
 				elif len(line) == 3:
 					peptide = line[0].strip()
@@ -40,7 +42,7 @@ class ReadInputFile:
 						raise Exception("Sorry, You must provide an appropriate Coding Sequence for peptide ", peptide)
 					peptide_type = line[2].strip()
 					self.CS_mode[peptide] = [cs,'','',peptide_type]
-					
+					self.all_mode_peptide[peptide] = peptide_type
 
 				elif len(line) == 5:
 					peptide = line[0].strip()
@@ -55,6 +57,7 @@ class ReadInputFile:
 						raise Exception("Sorry, You must provide an appropriate strand, either + (Forward) or - (Backward) for peptide ", peptide)
 					peptide_type = line[4].strip()
 					self.manual_mode[peptide] = [cs,position,strand,peptide_type]
+					self.all_mode_peptide[peptide] = peptide_type
 				else:
 					raise Exception("Sorry, You must provide peptides in the appropriate format mode : peptide/CS/manual ")
 				

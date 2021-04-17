@@ -90,6 +90,22 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 	else:
 		logging.info("Successfully created the directory %s " , path_to_res_bed_files_folder)
 
+	path_to_res_aux_files_folder = path_to_output_folder+'res/AUX_files/'
+	try:
+		os.mkdir(path_to_res_aux_files_folder)
+	except OSError:
+		logging.info("The %s directory already exists. ", path_to_res_aux_files_folder)
+	else:
+		logging.info("Successfully created the directory %s " , path_to_res_aux_files_folder)
+
+	path_to_res_aux_processed_files_folder = path_to_output_folder+'res/AUX_files/processed'
+	try:
+		os.mkdir(path_to_res_aux_processed_files_folder)
+	except OSError:
+		logging.info("The %s directory already exists. ", path_to_res_aux_processed_files_folder)
+	else:
+		logging.info("Successfully created the directory %s " , path_to_res_aux_processed_files_folder)
+
 
 	logging.info('Path to input folder : %s ', path_to_input_folder)
 	logging.info('Path to output folder : %s ', path_to_output_folder)
@@ -97,6 +113,8 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 	logging.info('Path to genomic alignments STAR folder : %s ', path_to_genome_alignment_folder)
 	logging.info('Path to alignments RES folder : %s ', path_to_alignment_folder)
 	logging.info('Path to res folder : %s ', path_to_res_folder)
+	logging.info('Path to res/BED_files folder : %s ', path_to_res_bed_files_folder)
+	logging.info('Path to res/AUX_files folder : %s ', path_to_res_aux_files_folder)
 	logging.info('=============== # ===================')
 
 	return path_to_output_folder

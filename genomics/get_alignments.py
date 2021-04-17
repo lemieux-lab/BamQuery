@@ -10,7 +10,9 @@ from pathos.multiprocessing import ProcessPool
 import multiprocessing
 import collections
 
+
 __author__ = "Maria Virginia Ruiz Cuevas"
+__email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
@@ -178,6 +180,7 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 	info_mcs_out_alignments = ''
 	chromosome = {}
 	path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
+	peptides_in = set()
 
 	try:
 		with open(path_to_lib+'/snps_dics/dbsnp149_all_'+chr+'.dic', 'rb') as fp:
@@ -222,11 +225,13 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 			if key == key_local:
 				if local_translation_peptide == peptide:
 					positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_reference_local, local_translation_peptide, [],0,0]
+					peptides_in.add(peptide)
 				else:
 					if 'S' not in operators : #'D' not in operators and 'I' not in operators and 
 						perfect_sequences_to_return, variant_sequences_to_return, peptide_with_snps_local_reference, seq_alignment_2, out_sequences_to_return = get_snps_information(chr, chromosome, peptide, pep_translation_seq_reference, seqReference, strand, rang)
 						if peptide_with_snps_local_reference == peptide:
 							positions_mcs_peptides_perfect_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0,0]
+							peptides_in.add(peptide)
 
 						if len(variant_sequences_to_return) > 0 and '*' not in peptide_with_snps_local_reference:
 							positions_mcs_peptides_variants_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, variant_sequences_to_return,0,0]
@@ -236,24 +241,26 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 			else:
 				if local_translation_peptide == peptide:
 					positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_reference_local, local_translation_peptide, [],0,0]
+					peptides_in.add(peptide)
 				else:
 					if not (parfait_alignment_local or variant_alignment_local or out_alignment_local):
 						perfect_sequences_to_return, variant_sequences_to_return, peptide_with_snps_local_reference, seq_alignment_2, out_sequences_to_return = get_snps_information(chr, chromosome, peptide, local_translation_peptide, seq_reference_local, strand, rang_local_ref)
 						if peptide_with_snps_local_reference == peptide:
 							positions_mcs_peptides_perfect_alignment[key_local] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0,0]
-					
+							peptides_in.add(peptide)
+
 				if 'S' not in operators : # 'D' not in operators and 'I' not in operators and 
 					perfect_sequences_to_return, variant_sequences_to_return, peptide_with_snps_local_reference, seq_alignment_2, out_sequences_to_return = get_snps_information(chr, chromosome, peptide, pep_translation_seq_reference, seqReference, strand, rang)
 					if peptide_with_snps_local_reference == peptide:
 						positions_mcs_peptides_perfect_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, perfect_sequences_to_return,0,0]
-
+						peptides_in.add(peptide)
 					if len(variant_sequences_to_return) > 0 and '*' not in peptide_with_snps_local_reference:
 						positions_mcs_peptides_variants_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, variant_sequences_to_return,0,0]
 							
 					if len(out_sequences_to_return) > 0:
 						positions_mcs_peptides_out_alignment[key] = [strand, seq_alignment_2, peptide_with_snps_local_reference, out_sequences_to_return,0,0]
 		
-	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, positions_mcs_peptides_out_alignment
+	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, positions_mcs_peptides_out_alignment, peptides_in
 
 
 def get_snps_information(chr, chromosome, peptide_origin, peptide_reference, seqReference, strand, rang):
@@ -394,7 +401,7 @@ def get_alignments(sam_file):
 	positions_mcs_peptides_perfect_alignment = {}
 	positions_mcs_peptides_variants_alignment = {}
 	positions_mcs_peptides_out_alignment = {}
-	
+	total_peptides_in = set()
 	nodes = multiprocessing.cpu_count()
 	
 	keys = od.keys()
@@ -405,6 +412,7 @@ def get_alignments(sam_file):
 		positions_mcs_peptides_perfect_alignment.update(res[0])
 		positions_mcs_peptides_variants_alignment.update(res[1])
 		positions_mcs_peptides_out_alignment.update(res[2])
+		total_peptides_in = total_peptides_in.union(res[3])
 
-	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, positions_mcs_peptides_out_alignment
+	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, positions_mcs_peptides_out_alignment, total_peptides_in
 
