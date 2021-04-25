@@ -29,82 +29,148 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 	try:
 		os.mkdir(path_to_plots_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_plots_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_plots_folder)
+		pass
 
 	path_to_plots_heat_maps_folder = path_to_output_folder+'plots/heat_maps/'
 	try:
 		os.mkdir(path_to_plots_heat_maps_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_plots_heat_maps_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_plots_heat_maps_folder)
+		pass
+
 
 	path_to_plots_biotypes_folder = path_to_output_folder+'plots/biotypes/'
 	try:
 		os.mkdir(path_to_plots_biotypes_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_plots_biotypes_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_plots_biotypes_folder)
+		pass
+
+	path_to_plots_heat_maps_genome_annotation_folder = path_to_output_folder+'plots/biotypes/genome_annotation/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_genome_annotation_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_ERE_annotation_folder = path_to_output_folder+'plots/biotypes/ERE_annotation/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_ERE_annotation_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_biotype_by_peptide_type_reads_folder = path_to_output_folder+'plots/biotypes/genome_annotation/biotype_by_peptide_type_reads/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_biotype_by_peptide_type_reads_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_by_level_biotype_folder = path_to_output_folder+'plots/biotypes/genome_annotation/biotype_by_peptide_type_reads/by_level_biotype/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_by_level_biotype_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_gene_level_biotype_folder = path_to_output_folder+'plots/biotypes/genome_annotation/biotype_by_peptide_type_reads/by_level_biotype/gene_level_biotype/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_gene_level_biotype_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_transcript_level_biotype_folder = path_to_output_folder+'plots/biotypes/genome_annotation/biotype_by_peptide_type_reads/by_level_biotype/transcript_level_biotype/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_transcript_level_biotype_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_genomic_position_biotype_folder = path_to_output_folder+'plots/biotypes/genome_annotation/biotype_by_peptide_type_reads/by_level_biotype/genomic_position_biotype/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_genomic_position_biotype_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_all_peptides_biotype_folder = path_to_output_folder+'plots/biotypes/genome_annotation/biotype_by_peptide_type_reads/all_peptides/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_all_peptides_biotype_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_global_biotypes_folder = path_to_output_folder+'plots/biotypes/genome_annotation/global_biotypes/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_global_biotypes_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_global_biotypes_cat_folder = path_to_output_folder+'plots/biotypes/genome_annotation/global_biotypes/by_peptide_type/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_global_biotypes_cat_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_global_biotypes_all_folder = path_to_output_folder+'plots/biotypes/genome_annotation/global_biotypes/all_peptides/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_global_biotypes_all_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_ERE_global_biotype_folder = path_to_output_folder+'plots/biotypes/ERE_annotation/global_biotypes/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_ERE_global_biotype_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_ERE_global_biotypes_biotype_folder = path_to_output_folder+'plots/biotypes/ERE_annotation/with_counts/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_ERE_global_biotypes_biotype_folder)
+	except OSError:
+		pass
+
 
 	path_to_plots_correlation_folder = path_to_output_folder+'plots/correlation/'
 	try:
 		os.mkdir(path_to_plots_correlation_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_plots_correlation_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_plots_correlation_folder)
+		pass
 
 
 	path_to_genome_alignment_folder = path_to_output_folder+'genome_alignments/'
 	try:
 		os.mkdir(path_to_genome_alignment_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_genome_alignment_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_genome_alignment_folder)
+		pass
 
 	path_to_alignment_folder = path_to_output_folder+'alignments/'
 	try:
 		os.mkdir(path_to_alignment_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_alignment_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_alignment_folder)
+		pass
 
 	path_to_res_folder = path_to_output_folder+'res/'
 	try:
 		os.mkdir(path_to_res_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_res_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_res_folder)
+		pass
 
 	path_to_res_bed_files_folder = path_to_output_folder+'res/BED_files/'
 	try:
 		os.mkdir(path_to_res_bed_files_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_res_bed_files_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_res_bed_files_folder)
+		pass
 
 	path_to_res_aux_files_folder = path_to_output_folder+'res/AUX_files/'
 	try:
 		os.mkdir(path_to_res_aux_files_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_res_aux_files_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_res_aux_files_folder)
+		pass
+
+	path_to_res_temps_files_folder = path_to_output_folder+'res/temps_files/'
+	try:
+		os.mkdir(path_to_res_temps_files_folder)
+	except OSError:
+		pass
 
 	path_to_res_aux_processed_files_folder = path_to_output_folder+'res/AUX_files/processed'
 	try:
 		os.mkdir(path_to_res_aux_processed_files_folder)
 	except OSError:
-		logging.info("The %s directory already exists. ", path_to_res_aux_processed_files_folder)
-	else:
-		logging.info("Successfully created the directory %s " , path_to_res_aux_processed_files_folder)
+		pass
 
 
 	logging.info('Path to input folder : %s ', path_to_input_folder)
@@ -113,8 +179,6 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 	logging.info('Path to genomic alignments STAR folder : %s ', path_to_genome_alignment_folder)
 	logging.info('Path to alignments RES folder : %s ', path_to_alignment_folder)
 	logging.info('Path to res folder : %s ', path_to_res_folder)
-	logging.info('Path to res/BED_files folder : %s ', path_to_res_bed_files_folder)
-	logging.info('Path to res/AUX_files folder : %s ', path_to_res_aux_files_folder)
 	logging.info('=============== # ===================')
 
 	return path_to_output_folder

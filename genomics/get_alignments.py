@@ -1,5 +1,4 @@
 import warnings, time, os, itertools
-warnings.filterwarnings("ignore")
 import pysam, re
 from itertools import groupby
 from operator import itemgetter

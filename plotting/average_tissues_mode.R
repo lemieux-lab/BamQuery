@@ -85,10 +85,12 @@ proSplusMerged = Reduce(function(...) rbind(...), proSplus)
 
 # Tile - all tissues
 filename = sprintf('%s_%s', name, 'all_tissues.pdf') 
+label = sprintf('%s%s%s', 'mean > log10(', th_out, '+ 1)' ) 
 
 g = ggplot(proSplusMerged, aes(x = Tissue, y = reorder(Peptide, +nbTissue), fill = mean,
-                               color = as.factor(mean > log10(th_out + 1))))
+                               color = as.factor(mean > log10(th_out + 1))) )
 				#color = as.factor(mean > th_out)))
+g = g + labs(col = label) #"mean > log10(th_out + 1)"
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
 g = g + scale_color_manual(values=c("grey", "black"))
 #g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white', trans = "log")
@@ -111,6 +113,7 @@ filename = sprintf('%s_%s', name, 'selected_tissues.pdf')
 g = ggplot(proSplusMerged[proSplusMerged$Short_list == 'yes', ],
            aes(x = Tissue, y = reorder(Peptide, + nbTissue15short), fill = mean,
                color = as.factor(mean > log10(th_out + 1))))
+g = g + labs(col = label)
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
 g = g + scale_color_manual(values=c("grey", "black"))
 g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white')

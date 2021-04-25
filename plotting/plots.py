@@ -6,6 +6,8 @@ import matplotlib.style
 import numpy as np
 import random
 import scipy.stats
+from matplotlib import cm
+
 
 violetes = sns.cubehelix_palette(7)
 blues_palette = sns.color_palette("Blues")
@@ -19,7 +21,7 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'In_frame':  blues_palette[3],
 						'Frameshift':  blues_palette[4],
 						'protein_coding':  blues_palette[0],
-						'Combined': blues_palette[5],
+						'Junctions': blues_palette[5],
 						'Other coding regions': blues_palette[5],
 
 						'Non-coding genes': violetes[0],
@@ -38,16 +40,16 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 
 
 
-def get_heat_map(df, path_to_output_folder, name_exp, name):
+def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55):
 	peptides_total = len(df.index)
 	bam_files = len(df.columns)
 
 	width = 10
-	heigth = 6
+	heigth = 10
 	fontsize = 12
 	annot = True
 
-	if peptides_total > 30 :
+	if peptides_total > 60 :
 		heigth = 20
 		fontsize = 8
 		annot = False
@@ -70,9 +72,10 @@ def get_heat_map(df, path_to_output_folder, name_exp, name):
 	plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape')
 	plt.show()
 
-	script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/average_tissues_mode.R'
-	command = 'Rscript '+script_R_path+' '+path_to_output_folder+'res/AUX_files/processed/'+' '+path_to_output_folder+'plots/heat_maps/'+' 8.55 '+name_exp+name
-	subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
+	if norm:
+		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/average_tissues_mode.R'
+		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'res/AUX_files/processed/'+' '+path_to_output_folder+'plots/heat_maps/ '+str(th_out)+' '+name_exp+name
+		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 
 
 def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
@@ -129,10 +132,40 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 			kw["arrowprops"].update({"connectionstyle": connectionstyle})
 			
 			ax.annotate(outer_labels[i], xy=(x,y), xytext=(1.2*np.sign(x), 1.2*y), horizontalalignment=horizontalalignment, fontsize = fontsize, fontweight = 'normal', **kw)
-			plt.savefig(path_to_output_folder+'plots/biotypes/'+name_exp+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
+			plt.savefig(path_to_output_folder+name_exp+'_'+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
 			plt.show()
 	except :
 		print ('It was not possible to save the figure for ', title )
+
+
+def plot_pie_ere(title, outer_labels, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
+	
+	number = len(outer_labels)
+	#a = np.random.random(number)
+	#cs = cm.Set1(np.arange(number)/(number * 1.0))
+	
+	import matplotlib.colors as mcolors
+	colors = random.choices(list(mcolors.CSS4_COLORS.values()),k = number)
+
+	fig, ax = plt.subplots(figsize=(11, 7), dpi=300) 
+
+	title=title+'\n'
+
+	plt.title(title, fontsize = fontsize+2)
+
+	wedges1, texts1 = plt.pie(outer_sizes, colors = colors,
+							startangle=180, pctdistance=0.9, shadow=False, 
+							textprops={'fontsize': fontsize, 'fontweight' : 'normal'},
+							wedgeprops={"edgecolor":"black",'linewidth': 1, 'antialiased': True})
+
+	plt.legend(wedges1, outer_labels, loc="best", ncol=2, bbox_to_anchor=(0.7,-0.05, 0, 0.8), fontsize = fontsize, frameon=True)
+	
+	bbox_props = dict(boxstyle="square,pad=0.2", color='black', fc="w", ec="k", lw=0.2)
+	kw = dict(arrowprops=dict(arrowstyle="-", color='black', linewidth=2),zorder=2, va="center")
+	plt.axis('equal')
+
+	plt.savefig(path_to_output_folder+name_exp+'_'+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
+	plt.show()
 
 
 def correlation(path_to_output_folder, name_exp, dataframe):

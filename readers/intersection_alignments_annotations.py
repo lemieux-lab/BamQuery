@@ -3,7 +3,8 @@ import pandas as pd
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
-annotation = path_to_lib + 'gencode.v26.primary_assembly.annotation.gtf'
+annotation_transcripts = path_to_lib + 'gencode.v26.primary_assembly.annotation.gtf'
+annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 
@@ -14,7 +15,6 @@ class IntersectAnnotations:
 		self.perfect_alignments = perfect_alignments
 		self.path_to_output_folder = path_to_output_folder+'res/BED_files/'
 		self.name_exp = name_exp
-
 
 	def generate_BED_files(self):
 
@@ -57,18 +57,19 @@ class IntersectAnnotations:
 
 		else:
 			logging.info('to_intersect_to_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'to_intersect_to_annotations.bed')
-	
+			self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
 
 	def perform_intersection_with_annotation(self):
 
-		exists = os.path.exists(self.path_to_output_folder+ 'intersection_with_annotations.bed')
+		exists = os.path.exists(self.path_to_output_folder+ 'intersection_with_annotated_transcripts.bed')
+		exists_2 = os.path.exists(self.path_to_output_folder+ 'intersection_with_annotated_EREs.bed')
 		
-		if not exists:
+		if not exists and not exists_2:
 			t_0 = time.time()
 
 			logging.info('Using bedtools to intersect alignments to annotations.')
 
-			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+annotation+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotations.bed'
+			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed; bedtools intersect -a '+self.bed_file+' -b '+annotation_EREs+' -wao > '+self.path_to_output_folder + '/intersection_with_annotated_EREs.bed'
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 			out, err = p_1.communicate()
 

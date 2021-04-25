@@ -12,6 +12,7 @@ class Normalization:
 	def __init__(self, path_to_output_folder, name_exp, bam_files_list, peptides_types, mode):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.path_to_output_folder = path_to_output_folder+'res/'
+		self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
 		self.path_to_output_aux_folder = path_to_output_folder+'res/AUX_files/'
 		self.path_to_output_aux_processed_folder = path_to_output_folder+'res/AUX_files/processed/'
 		self.name_exp = name_exp
@@ -23,7 +24,7 @@ class Normalization:
 
 	def get_normalization(self, df_counts, type_save):
 
-		exists = os.path.exists(self.path_to_output_folder+self.name_exp+type_save)
+		exists = os.path.exists(self.path_to_output_temps_folder+self.name_exp+type_save)
 		
 		if not exists:
 		
@@ -164,14 +165,14 @@ class Normalization:
 			total = t_2-t_0
 			logging.info('Total time run function get_normalization to end : %f min', (total/60.0))
 		else:
-			logging.info('Normalization information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder+self.name_exp+type_save)
-			def_norm = pd.read_csv(self.path_to_output_folder+self.name_exp+type_save, index_col=0)
+			logging.info('Normalization information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+type_save)
+			def_norm = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index_col=0)
 		
 		return def_norm
 
 	def save_info_counts(self, df, type_save):
-		df.to_csv(self.path_to_output_folder+self.name_exp+type_save, index=True, header=True)
-		logging.info('Normalization Information saved to : %s ', self.path_to_output_folder+self.name_exp+type_save)
+		df.to_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index=True, header=True)
+		logging.info('Normalization Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
 
 # 				t1 				ts2 			ts3 			ts4
 # rphm			x				x				x				x

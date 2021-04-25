@@ -1,6 +1,8 @@
 import os, logging, time, subprocess, pickle, multiprocessing, os, _thread, csv
 import genomics.get_alignments as get_alig
 import collections
+from pathos.multiprocessing import ProcessPool
+import pandas as pd
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -55,6 +57,7 @@ class Alignments:
 		
 		exist = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information.dic')
 		perfect_alignments = {}
+		peptides_with_alignments = set()
 
 		if not exist:
 			res_star = get_alig.get_alignments(sam_file)
@@ -66,26 +69,33 @@ class Alignments:
 			logging.info('Total perfect aligments : %s ', str(len(res_star[0])))
 			
 			perfect_alignments = res_star[0]
+			variants_alignments = res_star[1]
+			out_alignments = res_star[2]
 
 			peptides_with_alignments = res_star[3]
 
-			_thread.start_new_thread(self.save_output_info, (res_star[0], '_info_perfect_alignments.csv',))
-			_thread.start_new_thread(self.save_output_info, (res_star[1], '_info_variants_alignments.csv',))
-			_thread.start_new_thread(self.save_output_info, (res_star[2], '_info_out_alignments.csv',))
-			_thread.start_new_thread(self.save_info, (res_star[0], ) )
+			alignments = [perfect_alignments, variants_alignments, out_alignments]
+			pool = ProcessPool(nodes = NUM_WORKERS)
+			results = pool.map(self.generer_alignments_information, alignments)
+			
+			self.df1 = pd.DataFrame(results[0], columns=["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff_AA", "SNVs", "Mutations_Non_Annotated"])
+			self.df2 = pd.DataFrame(results[1], columns=["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff_AA", "SNVs", "Mutations_Non_Annotated"])
+			self.df3 = pd.DataFrame(results[2], columns=["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff_AA", "SNVs", "Mutations_Non_Annotated"])
+
+			self.write_xls_with_alignments_info()
+			
+			name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+			with open(name_path, 'wb') as handle:
+				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+			logging.info('Alignments Information save to : %s ', name_path)
 
 		else:
 			logging.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
-			files_already_collected = [os.path.exists(self.path_to_output_folder_alignments+self.name_exp+'_info_perfect_alignments.csv'),
-										os.path.exists(self.path_to_output_folder_alignments+self.name_exp+'_info_variants_alignments.csv'),
-										os.path.exists(self.path_to_output_folder_alignments+self.name_exp+'_info_out_alignments.csv')]
-
+			
 			with open(self.path_to_output_folder_alignments+'/Alignments_information.dic', 'rb') as fp:
 				perfect_alignments = pickle.load(fp)
 
 			logging.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
-			
-			peptides_with_alignments = set()
 			
 			try:
 				with open(self.path_to_output_folder_alignments+'alignments/missed_peptides.info') as f:
@@ -97,24 +107,43 @@ class Alignments:
 				for key in peptides_keys:
 					peptides_with_alignments.add(key.split('_')[0])
 
-
-			if sum(files_already_collected) > 0 :
-
-				if not files_already_collected[0]:
-					logging.info('Total perfect aligments : %s ', str(len(res_star)))
-					_thread.start_new_thread(self.save_output_info, (res_star, '_info_perfect_alignments.csv',))
-				# if not files_already_collected[1]:
-				# 	_thread.start_new_thread(self.save_output_info, (res_star[1], '_info_variants_alignments.csv',))
-				# if not files_already_collected[2]:
-				# 	_thread.start_new_thread(self.save_output_info, (res_star[2], '_info_out_alignments.csv',))
-
 		return perfect_alignments, peptides_with_alignments
 
-	def save_info(self, res_star):
-		name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
-		with open(name_path, 'wb') as handle:
-			pickle.dump(res_star, handle, protocol=pickle.HIGHEST_PROTOCOL)
-		logging.info('Alignments Information save to : %s ', name_path)
+
+	def generer_alignments_information(self, alignments_input):
+		row_list = []
+
+		alignments = collections.OrderedDict(sorted(alignments_input.items()))
+		
+		for peptide_info, info_alignment in alignments.items():
+			alignment = peptide_info.split('_')[1]
+			peptide = peptide_info.split('_')[0]
+
+			strand = info_alignment[0]
+			MCS = info_alignment[1]
+			peptide_with_snps_local_reference = info_alignment[2]
+			snvs_write = ''
+			dif_aa_write = ''
+			mutations_write = ''
+
+			try:
+				snvs = info_alignment[3][0]
+				dif_aas = info_alignment[3][1]
+				mutations_non_annotated = info_alignment[3][2]
+				for snv in snvs:
+					#T->G|snp:rs12036323|GenPos:239044335|MCSPos:10
+					snv = '['+snv[0]+'->'+snv[1]+'|snp:'+snv[2]+'|GenPos:'+str(snv[3])+'|MCSPos:'+str(snv[4])+']'
+					snvs_write += snv
+				for dif_aa in dif_aas:
+					dif_aa_write += '['+dif_aa+']'
+				for mutation in mutations_non_annotated:
+					mutation_write = '['+mutation+']'
+					mutations_write += mutation_write
+			except IndexError:
+				pass
+			row_list.append([peptide, strand, alignment, MCS, peptide_with_snps_local_reference, dif_aa_write, snvs_write, mutations_write])
+		
+		return row_list
 
 
 	def save_output_info(self, alignments_input, name_file):
@@ -155,4 +184,10 @@ class Alignments:
 			writer.writerows(row_list)
 		logging.info('Info perfect alignments saved to : %s ', self.path_to_output_folder_alignments+self.name_exp+name_file)
 
+	def write_xls_with_alignments_info(self):
+		writer = pd.ExcelWriter(self.path_to_output_folder_alignments+self.name_exp+'_info_alignments.xlsx', engine='xlsxwriter')
+		self.df1.to_excel(writer, sheet_name='Perfect Alignments')
+		self.df2.to_excel(writer, sheet_name='Variants Alignments')
+		self.df3.to_excel(writer, sheet_name='Out Alignments')
+		writer.save()
 
