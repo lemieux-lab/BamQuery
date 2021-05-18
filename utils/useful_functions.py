@@ -131,6 +131,7 @@ def translateDNA(sequence, frame = 'f1', translTable_id='default') :
 				# MC
 				protein += translTable[translTable_id][codon]
 			except KeyError :
+				print ('sequence ',sequence)
 				combinaisons = polymorphicCodonCombinaisons(list(codon))
 				translations = set()
 				for ci in range(len(combinaisons)):

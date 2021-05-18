@@ -1,4 +1,3 @@
-##This has to be edited by user:
 args = commandArgs(trailingOnly=TRUE)
 
 norm_results = args[1]
@@ -6,13 +5,11 @@ output = args[2]
 th_out = as.numeric(args[3])
 name = args[4]
 
-print (name)
 ###############################################################################
 
 library(ggplot2)
 library(data.table)
 
-p_out = 'processed'
 pl_out = 'r_plot'
 
 output_plot = sprintf('%s%s', output, pl_out)
@@ -30,7 +27,6 @@ procFiles = lapply(lf_process, function(x) {
 
 procMerged <- Reduce(function(...) rbind(...), procFiles)
 
-print (procMerged)
 # Peptide Peptide_type  Tissue  Tissue_type Short_list  median  mean
 proS = split(procMerged, list(procMerged$Peptide, procMerged$Peptide_type), drop = TRUE)
 
@@ -70,6 +66,7 @@ proSplus = lapply(proS, function(x){
            'superMedTissue', 'superMedTissueShort',
            'nbTissue1Medshort', 'nbTissue5Medshort', 'nbTissue10Medshort',
            'nbTissue15Medshort', 'nbTissue20Medshort', 'nbTissue25Medshort')
+
   x[,(cols):= list(nbTissue, nbTissueShort,
                    superMeanTissue, superMeanTissueShort,
                    nbTissue1, nbTissue5, nbTissue10,
@@ -83,27 +80,33 @@ proSplus = lapply(proS, function(x){
 
 proSplusMerged = Reduce(function(...) rbind(...), proSplus)
 
+
 # Tile - all tissues
 filename = sprintf('%s_%s', name, 'all_tissues.pdf') 
+
+
 label = sprintf('%s%s%s', 'mean > log10(', th_out, '+ 1)' ) 
 
-g = ggplot(proSplusMerged, aes(x = Tissue, y = reorder(Peptide, +nbTissue), fill = mean,
+
+
+g = ggplot(proSplusMerged, aes(x = Tissue, y = reorder(Peptide, + nbTissue), fill = mean,
                                color = as.factor(mean > log10(th_out + 1))) )
-				#color = as.factor(mean > th_out)))
-g = g + labs(col = label) #"mean > log10(th_out + 1)"
+
+g = g + labs(col = label) 
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
 g = g + scale_color_manual(values=c("grey", "black"))
-#g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white', trans = "log")
 g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white')
 g = g + facet_grid(Peptide_type ~ Tissue_type, scales = 'free', space = 'free')
 g = g + theme_bw() + xlab('') + ylab('')
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-g = g + theme(axis.text.y = element_text(size = 5))
-g
-
-ggsave(sprintf('%s/%s', output_plot, filename),
-       width = 11, height = 11,
-       useDingbats = FALSE)
+total_peptides = nrow(proSplusMerged)
+if (total_peptides > 50){
+  g = g + theme(axis.text.y = element_text(size = 5))
+}
+if (total_peptides > 70){
+  g = g + theme(axis.text.y = element_text(size = 3))
+}
+ggsave(sprintf('%s/%s', output_plot, filename), width = 11, height = 11, useDingbats = FALSE)
 
 
 # Tile - selected tissues
@@ -120,7 +123,6 @@ g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white
 g = g + facet_grid(Peptide_type ~ Tissue_type, scales = 'free', space = 'free')
 g = g + theme_bw() + xlab('') + ylab('')
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-g
 
 ggsave(sprintf('%s/%s', output_plot, filename), width = 11, height = 11, useDingbats = FALSE)
 
@@ -138,7 +140,7 @@ m = unique(subset(proSplusMerged, select = c(Peptide_type, Peptide, nbTissue,
                                              nbTissue25Medshort)))
 
 # #write.table(m, sprintf('%s/%s/%s_processed.txt', getwd(), p_out, 'recapPepNbtissue'),
-# #            sep = '\t',
-# #           quote = FALSE, row.names = FALSE)
+#            sep = '\t',
+#           quote = FALSE, row.names = FALSE)
 
 rm(list = ls())

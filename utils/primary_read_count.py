@@ -5,6 +5,8 @@ from os.path import isfile, join
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
+path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
+
 
 class GetPrimaryReadCountBamFiles:
 
@@ -29,7 +31,7 @@ class GetPrimaryReadCountBamFiles:
 		try:
 			bam_files = path_to_input_folder+'BAM_directories.tsv'
 			self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
-
+		
 		except FileNotFoundError:
 			logging.info('Bam File %s doesn\'t exist ', path_to_input_folder+'BAM_directories.tsv')
 
@@ -52,11 +54,13 @@ class GetPrimaryReadCountBamFiles:
 				line = line.strip().split('\t')
 				name = line[0]
 				path = line[1]
-				
-				if '.bam' not in path:
-					bam_file_paths = self.search_bam_files(path)
 
+				if '.bam' not in path or '.cram' not in path:
+
+					bam_file_paths = self.search_bam_files(path)
+					
 					for bam_file in bam_file_paths:
+						
 						if strandedness:
 							library, sequencing = self.get_type_library(bam_file)
 						else:
@@ -65,11 +69,13 @@ class GetPrimaryReadCountBamFiles:
 						name_bam_file = "_".join(bam_file.split('/')[:-1][-2:])
 						bam_files_list[name_bam_file] = [bam_file, sequencing, library, name]
 				else:
+
 					if strandedness:
 						library, sequencing = self.get_type_library(bam_file)
 					else:
 						library = 'unstranded' 
 						sequencing = 'unstranded' 
+					
 					name_bam_file = "_".join(path.split('/')[:-1][-2:])
 					bam_files_list[name_bam_file] = [path, sequencing, library, name]
 		
@@ -153,33 +159,39 @@ class GetPrimaryReadCountBamFiles:
 		try:
 			bam_file_paths = []
 			components = [f for f in listdir(path)]
-			
+
 			for component in components:
+
 				if component[0] != '.' and component[0] != '_':
 					path_component = join(path, component)
+
 					if isfile(path_component) :
-						if path_component[-4:] == '.bam':
+						if path_component[-4:] == '.bam' or path_component[-5:] == '.cram':
 							bam_file_paths.append(path_component)
 					else:
 						bam_file_paths = self.search_bam_file(bam_file_paths, path_component)
-			
+
 			return bam_file_paths
 		except PermissionError:
 			logging.info('You don\'t have permission to read the files contained in %s !', path)
 
+
 	def search_bam_file(self, bam_file_paths, path): 
+
 		try:
 			components = [f for f in listdir(path)]
+			
 			for component in components:
 				
 				if component[0] != '.' and component[0] != '_':
 					path_component = join(path, component)
-					
+
 					if isfile(path_component) :
-						if path_component[-4:] == '.bam':
+						if path_component[-4:] == '.bam' or path_component[-5:] == '.cram':
 							bam_file_paths.append(path_component)
 					else:
 						self.search_bam_file(bam_file_paths, path_component)
+			
 			return bam_file_paths
 		except PermissionError:
 			logging.info('You don\'t have permission to read the files contained in %s !', path)
@@ -187,16 +199,29 @@ class GetPrimaryReadCountBamFiles:
 
 	def get_type_library(self, path):
 
-		count_1 = int(pysam.view("-f1",'-c', path, 'chr12:6,537,097-6,537,227'))
+		if '.bam' in path:
+			count_1 = int(pysam.view("-f1",'-c', path, 'chr12:6,537,097-6,537,227'))
 
-		if count_1 == 0 :
-			sequencing = 'single-end'
-			count_1 = int(pysam.view("-f0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
-			count_2 = int(pysam.view("-F0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
+			if count_1 == 0 :
+				sequencing = 'single-end'
+				count_1 = int(pysam.view("-f0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
+				count_2 = int(pysam.view("-F0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
+			else:
+				sequencing = 'pair-end'
+				count_1 = int(pysam.view("-f0X50",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f80 to hexa
+				count_2 = int(pysam.view("-f0X60",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f96 to hexa
 		else:
-			sequencing = 'pair-end'
-			count_1 = int(pysam.view("-f0X50",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f80 to hexa
-			count_2 = int(pysam.view("-f0X60",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f96 to hexa
+			fa = "-T "+genomePath
+			count_1 = len(pysam.view("-f1"+'-c', path, 'chr12:6,537,097-6,537,227').split('\n'))
+			
+			if count_1 == 0 :
+				sequencing = 'single-end'
+				count_1 = len(pysam.view("-f0X10","-c", path, 'chr12:6,537,097-6,537,227').split('\n'))
+				count_2 = len(pysam.view("-F0X10","-c", path, 'chr12:6,537,097-6,537,227').split('\n'))
+			else:
+				sequencing = 'pair-end'
+				count_1 = len(pysam.view("-f0X50","-c", path, 'chr12:6,537,097-6,537,227').split('\n')) # Conversion -f80 to hexa
+				count_2 = len(pysam.view("-f0X60","-c", path, 'chr12:6,537,097-6,537,227').split('\n')) # Conversion -f96 to hexa
 
 		ratio = 0
 		try:
@@ -259,7 +284,7 @@ def main(argv):
 			line = line.strip().split('\t')
 			path = line[1]
 			
-			if '.bam' not in path:
+			if '.bam' not in path or '.cram' not in path:
 				bam_file_paths = Get_Read_Count_obj.search_bam_files(path)
 
 				for bam_file in bam_file_paths:

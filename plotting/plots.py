@@ -13,8 +13,10 @@ violetes = sns.cubehelix_palette(7)
 blues_palette = sns.color_palette("Blues")
 navy_colors = sns.light_palette("navy", reverse=False)[1:]
 green_palette = sns.light_palette("green")[1:]
+flare_palette = sns.color_palette("flare",n_colors = 6)
 
 assignation_colors = {'Protein-coding genes': blues_palette[0],
+						'Protein-coding Regions': blues_palette[0],
 						'Protein-coding transcripts': blues_palette[0],
 						'5UTR':  blues_palette[1],
 						'3UTR':  blues_palette[2],
@@ -25,18 +27,28 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'Other coding regions': blues_palette[5],
 
 						'Non-coding genes': violetes[0],
+						'Non-coding Regions': violetes[0],
 						'Non-coding transcripts': violetes[0],
 						'processed_transcript': violetes[1],
 						'nonsense_mediated_decay': violetes[2],
 						'antisense': violetes[3],
-						'Exons': violetes[4],
+						'Non-coding Exons': violetes[4],
 						'lincRNA': violetes[5],
 						'Other non-coding regions':violetes[6],
 
-						'Intergenic Region': green_palette[0],
+						'Intergenic Regions': green_palette[0],
 						'Intergenic': green_palette[1],
-						'Intronic Region': navy_colors[1],
-						'Introns':navy_colors[2]}
+
+						'Intronic Regions': navy_colors[1],
+						'Introns':navy_colors[2],
+
+						'EREs' : flare_palette[0],
+						'LINE': flare_palette[1],
+						'LTR': flare_palette[2], 
+						'Retroposon': flare_palette[3],
+						'SINE': flare_palette[4],
+						'Other EREs': flare_palette[5]
+						}
 
 
 
@@ -63,18 +75,20 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55)
 	ax = fig.add_subplot(111)
 	ax.grid(False)
 	
-	if 'norm' not in name :
-		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='g') #cmap="YlGnBu"
+	if norm:
+		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='.1f')
 	else:
-		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='.1f') #cmap="YlGnBu"
+		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='g') #cmap="YlGnBu"
+	
 	plt.yticks(rotation=0)
 	plt.tight_layout()
 	plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape')
 	plt.show()
 
 	if norm:
+		exp = name[1:]+'/'
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/average_tissues_mode.R'
-		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'res/AUX_files/processed/'+' '+path_to_output_folder+'plots/heat_maps/ '+str(th_out)+' '+name_exp+name
+		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'res/AUX_files/processed/'+exp+' '+path_to_output_folder+'plots/heat_maps/ '+str(th_out)+' '+name_exp+name
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 
 

@@ -7,6 +7,7 @@ import pandas as pd
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
+
 NUM_WORKERS =  multiprocessing.cpu_count()
 
 class Alignments:
@@ -31,7 +32,7 @@ class Alignments:
 			maxMulti = 2000 						
 			dbSNPFile = self.path_to_lib+'dbSNP149_all.vcf'
 
-			command='module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
+			command = 'module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
 					' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
 					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 3 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
 					str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+\
@@ -60,27 +61,43 @@ class Alignments:
 		peptides_with_alignments = set()
 
 		if not exist:
+
 			res_star = get_alig.get_alignments(sam_file)
 			
 			t_2 = time.time()
 			total = t_2-t_0
+
 			print ("Total time run function get_alignments End : %s " % (total/60.0))
 			logging.info('Total time run function get_alignments to end : %f min', (total/60.0))
 			logging.info('Total perfect aligments : %s ', str(len(res_star[0])))
 			
 			perfect_alignments = res_star[0]
 			variants_alignments = res_star[1]
-			out_alignments = res_star[2]
+			
+			peptides_with_alignments = res_star[2]
+			
+			columns = ["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff AA", "Diff ntd", "SNVs"]
+			columns_cosmic = ["Peptide", "Strand", "Alignment", "SNV", 'Mutation genome position', 'GRCh', 'Gene', 'SNP', 'Mutation Id', 
+							'Mutation CDS', 'Mutation AA', 'Description',
+							'Mutation Strand', 'Resistance', 'Score', 'Prediction', 'Status' ]
 
-			peptides_with_alignments = res_star[3]
-
-			alignments = [perfect_alignments, variants_alignments, out_alignments]
+			alignments = [perfect_alignments, variants_alignments]
 			pool = ProcessPool(nodes = NUM_WORKERS)
 			results = pool.map(self.generer_alignments_information, alignments)
 			
-			self.df1 = pd.DataFrame(results[0], columns=["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff_AA", "SNVs", "Mutations_Non_Annotated"])
-			self.df2 = pd.DataFrame(results[1], columns=["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff_AA", "SNVs", "Mutations_Non_Annotated"])
-			self.df3 = pd.DataFrame(results[2], columns=["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff_AA", "SNVs", "Mutations_Non_Annotated"])
+			perfect_alignments_to_print = results[0][0]
+			variants_alignments_to_print = results[1][0]
+			
+			info_cosmic = results[0][1]
+			
+			info_cosmic_to_print = self.get_info_cosmic(info_cosmic)
+			
+			if len(info_cosmic_to_print) == 0:
+				info_cosmic_to_print = [['NA']*len(columns_cosmic)]
+
+			self.df1 = pd.DataFrame(perfect_alignments_to_print, columns = columns)
+			self.df2 = pd.DataFrame(variants_alignments_to_print, columns = columns)
+			self.df3 = pd.DataFrame(info_cosmic_to_print, columns = columns_cosmic)
 
 			self.write_xls_with_alignments_info()
 			
@@ -88,7 +105,7 @@ class Alignments:
 			with open(name_path, 'wb') as handle:
 				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 			logging.info('Alignments Information save to : %s ', name_path)
-
+			
 		else:
 			logging.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
 			
@@ -111,83 +128,79 @@ class Alignments:
 
 
 	def generer_alignments_information(self, alignments_input):
+
 		row_list = []
+		info_cosmic = {}
 
 		alignments = collections.OrderedDict(sorted(alignments_input.items()))
 		
 		for peptide_info, info_alignment in alignments.items():
 			alignment = peptide_info.split('_')[1]
+			MCS = peptide_info.split('_')[2]
 			peptide = peptide_info.split('_')[0]
-
+			
 			strand = info_alignment[0]
-			MCS = info_alignment[1]
-			peptide_with_snps_local_reference = info_alignment[2]
+			peptide_with_snps_local_reference = info_alignment[1]
+			
+			dif_aas = info_alignment[2]
+			snvs = info_alignment[3]
+			dif_ntds = info_alignment[4]
+			
 			snvs_write = ''
 			dif_aa_write = ''
 			mutations_write = ''
+			dif_ntd_write = ''
+			
+			for snv in snvs:
+				snv_to_print = '['+snv[0]+'->'+snv[1]+'|snp:'+snv[2]+'|GenPos:'+str(snv[3])+'|MCSPos:'+str(snv[4])+']'
+				snvs_write += snv_to_print
+				pos_to_search_cosmic = alignment.split('chr')[1].split(':')[0]+':'+str(snv[3])+'-'+str(snv[3])
+				
+				try:
+					info_cosmic[pos_to_search_cosmic] = [peptide, strand, alignment, snv[2], pos_to_search_cosmic]
+				except :
+					pass
 
-			try:
-				snvs = info_alignment[3][0]
-				dif_aas = info_alignment[3][1]
-				mutations_non_annotated = info_alignment[3][2]
-				for snv in snvs:
-					#T->G|snp:rs12036323|GenPos:239044335|MCSPos:10
-					snv = '['+snv[0]+'->'+snv[1]+'|snp:'+snv[2]+'|GenPos:'+str(snv[3])+'|MCSPos:'+str(snv[4])+']'
-					snvs_write += snv
-				for dif_aa in dif_aas:
-					dif_aa_write += '['+dif_aa+']'
-				for mutation in mutations_non_annotated:
-					mutation_write = '['+mutation+']'
-					mutations_write += mutation_write
-			except IndexError:
+			for dif_aa in dif_aas:
+				dif_aa_write += '['+dif_aa+']'
+
+			for dif_ntd in dif_ntds:
+				dif_ntd_write += '['+dif_ntd+']'
+
+			row_list.append([peptide, strand, alignment, MCS, peptide_with_snps_local_reference, dif_aa_write, dif_ntd_write, snvs_write ])
+	
+		if len(row_list) == 1048575 :
+			return row_list, info_cosmic
+
+		return row_list, info_cosmic
+
+
+	def get_info_cosmic(self, snv_alignments):
+
+		cosmic_dic = self.path_to_lib + 'Cosmic_info.dic'
+
+		with open(cosmic_dic, 'rb') as fp:
+			cosmic_dic = pickle.load(fp)
+
+		info_cosmic = []
+
+		for positions, peptide_info_snv in snv_alignments.items():
+			pos_to_search_cosmic = peptide_info_snv[4]
+			try:			
+				info_cosmic_ntd = cosmic_dic[pos_to_search_cosmic]
+				peptide_info_snv.extend(info_cosmic_ntd)
+				info_cosmic_to_print = peptide_info_snv
+				info_cosmic.append(info_cosmic_to_print)
+			except :
 				pass
-			row_list.append([peptide, strand, alignment, MCS, peptide_with_snps_local_reference, dif_aa_write, snvs_write, mutations_write])
-		
-		return row_list
 
+		return info_cosmic
 
-	def save_output_info(self, alignments_input, name_file):
-		row_list = [["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff_AA", "SNVs", "Mutations_Non_Annotated"]]
-
-		alignments = collections.OrderedDict(sorted(alignments_input.items()))
-		
-		for peptide_info, info_alignment in alignments.items():
-			alignment = peptide_info.split('_')[1]
-			peptide = peptide_info.split('_')[0]
-
-			strand = info_alignment[0]
-			MCS = info_alignment[1]
-			peptide_with_snps_local_reference = info_alignment[2]
-			snvs_write = ''
-			dif_aa_write = ''
-			mutations_write = ''
-
-			try:
-				snvs = info_alignment[3][0]
-				dif_aas = info_alignment[3][1]
-				mutations_non_annotated = info_alignment[3][2]
-				for snv in snvs:
-					#T->G|snp:rs12036323|GenPos:239044335|MCSPos:10
-					snv = '['+snv[0]+'->'+snv[1]+'|snp:'+snv[2]+'|GenPos:'+str(snv[3])+'|MCSPos:'+str(snv[4])+']'
-					snvs_write += snv
-				for dif_aa in dif_aas:
-					dif_aa_write += '['+dif_aa+']'
-				for mutation in mutations_non_annotated:
-					mutation_write = '['+mutation+']'
-					mutations_write += mutation_write
-			except IndexError:
-				pass
-			row_list.append([peptide, strand, alignment, MCS, peptide_with_snps_local_reference, dif_aa_write, snvs_write, mutations_write])
-		
-		with open(self.path_to_output_folder_alignments+self.name_exp+name_file, 'w') as file:
-			writer = csv.writer(file)
-			writer.writerows(row_list)
-		logging.info('Info perfect alignments saved to : %s ', self.path_to_output_folder_alignments+self.name_exp+name_file)
 
 	def write_xls_with_alignments_info(self):
 		writer = pd.ExcelWriter(self.path_to_output_folder_alignments+self.name_exp+'_info_alignments.xlsx', engine='xlsxwriter')
 		self.df1.to_excel(writer, sheet_name='Perfect Alignments')
 		self.df2.to_excel(writer, sheet_name='Variants Alignments')
-		self.df3.to_excel(writer, sheet_name='Out Alignments')
+		self.df3.to_excel(writer, sheet_name='COSMIC Information')
 		writer.save()
 

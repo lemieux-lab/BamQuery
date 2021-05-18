@@ -140,6 +140,7 @@ class Normalization:
 
 				norm_matrix.append(aux)
 
+			exp = type_save[1:].split('.csv')[0]+'/'
 			for tissue, peptides in info_tissue_peptide.items():
 				to_write = 'Peptide\tPeptide_type\tTissue\tTissue_type\tShort_list\tmedian\tmean\n'
 				for peptide, info in peptides.items():
@@ -152,7 +153,7 @@ class Normalization:
 					short_list = tissues_for_samples[tissue][2]
 					to_write += peptide+'\t'+peptide_type+'\t'+tissue+'\t'+tissue_type+'\t'+short_list+'\t'+str(median)+'\t'+str(mean)+'\n'
 
-				with open(self.path_to_output_aux_processed_folder+tissue+"_processed.txt", 'w') as f:
+				with open(self.path_to_output_aux_processed_folder+exp+tissue+"_processed.txt", 'w') as f:
 					f.write(to_write)
 					f.close()
 

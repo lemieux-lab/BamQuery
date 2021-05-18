@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings("ignore")
 import os, logging, time, subprocess, pickle, multiprocessing, os, _thread, csv, collections, pysam
 import genomics.get_alignments as get_alig
 import pandas as pd
@@ -9,6 +11,9 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
 NUM_WORKERS =  multiprocessing.cpu_count()
+
+path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
+genomePath = '/share/tsa_project/gtex_cram/cram_cache/Homo_sapiens.GRCh38.fa'
 
 class GetCounts:
 
@@ -43,7 +48,7 @@ class GetCounts:
 			
 			def get_index(sample):
 				index = list(bam_files_list.keys()).index(sample)
-				return index
+				return index + 1
 
 			total_samples = len(bam_files_list.keys())
 
@@ -72,24 +77,27 @@ class GetCounts:
 
 						except KeyError:
 							counts = [0]*total_samples
-							counts[index] = count
 							to_add = [strand]
 							to_add.extend(counts)
+							to_add[index] = count
 							peptide_info_to_write[alignment] = to_add
 
 					except KeyError:
 						counts = [0]*total_samples
-						counts[index] = count
 						to_add = [strand]
 						to_add.extend(counts)
+						to_add[index] = count
 						to_write[peptide] = {alignment: to_add}
 
-					data.append(count_align[:-1])
+					data.append(count_align[:-2])
 
-					#if count > 0:
-					key = peptide+'_'+alignment
-					perfect_alignments[key][-1] += count 
+					key = peptide+'_'+alignment+'_'+sequence
+					if len(perfect_alignments[key][-1]) == 0:
+						perfect_alignments[key][-1] = [0]*total_samples
+
+					perfect_alignments[key][-1][index-1] = count
 					perfect_alignments_to_return[key] = perfect_alignments[key]
+
 
 			header = ['Peptide', 'Position', 'Strand']
 			header.extend(list(bam_files_list.keys()))
@@ -148,7 +156,8 @@ class GetCounts:
 			data_filtered = []
 			exist_ribo = os.path.exists(self.path_to_output_temps_folder+self.name_exp+'_rna_ribo_count.csv')
 
-		if not exist_rna and not exist_ribo:
+		
+		if not exist_rna and exist_ribo:
 			t_0 = time.time()
 			to_write = {} 
 			
@@ -169,12 +178,13 @@ class GetCounts:
 			
 			def get_index(sample):
 				index = list(bam_files_list.keys()).index(sample)
-				return index
+				return index + 1
 
 			total_samples = len(bam_files_list.keys())
 
 			keys = perfect_alignments.keys()
 			values = perfect_alignments.values()
+			
 			pool = ProcessPool(nodes=NUM_WORKERS)
 
 			bams.extend([info_bams]*len(keys))
@@ -189,50 +199,57 @@ class GetCounts:
 					sample = count_align[2]
 					count = count_align[3]
 					strand = count_align[4]
+					sequence = count_align[5]
 
-					index = get_index(sample)
+					index = get_index(sample) 
 
+					key_aux = alignment+'_'+sequence
 					try:
 						peptide_info_to_write = to_write[peptide]
 
 						try:
-							peptide_info_to_write[alignment][index] = count
+							peptide_info_to_write[key_aux][index] = count
 						except KeyError:
 							counts = [0]*total_samples
-							counts[index] = count
 							to_add = [strand]
 							to_add.extend(counts)
-							peptide_info_to_write[alignment] = to_add
+							to_add[index] = count
+							peptide_info_to_write[key_aux] = to_add
 
 					except KeyError:
 						counts = [0]*total_samples
-						counts[index] = count
 						to_add = [strand]
 						to_add.extend(counts)
-						to_write[peptide] = {alignment: to_add}
+						to_add[index]  = count
+						to_write[peptide] = {key_aux: to_add}
 
-					data.append(count_align[:-1])
+					data.append(count_align[:-2])
 
-					key = peptide+'_'+alignment
-					perfect_alignments[key][-2] += count
+					key = peptide+'_'+alignment+'_'+sequence
+					if len(perfect_alignments[key][-2]) == 0:
+						perfect_alignments[key][-2] = [0]*total_samples
+
+					perfect_alignments[key][-2][index-1] = count
 
 					if self.mode == 'translation':
 						try:
-							count_ribo = perfect_alignments_ribo[key][-1]
+							count_ribo = perfect_alignments_ribo[key][-1][index-1]
 							if count_ribo > 0:
-								data_filtered.append(count_align[:-1])
+								data_filtered.append(count_align[:-2])
 						except KeyError:
 							pass
 
-			# 'Peptide\tPosition\tStrand\tName_Sample\tCount\n'
-			header = ['Peptide', 'Position', 'Strand']
+			header = ['Peptide', 'Position', 'MCS', 'Strand']
 			header.extend(bam_files_list.keys())
 			to_write_list = [header]
+			
 			for peptide, info_peptide in to_write.items():
 				to_add = []
 				for alignment, info_counts in info_peptide.items():
+					position = alignment.split('_')[0]
+					MCS = alignment.split('_')[1]
 					#if sum(info_counts[1:]) > 0:
-					to_add =  [peptide, alignment]
+					to_add =  [peptide, position, MCS]
 					to_add.extend(info_counts)
 					to_write_list.append(to_add)
 
@@ -266,7 +283,9 @@ class GetCounts:
 			with open(self.path_to_output_folder_alignments+'/Alignments_information.dic', 'rb') as fp:
 				perfect_alignments = pickle.load(fp)
 
-			df_counts_filtered = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_rna_ribo_count.csv', index_col=0)
+			if self.mode == 'translation':
+				df_counts_filtered = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_rna_ribo_count.csv', index_col=0)
+
 			df_alignments = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_rna_count'+'_All_alignments.csv', index_col=0)
 
 		return df_counts, perfect_alignments, df_counts_filtered, df_alignments
@@ -284,16 +303,18 @@ class GetCounts:
 
 			peptide = peptide_alignment.split('_')[0]
 			alignment = peptide_alignment.split('_')[1]
-			
-			strand = info_alignment[0]
-			sequence = info_alignment[1]
-			
-			chr = alignment.split(':')[0]
-			region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
-			
-			count = self.get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequence)
-			
-			to_return.append([peptide, alignment, name_sample, count, strand])
+			sequence = peptide_alignment.split('_')[2]
+
+			for mcs in info_alignment[0]:
+				strand = mcs[0]
+				
+				chr = alignment.split(':')[0]
+				
+				rcmcs = uf.reverseComplement(sequence)
+
+				region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
+				count = self.get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequence)
+				to_return.append([peptide, alignment, name_sample, count, strand, sequence])
 		 
 		return to_return
 
@@ -315,16 +336,14 @@ class GetCounts:
 		library = library.lower()
 		sens = sens.lower()
 		
-		if strand == '-':
-			seq = uf.reverseComplement(seq)
-
 		reads_name = set()
 		rcmcs = uf.reverseComplement(seq)
 
+		#if '.bam' in bam_file:
 		if library == 'unstranded':
 
 			count_1 = pysam.view("-F0X100", bam_file, region_to_query)
-			contReads = count_1.count(seq)
+			contReads += count_1.count(seq)
 			contReads += count_1.count(rcmcs)
 
 		elif library == 'single-end':
@@ -334,7 +353,7 @@ class GetCounts:
 			elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
 				count_1 = pysam.view("-F0X100", "-f0X10", bam_file, region_to_query)
 
-			contReads = count_1.count(seq)
+			contReads += count_1.count(seq)
 
 		elif library == 'pair-end':
 			if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
@@ -357,8 +376,8 @@ class GetCounts:
 					name = read.split('\t')[0]
 					reads_name.add(name)
 
-			contReads = count_1.count(seq)
-		
+			contReads = len(reads_name)
+			# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
 		return contReads
 
 	

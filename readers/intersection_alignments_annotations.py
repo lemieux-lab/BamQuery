@@ -26,26 +26,30 @@ class IntersectAnnotations:
 			t_0 = time.time()
 
 			to_write = ''
-			cont = 0
+			places_written = set()
+
 			for key, info_alignment in self.perfect_alignments.items():
 				split_key = key.split('_')
 				peptide = split_key[0]
 				chr = split_key[1].split(':')[0]
 				places = split_key[1].split(':')[1]
+				MCS = split_key[2]
+
 				strand = info_alignment[0]
-				#TTRPALQEL_chrX:155355661-155355687 ['+', 'ACCACCAGACCTGCCCTACAAGAGCTC', 'TTRPALQEL', []]
+				key_unique = peptide+'_'+split_key[1]
 
-				if '|' in places:
-					split_places = places.split('|')
-					for index, place in enumerate(split_places): # chr1:28214940-28214963
-						id = key+'_'+str(cont)+'_'+str(index)
-						to_write += self.get_string_for_alignment(place, chr, key, strand)
-				else:
-					id = key+'_'+str(cont)+'_0'
-					to_write += self.get_string_for_alignment(places, chr, key, strand)
+				if key_unique not in places_written:
 
-				cont += 1
+					if '|' in places:
+						split_places = places.split('|')
+						for index, place in enumerate(split_places): # chr1:28214940-28214963
+							to_write += self.get_string_for_alignment(place, chr, key_unique, strand)
+					else:
+						to_write += self.get_string_for_alignment(places, chr, key_unique, strand)
 
+					places_written.add(key_unique)
+
+			
 			self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
 			file_to_save = open(self.bed_file, 'w')
 			file_to_save.write(to_write)

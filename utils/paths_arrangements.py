@@ -22,7 +22,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 		pass
 
 	nameLog = path_to_logs_folder+'BamQuery_Res_'+name_exp+'.log'
-	logging.basicConfig(filename=nameLog, filemode='w', level=logging.INFO, format='%(asctime)s %(message)s')
+	logging.basicConfig(filename=nameLog, filemode='a', level=logging.INFO, format='%(asctime)s %(message)s')
 	logging.info('=============== BamQuery id : %s, mode : %s, strandedness : %s ===================', name_exp, mode, strandedness)
 
 	path_to_plots_folder = path_to_output_folder+'plots/'
@@ -53,6 +53,12 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 	path_to_plots_heat_maps_ERE_annotation_folder = path_to_output_folder+'plots/biotypes/ERE_annotation/'
 	try:
 		os.mkdir(path_to_plots_heat_maps_ERE_annotation_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_genome_ERE_annotation_folder = path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_genome_ERE_annotation_folder)
 	except OSError:
 		pass
 
@@ -110,6 +116,18 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 	except OSError:
 		pass
 
+	path_to_plots_heat_maps_genome_ERE_annotation_all_folder = path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/all_peptides/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_genome_ERE_annotation_all_folder)
+	except OSError:
+		pass
+
+	path_to_plots_heat_maps_genome_ERE_annotation_by_peptide_type_folder = path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/by_peptide_type/'
+	try:
+		os.mkdir(path_to_plots_heat_maps_genome_ERE_annotation_by_peptide_type_folder)
+	except OSError:
+		pass
+
 	path_to_plots_heat_maps_ERE_global_biotype_folder = path_to_output_folder+'plots/biotypes/ERE_annotation/global_biotypes/'
 	try:
 		os.mkdir(path_to_plots_heat_maps_ERE_global_biotype_folder)
@@ -122,13 +140,11 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 	except OSError:
 		pass
 
-
 	path_to_plots_correlation_folder = path_to_output_folder+'plots/correlation/'
 	try:
 		os.mkdir(path_to_plots_correlation_folder)
 	except OSError:
 		pass
-
 
 	path_to_genome_alignment_folder = path_to_output_folder+'genome_alignments/'
 	try:
@@ -166,11 +182,30 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness):
 	except OSError:
 		pass
 
-	path_to_res_aux_processed_files_folder = path_to_output_folder+'res/AUX_files/processed'
+	path_to_res_aux_processed_files_folder = path_to_output_folder+'res/AUX_files/processed/'
 	try:
 		os.mkdir(path_to_res_aux_processed_files_folder)
 	except OSError:
 		pass
+
+	path_to_res_aux_processed_rna_files_folder = path_to_output_folder+'res/AUX_files/processed/rna_norm/'
+	try:
+		os.mkdir(path_to_res_aux_processed_rna_files_folder)
+	except OSError:
+		pass
+
+	if mode == 'translation':
+		path_to_res_aux_processed_ribo_files_folder = path_to_output_folder+'res/AUX_files/processed/ribo_norm/'
+		try:
+			os.mkdir(path_to_res_aux_processed_ribo_files_folder)
+		except OSError:
+			pass
+
+		path_to_res_aux_processed_rna_ribo_files_folder = path_to_output_folder+'res/AUX_files/processed/rna_ribo_norm/'
+		try:
+			os.mkdir(path_to_res_aux_processed_rna_ribo_files_folder)
+		except OSError:
+			pass
 
 
 	logging.info('Path to input folder : %s ', path_to_input_folder)

@@ -43,20 +43,32 @@ class BamQuery:
 	def run_bam_query_normal_mode(self):
 		self.common_to_modes()
 		
-		# get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode)
-		# df_counts, self.perfect_alignments, df_counts_filtered = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
-		# plots.get_heat_map(df_counts, self.path_to_output_folder, self.name_exp, '_rna_counts')
+		writer = pd.ExcelWriter(self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx', engine='xlsxwriter')
 
-		# normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.mode)
-		# def_norm = normalization.get_normalization(df_counts, '_rna_norm.csv')
-		# plots.get_heat_map(def_norm, self.path_to_output_folder, self.name_exp, '_rna_norm')
+		get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode)
+		df_counts_rna, self.perfect_alignments, df_counts_filtered, df_all_alignments_rna = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
+		df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
+		df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
 
+		plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False)
 
+		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode)
+		def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
+		def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
+		plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, self.th_out)
+
+		writer.save()
+	
 	def run_bam_query_translation_mode(self):
 		self.common_to_modes()
+		writer = pd.ExcelWriter(self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx', engine='xlsxwriter')
+		
 
 		get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode)
 		perfect_alignments_to_return, df_counts_ribo, df_all_alignments_ribo = get_counts.ribo_counts(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list)
+		df_all_alignments_ribo.to_excel(writer, sheet_name='Alignments Read count Ribo-seq')
+		df_counts_ribo.to_excel(writer, sheet_name='Read count Ribo-seq by peptide')
+
 		plots.get_heat_map(df_counts_ribo, self.path_to_output_folder, self.name_exp, '_ribo_counts', False)
 		
 		logging.info('========== Get Count Ribo : Done! ============ ')
@@ -64,13 +76,18 @@ class BamQuery:
 
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.input_file_treatment.all_mode_peptide, self.mode)
 		def_norm_ribo = normalization.get_normalization(df_counts_ribo, '_ribo_norm.csv')
+		
+		def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide')
+		
 		plots.get_heat_map(def_norm_ribo, self.path_to_output_folder, self.name_exp, '_ribo_norm', True, self.th_out)
 
 		logging.info('========== Get Norm Ribo : Done! ============ ')
 		print ('Get Norm Ribo : Done!')
 
-
 		df_counts_rna, self.perfect_alignments, df_counts_filtered, df_all_alignments_rna = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
+		df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
+		df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
+
 		plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False)
 		
 		plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts', False)
@@ -80,26 +97,20 @@ class BamQuery:
 
 		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode)
 		def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
+		def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
 		plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, self.th_out)
 
 		logging.info('========== Get Norm RNA : Done! ============ ')
 		print ('Get Norm RNA : Done!')
 
 		def_norm_rna_ribo = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
+		def_norm_rna_ribo.to_excel(writer, sheet_name='log10(RPHM) RNA and Ribo counts')
+		
 		plots.get_heat_map(def_norm_rna_ribo, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm', True, self.th_out)
 
 		logging.info('========== Get Norm Ribo-RNA : Done! ============ ')
 		print ('Get Norm Ribo-RNA : Done!')
 
-		writer = pd.ExcelWriter(self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx', engine='xlsxwriter')
-		df_all_alignments_ribo.to_excel(writer, sheet_name='Alignments Read count Ribo-seq')
-		df_counts_ribo.to_excel(writer, sheet_name='Read count Ribo-seq by peptide')
-		def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide')
-		df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
-		df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
-		def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
-		def_norm_rna_ribo.to_excel(writer, sheet_name='log10(RPHM) RNA and Ribo counts')
-		
 		writer.save()
 
 
@@ -108,7 +119,7 @@ class BamQuery:
 		self.bam_files_info.get_all_counts(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness)
 
 		logging.info('========== Get Primary Counts : Done! ============ ')
-		print ('Get Primary Counts : Done : Done!')
+		print ('Get Primary Counts : Done!')
 
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder)
 		self.input_file_treatment.treatment_file()
@@ -130,22 +141,23 @@ class BamQuery:
 		logging.info('========== Alignment : Done! ============ ')
 		print ('Alignment : Done!')
 
+		# positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 		if len(self.input_file_treatment.manual_mode) > 0 :
 			for peptide, info_peptide in self.input_file_treatment.manual_mode.items() :
 				coding_sequence = info_peptide[0]
 				position = info_peptide[1]
 				strand = info_peptide[2]
-				key = peptide+'_'+position
+				key = peptide+'_'+position+'_'+coding_sequence
 				peptides_with_alignments.add(peptide)
-				self.perfect_alignments[key] = [strand, coding_sequence, peptide, ['Peptide Manual Mode'],0,0]
+				self.perfect_alignments[key] = [strand, peptide, ['NA'], ['NA'], ['NA'], [], []]
 
 		missed_peptides = list(set_peptides - peptides_with_alignments)
 
 		with open(self.path_to_output_folder+'alignments/missed_peptides.info', 'w') as f:
 			for item in missed_peptides:
 				f.write("%s\t\n" % item)
-		logging.info('Total missed_peptides : %s. Find the list in : %s.', str(len(missed_peptides)), self.path_to_output_folder+'alignments/missed_peptides.info')
 
+		logging.info('Total missed_peptides : %s. Find the list in : %s.', str(len(missed_peptides)), self.path_to_output_folder+'alignments/missed_peptides.info')
 
 		logging.info('========== Common_to_modes : Done! ============ ')
 		print ('common_to_modes : Done!')
@@ -162,13 +174,10 @@ class BamQuery:
 		intsersect_to_annotations.perform_intersection_with_annotation()
 
 		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode)
-		get_biotype.get_information_from_BED_intersection()
-		get_biotype.get_information_from_BED_intersection_ERE()
 		
-		get_biotype.get_biotype_from_EREs(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
-
-		get_biotype.get_biotype_from_intersected_transcripts()
-		get_biotype.prepare_info_to_draw_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
+		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type, self.bam_files_info.bam_files_list, self.bam_files_info.bam_ribo_files_list)
+		get_biotype.get_global_annotation()
+		
 		
 
 	def get_info_peptide_alignments(self):
@@ -178,14 +187,20 @@ class BamQuery:
 		for peptide_alignment in self.perfect_alignments:
 			peptide = peptide_alignment.split('_')[0]
 			alignment = peptide_alignment.split('_')[1]
+			MCS = peptide_alignment.split('_')[2]
 			count_rna = self.perfect_alignments[peptide_alignment][-2]
 			count_ribo = self.perfect_alignments[peptide_alignment][-1]
 			strand = self.perfect_alignments[peptide_alignment][0]
 
 			try:
-				info_peptide_alignments[peptide].append((alignment, count_rna, count_ribo, strand))
+				info_peptide = info_peptide_alignments[peptide]
+				info_peptide[0][peptide_alignment] = [strand, count_rna, count_ribo]
+				info_peptide[1] += sum(count_rna) 
+				info_peptide[2] += sum(count_ribo)
 			except KeyError:
-				info_peptide_alignments[peptide] = [(alignment, count_rna, count_ribo, strand)]
+				dic = {}
+				dic[peptide_alignment] = [strand, count_rna, count_ribo]
+				info_peptide_alignments[peptide] = [dic, sum(count_rna), sum(count_ribo)]
 
 		return info_peptide_alignments
 
@@ -208,8 +223,8 @@ def main(argv):
 	args = parser.parse_args()
 	
 	path_to_input_folder = args.path_to_input_folder
-	name_exp = args.name_exp
-	mode = args.mode
+	name_exp = args.name_exp.lower()
+	mode = args.mode.lower()
 	strandedness = args.strandedness
 	th_out = args.th_out
 
