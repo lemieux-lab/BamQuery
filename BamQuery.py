@@ -168,39 +168,50 @@ class BamQuery:
 		print ('Treatment File : Done!')
 		set_peptides = set(list(self.input_file_treatment.all_mode_peptide.keys()))
 
-		if len(self.input_file_treatment.peptide_mode) > 0 or len(self.input_file_treatment.CS_mode) > 0 :
-
-			if len(self.input_file_treatment.CS_mode) > 0 :			
-				with open(self.path_to_output_folder+'genome_alignments/CS_mode.dic', 'wb') as handle:
-					pickle.dump(self.input_file_treatment.CS_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-			if len(self.input_file_treatment.peptide_mode) > 0 :			
-				with open(self.path_to_output_folder+'genome_alignments/peptides_mode.dic', 'wb') as handle:
-					pickle.dump(self.input_file_treatment.peptide_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-			self.reverse_translation = ReverseTranslation()
-			self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
-			
-			logging.info('========== Reverse Translation : Done! ============ ')
-			print ('Reverse Translation : Done!')
-		
-			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light)
-			self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(set_peptides)
-
-			logging.info('========== Alignment : Done! ============ ')
-			print ('Alignment : Done!')
-
+		if not self.light:
+			name_path = self.path_to_output_folder+'alignments/Alignments_information.dic'
 		else:
-			self.perfect_alignments = {}
-			peptides_with_alignments = set()
+			name_path = self.path_to_output_folder+'alignments/Alignments_information_light.dic'
+		
+		exists = os.path.exists(name_path) 
 
-			if not self.light:
-				name_path = self.path_to_output_folder+'alignments/Alignments_information.dic'
+		if not exists:
+			if len(self.input_file_treatment.peptide_mode) > 0 or len(self.input_file_treatment.CS_mode) > 0 :
+
+				if len(self.input_file_treatment.CS_mode) > 0 :			
+					with open(self.path_to_output_folder+'genome_alignments/CS_mode.dic', 'wb') as handle:
+						pickle.dump(self.input_file_treatment.CS_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+				if len(self.input_file_treatment.peptide_mode) > 0 :			
+					with open(self.path_to_output_folder+'genome_alignments/peptides_mode.dic', 'wb') as handle:
+						pickle.dump(self.input_file_treatment.peptide_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+				self.reverse_translation = ReverseTranslation()
+				self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
+				
+				logging.info('========== Reverse Translation : Done! ============ ')
+				print ('Reverse Translation : Done!')
+			
+				self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light)
+				self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(set_peptides)
+
+				logging.info('========== Alignment : Done! ============ ')
+				print ('Alignment : Done!')
+
 			else:
-				name_path = self.path_to_output_folder+'alignments/Alignments_information_light.dic'
+				self.perfect_alignments = {}
+				peptides_with_alignments = set()
 
-			with open(name_path, 'wb') as handle:
-				pickle.dump(self.perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+				if not self.light:
+					name_path = self.path_to_output_folder+'alignments/Alignments_information.dic'
+				else:
+					name_path = self.path_to_output_folder+'alignments/Alignments_information_light.dic'
+
+				with open(name_path, 'wb') as handle:
+					pickle.dump(self.perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		else:
+			with open(name_path, 'rb') as handle:
+				self.perfect_alignments = pickle.load(handle)
 
 
 		# positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]

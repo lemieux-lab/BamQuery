@@ -44,7 +44,6 @@ class BiotypeAssignation:
 
 			for peptide in peptides:
 
-				
 				try:
 					info_alignments_peptide = info_peptide_alignments[peptide]
 
@@ -169,6 +168,7 @@ class BiotypeAssignation:
 		self.df1 = pd.DataFrame(data_ere, columns = columns_ere)
 		self.df2 = pd.DataFrame(data_gen, columns = columns_gen)
 		self.df3 = pd.DataFrame(data_gen_ere, columns = columns_gen_ere)
+
 		data_gen_ere = []
 		data_gen = []
 		data_ere = []
@@ -222,7 +222,6 @@ class BiotypeAssignation:
 		
 		group = [df_global_gen_gene, df_global_gen_transcript, df_global_gen_pos]
 		data_global_annotation_gen = self.get_consensus(df_global_gen_construction, group, len(groupby_columns))
-
 		groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Strand', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype']
 		self.df_global_gen = pd.DataFrame(data_global_annotation_gen, columns = groupby_columns+bam_files_columns)
 		data_global_annotation_gen = []
@@ -446,12 +445,13 @@ class BiotypeAssignation:
 				types = type_.split(',')
 				type_gen.extend(types)
 
-			type_ere = list(set(type_ere))
-			type_gen = list(set(type_gen))
+			type_ere = list(type_ere)
+			type_gen = list(type_gen)
 
 			total_items = len(type_gen) + len(type_ere)
 			sum_percentage = 1 / (total_items*1.0)
 			
+
 			for genomic_position_biotype in type_gen:
 				if genomic_position_biotype != '' :
 					insert_dic(genomic_position_biotype, sum_percentage)
