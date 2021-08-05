@@ -8,12 +8,14 @@ import random
 import scipy.stats
 from matplotlib import cm
 
+__author__ = "Maria Virginia Ruiz Cuevas"
+__email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 violetes = sns.cubehelix_palette(7)
 blues_palette = sns.color_palette("Blues")
 navy_colors = sns.light_palette("navy", reverse=False)[1:]
 green_palette = sns.light_palette("green")[1:]
-flare_palette = sns.color_palette("flare",n_colors = 6)
+flare_palette = sns.color_palette("flare", n_colors = 6)
 
 assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'Protein-coding Regions': blues_palette[0],
@@ -29,12 +31,12 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'Non-coding genes': violetes[0],
 						'Non-coding Regions': violetes[0],
 						'Non-coding transcripts': violetes[0],
-						'processed_transcript': violetes[1],
-						'nonsense_mediated_decay': violetes[2],
-						'antisense': violetes[3],
-						'Non-coding Exons': violetes[4],
-						'lincRNA': violetes[5],
-						'Other non-coding regions':violetes[6],
+						'Non_coding Exons': violetes[1],
+						'Non_coding Junctions': violetes[2],
+						'Other non-coding regions':violetes[3],
+						'processed_transcript': violetes[4],
+						'nonsense_mediated_decay': violetes[5],
+						'antisense': violetes[6],
 
 						'Intergenic Regions': green_palette[0],
 						'Intergenic': green_palette[1],
@@ -45,47 +47,65 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'EREs' : flare_palette[0],
 						'LINE': flare_palette[1],
 						'LTR': flare_palette[2], 
-						'Retroposon': flare_palette[3],
-						'SINE': flare_palette[4],
+						'SINE': flare_palette[3],
+						'Retroposon': flare_palette[4],
 						'Other EREs': flare_palette[5]
 						}
 
+def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_out = 8.55):
 
-
-def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55):
 	peptides_total = len(df.index)
 	bam_files = len(df.columns)
 
-	width = 10
-	heigth = 10
-	fontsize = 12
-	annot = True
+	if peptides_total < 400 and bam_files < 200:
+		
+		width = 10
+		heigth = 10
+		fontsize = 12
+		annot = True
 
-	if peptides_total > 60 :
-		heigth = 20
-		fontsize = 8
-		annot = False
+		if peptides_total > 60 :
+			heigth = 20
+			fontsize = 8
+			annot = False
 
-	if bam_files > 30 :
-		width = 20
-		fontsize = 8
-		annot = False
+		if peptides_total > 120 :
+			fontsize = 5
+			
+		if bam_files > 30 :
+			width = 20
+			fontsize = 8
+			annot = False
 
-	fig = plt.figure(figsize=(width, heigth), dpi=300)
-	ax = fig.add_subplot(111)
-	ax.grid(False)
-	
-	if norm:
-		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='.1f')
-	else:
-		ax = sns.heatmap(df, cmap="Blues",linewidths=1, linecolor='white',xticklabels = 1, yticklabels = 1, annot=annot, fmt='g') #cmap="YlGnBu"
-	
-	plt.yticks(rotation=0)
-	plt.tight_layout()
-	plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape')
-	plt.show()
+		if bam_files > 100 :
+			width = 50
+			sns.set(font_scale=0.5)
 
-	if norm:
+		fig, ax = plt.subplots(figsize=(width, heigth))
+		ax.grid(False)
+		
+		if norm:
+			ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='.1f', annot_kws={"size": fontsize})
+		else:
+			ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='g', annot_kws={"size": fontsize}) #cmap="YlGnBu"
+		
+		lines = []
+		last = 0
+		for i, line in enumerate(ax_lines):
+			if i == 0:
+				lines.append(line)
+				last = line
+			else:
+				last = last + line
+				lines.append(last)
+		ax.hlines(lines, *ax.get_xlim(), color='red')
+
+		plt.yticks(rotation=0)
+		plt.tight_layout()
+		plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape', dpi=300)
+		plt.show()
+
+	if norm and peptides_total < 400:
 		exp = name[1:]+'/'
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/average_tissues_mode.R'
 		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'res/AUX_files/processed/'+exp+' '+path_to_output_folder+'plots/heat_maps/ '+str(th_out)+' '+name_exp+name
@@ -110,13 +130,13 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 	# Plot
 	plt.title(title, fontsize = fontsize+2)
 
-	wedges1, texts1 = plt.pie(outer_sizes, colors=colors_outer_labels, 
+	wedges1, texts1, autotexts1 = plt.pie(outer_sizes, colors=colors_outer_labels, 
 							startangle=180, pctdistance=0.9, shadow=False, 
 							textprops={'fontsize': fontsize, 'fontweight' : 'normal'},
-							wedgeprops={"edgecolor":"w",'linewidth': 5, 'antialiased': True})
+							autopct='%1.0f%%', wedgeprops={"edgecolor":"w",'linewidth': 5, 'antialiased': True})
 
 	wedges, texts, autotexts = plt.pie(intra_sizes, colors=colors_intra_labels, 
-							radius=0.8,startangle=180, 
+							radius=0.8, startangle=180, 
 							textprops={'fontsize': fontsize, 'fontweight' : 'normal'}, 
 							shadow=True, autopct='%1.0f%%', pctdistance=0.8,
 							wedgeprops={"edgecolor":"w",'linewidth': 1, 'antialiased': True})

@@ -63,6 +63,7 @@ class IntersectAnnotations:
 			logging.info('to_intersect_to_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'to_intersect_to_annotations.bed')
 			self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
 
+	
 	def perform_intersection_with_annotation(self):
 
 		exists = os.path.exists(self.path_to_output_folder+ 'intersection_with_annotated_transcripts.bed')
@@ -88,5 +89,6 @@ class IntersectAnnotations:
 		start = place.split('-')[0]
 		end = place.split('-')[1]
 		string = chr+'\t'+start+'\t'+end+'\t'+key+'\t'+strand+'\n'
+		
 		return string
 

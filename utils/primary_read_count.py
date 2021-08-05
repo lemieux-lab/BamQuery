@@ -2,6 +2,7 @@ import os, logging, threading, time, subprocess, concurrent.futures, getpass, pi
 from os import listdir
 from os.path import isfile, join
 
+
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
@@ -13,21 +14,20 @@ class GetPrimaryReadCountBamFiles:
 	def __init__(self):
 		pass
 
-	def get_all_counts(self, path_to_input_folder, path_to_output_folder, mode, strandedness):
+	def get_all_counts(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light):
 
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		path_to_all_counts_file = path_to_lib+"allcounts.dic"
 		exist = os.path.exists(path_to_all_counts_file)
 		
-		if exist :
-			with open(path_to_all_counts_file, 'rb') as fp:
-				dictionary_total_reads_bam_files = pickle.load(fp)
-		else:
-			dictionary_total_reads_bam_files = {}
-
 		self.bam_files_list = {}
 		self.bam_ribo_files_list = {}
 
+		if light:
+			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
+		else:
+			self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
+			
 		try:
 			bam_files = path_to_input_folder+'BAM_directories.tsv'
 			self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
@@ -44,56 +44,92 @@ class GetPrimaryReadCountBamFiles:
 				logging.info('If running translation mode you must include a list of Ribo Bam Files. Bam File %s doesn\'t exist ', path_to_input_folder+'BAM_Ribo_directories.tsv')
 
 
+
 	def get_info_bamfiles(self, bam_files, strandedness, path_to_output_folder):
 
 		bam_files_list = {}
 
-		with open(bam_files) as f:
+		bams_paths_to_search = []
+		exists = os.path.exists(self.path_to_output_temps_folder+"bam_files_info.dic")
 
-			for index, line in enumerate(f):
-				line = line.strip().split('\t')
-				name = line[0]
-				path = line[1]
+		if not exists:
+			with open(bam_files) as f:
 
-				if '.bam' not in path or '.cram' not in path:
+				for index, line in enumerate(f):
+					line = line.strip().split('\t')
+					name = line[0]
+					try:
+						path = line[1]
+					except IndexError:
+						raise Exception("Sorry, your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
 
-					bam_file_paths = self.search_bam_files(path)
-					
-					for bam_file in bam_file_paths:
-						
+					if '.bam' not in path or '.cram' not in path:
+
+						bam_files_found = self.search_bam_files(path)
+
+						for bam_file in bam_files_found:
+
+							if strandedness:
+								library, sequencing = self.get_type_library(bam_file)
+							else:
+								library = 'unstranded' 
+								sequencing = 'unstranded' 
+
+							name_bam_file = "_".join(bam_file.split('/')[:-1][-2:])
+
+							if library == '' and sequencing == '':
+								logging.info('Sample bam file for %s %s is not properly indexed, skipping...', name, name_bam_file) 
+							else:
+								bam_files_list[name_bam_file] = [bam_file, sequencing, library, name]
+					else:
+
 						if strandedness:
 							library, sequencing = self.get_type_library(bam_file)
 						else:
 							library = 'unstranded' 
 							sequencing = 'unstranded' 
-						name_bam_file = "_".join(bam_file.split('/')[:-1][-2:])
-						bam_files_list[name_bam_file] = [bam_file, sequencing, library, name]
-				else:
+						
+						name_bam_file = "_".join(path.split('/')[:-1][-2:])
 
-					if strandedness:
-						library, sequencing = self.get_type_library(bam_file)
-					else:
-						library = 'unstranded' 
-						sequencing = 'unstranded' 
-					
-					name_bam_file = "_".join(path.split('/')[:-1][-2:])
-					bam_files_list[name_bam_file] = [path, sequencing, library, name]
-		
+						if library == '' and sequencing == '':
+							logging.info('Sample bam file for %s %s is not properly indexed, skipping...', name, name_bam_file)
+						else:
+							bam_files_list[name_bam_file] = [path, sequencing, library, name]
+
+			with open(self.path_to_output_temps_folder+"bam_files_info.dic", 'wb') as handle:
+				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+		else:
+			with open(self.path_to_output_temps_folder+"bam_files_info.dic", 'rb') as fp:
+				bam_files_list = pickle.load(fp)
+
 		get_read_counts_path = os.path.abspath(__file__)
 		command = 'python '+get_read_counts_path+' -i '+bam_files+' -o '+ path_to_output_folder
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 		logging.info('Total Bam Files to Query : %d', len(bam_files_list))
 		return bam_files_list
+	
+	def search_bam_files(self, path):
+
+		bam_files_found = []
+
+		for p, d, f in os.walk(path):
+
+			for file in f:
+				if (file.endswith('.cram') and (file+'.crai' in f or file[:-5]+'.bai' in f)) or (file.endswith('.bam') and (file+'.bai' in f or file[:-4]+'.bai' in f)):
+					bam_file = join(p, file)
+					bam_files_found.append(bam_file)
+
+		return bam_files_found
+
 
 	def get_all_counts_bam_file(self, bam_file_info):
 		
 		path = bam_file_info
 		name_bam_file = "_".join(path.split('/')[:-1][-2:])
-		contReads = -1
-		count = pysam.view("-F0X100",'-c', name_bam_file) 
+		contReads = pysam.view("-F0X100",'-c', path) 
 		bam_file_info_to_return = [name_bam_file, path, contReads]
 		logging.info('BAM file : %s Path: %s Cont Reads: %s ', name_bam_file, path, str(contReads))
-
 		return bam_file_info_to_return
 
 
@@ -126,8 +162,8 @@ class GetPrimaryReadCountBamFiles:
 						some_change = True
 						info_bam_file[0] = path
 					else:
-						logging.info('BAM file is already in the dictionary, however the path for the BAM file is not the same. \
-							Path found: %s  path in BAM_directories.tsv or BAM_Ribo_directories.tsv is %s ', path_saved, path)
+						logging.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. \
+							Path found: %s  Path in BAM_directories.tsv or BAM_Ribo_directories.tsv is %s ', path_saved, path)
 				else:
 					logging.info('%s is already in the dictionary, total reads : %s ', path, str(count_reads_saved))
 			except KeyError:
@@ -141,7 +177,7 @@ class GetPrimaryReadCountBamFiles:
 				pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 		if len(list_bams_to_assess) > 0:
-			with concurrent.futures.ThreadPoolExecutor() as executor:	
+			with concurrent.futures.ThreadPoolExecutor() as executor:   
 				futures = [executor.submit(self.get_all_counts_bam_file, param) for param in list_bams_to_assess]
 			
 			for f in futures:
@@ -154,52 +190,9 @@ class GetPrimaryReadCountBamFiles:
 		else:
 			logging.info('All bam files into allcounts dictionary !')
 
-
-	def search_bam_files(self, path):
-		try:
-			bam_file_paths = []
-			components = [f for f in listdir(path)]
-
-			for component in components:
-
-				if component[0] != '.' and component[0] != '_':
-					path_component = join(path, component)
-
-					if isfile(path_component) :
-						if path_component[-4:] == '.bam' or path_component[-5:] == '.cram':
-							bam_file_paths.append(path_component)
-					else:
-						bam_file_paths = self.search_bam_file(bam_file_paths, path_component)
-
-			return bam_file_paths
-		except PermissionError:
-			logging.info('You don\'t have permission to read the files contained in %s !', path)
-
-
-	def search_bam_file(self, bam_file_paths, path): 
-
-		try:
-			components = [f for f in listdir(path)]
-			
-			for component in components:
-				
-				if component[0] != '.' and component[0] != '_':
-					path_component = join(path, component)
-
-					if isfile(path_component) :
-						if path_component[-4:] == '.bam' or path_component[-5:] == '.cram':
-							bam_file_paths.append(path_component)
-					else:
-						self.search_bam_file(bam_file_paths, path_component)
-			
-			return bam_file_paths
-		except PermissionError:
-			logging.info('You don\'t have permission to read the files contained in %s !', path)
-
-
 	def get_type_library(self, path):
-
-		if '.bam' in path:
+		
+		try:
 			count_1 = int(pysam.view("-f1",'-c', path, 'chr12:6,537,097-6,537,227'))
 
 			if count_1 == 0 :
@@ -210,39 +203,31 @@ class GetPrimaryReadCountBamFiles:
 				sequencing = 'pair-end'
 				count_1 = int(pysam.view("-f0X50",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f80 to hexa
 				count_2 = int(pysam.view("-f0X60",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f96 to hexa
-		else:
-			fa = "-T "+genomePath
-			count_1 = len(pysam.view("-f1"+'-c', path, 'chr12:6,537,097-6,537,227').split('\n'))
+
+			ratio = 0
+			try:
+				ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
+			except :
+				pass
 			
-			if count_1 == 0 :
-				sequencing = 'single-end'
-				count_1 = len(pysam.view("-f0X10","-c", path, 'chr12:6,537,097-6,537,227').split('\n'))
-				count_2 = len(pysam.view("-F0X10","-c", path, 'chr12:6,537,097-6,537,227').split('\n'))
+			type_library = ''
+			
+			if ratio > 2 :
+				type_library = 'unstranded'
 			else:
-				sequencing = 'pair-end'
-				count_1 = len(pysam.view("-f0X50","-c", path, 'chr12:6,537,097-6,537,227').split('\n')) # Conversion -f80 to hexa
-				count_2 = len(pysam.view("-f0X60","-c", path, 'chr12:6,537,097-6,537,227').split('\n')) # Conversion -f96 to hexa
+				if count_1 > count_2:
+					type_library = 'reverse'
+				elif count_2 > count_1:
+					type_library = 'forward'
+				elif count_1 == count_2 and count_1 == 0:
+					logging.info('Guessing library for this Bam file %s fail. Adding unstranded library ! ' , path)
+					type_library = 'unstranded'
 
-		ratio = 0
-		try:
-			ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
-		except :
-			pass
-		
-		type_library = ''
-		
-		if ratio > 2 :
-			type_library = 'unstranded'
-		else:
-			if count_1 > count_2:
-				type_library = 'reverse'
-			elif count_2 > count_1:
-				type_library = 'forward'
-			elif count_1 == count_2 and count_1 == 0:
-				logging.info('Guessing library for this Bam file %s fail. Adding forward library ! ' , path)
-				type_library = 'forward'
+			return type_library, sequencing
 
-		return type_library, sequencing
+		except pysam.utils.SamtoolsError: 
+
+			return '',''
 
 
 def main(argv):
@@ -277,6 +262,7 @@ def main(argv):
 	bam_files_dic = {}
 	bam_files = path_to_input_folder
 	Get_Read_Count_obj = GetPrimaryReadCountBamFiles()
+	bams_paths_to_search = []
 
 	with open(bam_files) as f:
 

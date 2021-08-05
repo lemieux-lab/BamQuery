@@ -91,7 +91,6 @@ class GetInformationBEDIntersection:
 				strand_peptide = splitLine[4]
 				strand_transcript = splitLine[10]
 				
-
 				if strand_peptide == strand_transcript :
 					key_position =  chr+':'+start+'-'+end+'_'+strand_peptide
 					repName = splitLine[8]

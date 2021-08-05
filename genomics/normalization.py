@@ -9,12 +9,22 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class Normalization:
 
-	def __init__(self, path_to_output_folder, name_exp, bam_files_list, peptides_types, mode):
+	def __init__(self, path_to_output_folder, name_exp, bam_files_list, peptides_types, mode, light):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
-		self.path_to_output_folder = path_to_output_folder+'res/'
-		self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
-		self.path_to_output_aux_folder = path_to_output_folder+'res/AUX_files/'
-		self.path_to_output_aux_processed_folder = path_to_output_folder+'res/AUX_files/processed/'
+		self.light = light
+		
+		if self.light:
+			self.path_to_output_folder = path_to_output_folder+'res_light/'
+			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
+			self.path_to_output_aux_folder = path_to_output_folder+'res_light/AUX_files/'
+			self.path_to_output_aux_processed_folder = path_to_output_folder+'res_light/AUX_files/processed/'
+		else:
+			self.path_to_output_folder = path_to_output_folder+'res/'
+			self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
+			self.path_to_output_aux_folder = path_to_output_folder+'res/AUX_files/'
+			self.path_to_output_aux_processed_folder = path_to_output_folder+'res/AUX_files/processed/'
+			
+
 		self.name_exp = name_exp
 		self.path_to_all_counts_file = path_to_lib+"allcounts.dic"
 		self.path_to_tissues_file = path_to_lib+"tissues.dic"

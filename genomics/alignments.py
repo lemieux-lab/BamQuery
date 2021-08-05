@@ -12,17 +12,19 @@ NUM_WORKERS =  multiprocessing.cpu_count()
 
 class Alignments:
 
-	def __init__(self, path_to_output_folder, name_exp):
+	def __init__(self, path_to_output_folder, name_exp, light):
 		self.path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 		self.name_exp = name_exp
 		self.path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
+		self.light = light
 
 	def alignment_cs_to_genome(self, set_peptides):
 
 		exist = os.path.exists(self.path_to_output_folder_genome_alignments+'/Aligned.out.sam')
+		exists_light = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information_light.dic')
 
-		if not exist:
+		if not exist and not exists_light:
 			t_0 = time.time()
 			inputFilesR1_1 = self.path_to_output_folder_genome_alignments+self.name_exp+'.fastq'
 			genomeDirectory = self.path_to_lib+'/Index_BAM_Query/'
@@ -32,9 +34,10 @@ class Alignments:
 			maxMulti = 2000 						
 			dbSNPFile = self.path_to_lib+'dbSNP149_all.vcf'
 
-			command = 'module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
+			#command = 'module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
+			command = 'module add star/2.7.1a; STAR --runThreadN 16'+\
 					' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
-					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 3 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
+					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
 					str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+\
 					dbSNPFile+' --readFilesIn  '+inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+self.path_to_output_folder_genome_alignments # 3286 #3276
 			
@@ -46,7 +49,10 @@ class Alignments:
 			print ("Total time run function alignment_CS_to_genome End : %s min" % (total/60.0))
 			logging.info('Total time run function alignment_CS_to_genome to end : %f min', (total/60.0))
 		else:
-			logging.info('Alignment file already exists in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Aligned.out.sam')
+			if exists_light:
+				logging.info('Skipping : Alignment to genome !')
+			else:
+				logging.info('Alignment file already exists in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Aligned.out.sam')
 		
 		perfect_alignments = self.get_alignments(set_peptides)
 		
@@ -56,11 +62,16 @@ class Alignments:
 		t_0 = time.time()
 		sam_file = self.path_to_output_folder_genome_alignments+'/Aligned.out.sam'
 		
-		exist = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information.dic')
+		exists = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information.dic')
+		exists_light = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information_light.dic')
+
+		if not self.light and exists_light:
+			perfect_alignments, peptides_with_alignments = self.filter_peptides_from_alignments_information_light(set_peptides, self.path_to_output_folder_alignments+'/Alignments_information_light.dic')
+		
 		perfect_alignments = {}
 		peptides_with_alignments = set()
 
-		if not exist:
+		if not exists_light and not exists:
 
 			res_star = get_alig.get_alignments(sam_file)
 			
@@ -101,16 +112,30 @@ class Alignments:
 
 			self.write_xls_with_alignments_info()
 			
-			name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+			if not self.light:
+				name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+			else:
+				name_path = self.path_to_output_folder_alignments+'/Alignments_information_light.dic'
+
 			with open(name_path, 'wb') as handle:
 				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 			logging.info('Alignments Information save to : %s ', name_path)
 			
 		else:
 			logging.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
 			
-			with open(self.path_to_output_folder_alignments+'/Alignments_information.dic', 'rb') as fp:
-				perfect_alignments = pickle.load(fp)
+			if not self.light:
+				name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+			else:
+				name_path = self.path_to_output_folder_alignments+'/Alignments_information_light.dic'
+
+			with open(name_path, 'rb') as fp:
+				try:
+					perfect_alignments = pickle.load(fp)
+				except ValueError:
+					import pickle5 as pick
+					perfect_alignments = pick.load(fp)
 
 			logging.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
 			
@@ -126,6 +151,26 @@ class Alignments:
 
 		return perfect_alignments, peptides_with_alignments
 
+
+	def filter_peptides_from_alignments_information_light(self, peptides, path_to_alignments):
+
+		with open(path_to_alignments, 'rb') as fp:
+			perfect_alignments_light = pickle.load(fp)
+
+		perfect_alignments = {}
+		peptides_with_alignments = set()
+
+		for peptide_key, peptide_position_info in perfect_alignments_light.items():
+			peptide = peptide_key.split('_')[0]
+			if peptide in peptides:
+				peptides_with_alignments.add(peptide)
+				perfect_alignments[peptide_key] = peptide_position_info
+
+		name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+		with open(name_path, 'wb') as handle:
+			pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+		return perfect_alignments, peptides_with_alignments
 
 	def generer_alignments_information(self, alignments_input):
 
@@ -200,7 +245,8 @@ class Alignments:
 	def write_xls_with_alignments_info(self):
 		writer = pd.ExcelWriter(self.path_to_output_folder_alignments+self.name_exp+'_info_alignments.xlsx', engine='xlsxwriter')
 		self.df1.to_excel(writer, sheet_name='Perfect Alignments')
-		self.df2.to_excel(writer, sheet_name='Variants Alignments')
+		if len(self.df2) > 0:
+			self.df2.to_excel(writer, sheet_name='Variants Alignments')
 		self.df3.to_excel(writer, sheet_name='COSMIC Information')
 		writer.save()
 

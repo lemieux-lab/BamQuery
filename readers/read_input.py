@@ -89,7 +89,7 @@ class ReadInputFile:
 				else:
 					raise Exception("Sorry, You must provide peptides in the appropriate format mode : peptide/CS/manual ")
 				
-				types = peptide_type.split('_')
+				types = peptide_type.split(';')
 				for type_ in types:
 					try:
 						self.peptides_by_type[type_].append(peptide)
