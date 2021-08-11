@@ -66,6 +66,9 @@ class GetInformationBEDIntersection:
 		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected)
 		self.information_final_biotypes_peptides = self.biotype_genomic_annotation_search.get_biotype_from_intersected_transcripts()
 		
+		with open(self.path_to_output_folder_bed_files+'/information_final_biotypes_peptides.dic', 'wb') as handle:
+			pickle.dump(self.information_final_biotypes_peptides, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		
 
 	def get_information_ERE_annotation(self):
 
@@ -142,4 +145,9 @@ class GetInformationBEDIntersection:
 								peptide_info[key_peptide] = rep_names
 						except KeyError:
 							self.peptides_intersected_ere[peptide] = {key_peptide : rep_names}
+
+
+		with open(self.path_to_output_folder_bed_files+'/peptides_intersected_ere.dic', 'wb') as handle:
+			pickle.dump(self.peptides_intersected_ere, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 		

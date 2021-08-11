@@ -81,6 +81,8 @@ class BiotypeGenomicSearch:
 				
 				transcripts_information[transcript] = info_transcript
 		
+		pool.close()
+
 		information_final_biotypes_peptides = self.set_final_transcript_level_biotype(transcripts_information)
 		t_2 = time.time()
 		total = t_2-t_0

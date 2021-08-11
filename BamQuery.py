@@ -213,6 +213,7 @@ class BamQuery:
 			with open(name_path, 'rb') as handle:
 				self.perfect_alignments = pickle.load(handle)
 
+			peptides_with_alignments = set()
 
 		# positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 		exists = os.path.exists(self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx') 
@@ -290,7 +291,6 @@ class BamQuery:
 				order_sample_bam_files_ribo[group] = [name_sample]
 		
 		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo)
-		
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
 		get_biotype.get_global_annotation()
 		
