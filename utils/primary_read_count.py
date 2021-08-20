@@ -100,8 +100,13 @@ class GetPrimaryReadCountBamFiles:
 				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 		else:
-			with open(self.path_to_output_temps_folder+"bam_files_info.dic", 'rb') as fp:
-				bam_files_list = pickle.load(fp)
+			try:
+				with open(self.path_to_output_temps_folder+"bam_files_info.dic", 'rb') as fp:
+					bam_files_list = pickle.load(fp)
+			except ValueError:
+				import pickle5
+				with open(self.path_to_output_temps_folder+"bam_files_info.dic", 'rb') as fp:
+					bam_files_list = pickle5.load(fp)
 
 		get_read_counts_path = os.path.abspath(__file__)
 		command = 'python '+get_read_counts_path+' -i '+bam_files+' -o '+ path_to_output_folder

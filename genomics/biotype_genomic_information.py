@@ -53,8 +53,11 @@ class BiotypeGenomicSearch:
 					except KeyError:
 						transcripts_to_search[transcript] = [info_transcript, [key], [key_peptide]]
 		
-		pool = ProcessPool(nodes=NUM_WORKERS)
-		results = pool.map(self.biotype_gene_and_transcript_level, list(transcripts_to_search.values()))
+		pool_ = ProcessPool(nodes=NUM_WORKERS)
+		results = pool_.map(self.biotype_gene_and_transcript_level, list(transcripts_to_search.values()))
+		pool_.close()
+		pool_.join()
+		pool_.clear()
 
 		# This gets for the start and the end of the peptide location, where into the transcript the peptide
 		# starts or ends, for instance: (5'utr, introns) etc...
@@ -80,8 +83,6 @@ class BiotypeGenomicSearch:
 					self.information_biotypes_peptides[key_peptide] = {key: {transcript: [gene_type, transcript_type, presence]}}
 				
 				transcripts_information[transcript] = info_transcript
-		
-		pool.close()
 
 		information_final_biotypes_peptides = self.set_final_transcript_level_biotype(transcripts_information)
 		t_2 = time.time()
@@ -129,114 +130,6 @@ class BiotypeGenomicSearch:
 
 			to_return.append([key_peptide, key, transcript, gene_type, transcript_type, presence])
 
-		return to_return
-
-
-	def get_biotype_from_intersected_transcripts_2(self):
-		
-		t_0 = time.time()
-
-		keys_peptides = []
-		keys = []
-		transcripts = []
-		info_transcripts = []
-		self.information_biotypes_peptides = {}
-
-		with open(annotations_file, 'rb') as fp:
-			info_transcripts_dic = pickle.load(fp)
-
-		# Get the information of the transcript from dictionary information
-		#{'AAAAPRPAL_chr13:99970439-99970465': {'chr13:99970439-99970465': ['ENST00000267294.4']}}
-		# NYYPYTITEY	chr17:67552321-67552345|67553610-67553614	AACTATTATCCCTACACAATTACAGAATAC	+	ENST00000581923.5
-
-		intersection = set()
-		cont = 0
-
-		transcripts_to_search = {}
-
-		for key_peptide, info_keys in self.peptides_intersected.items():
-
-			for key, intersected_transcripts in info_keys.items():
-
-				for transcript in intersected_transcripts:
-					info_transcript = info_transcripts_dic[transcript]
-					intersection.add(transcript)
-					cont += 1
-					transcripts.append(transcript)
-					info_transcripts.append(info_transcript)
-					try:
-						transcripts_to_search[transcript][1].append(key)
-						transcripts_to_search[transcript][2].append(key_peptide)
-					except KeyError:
-						transcripts_to_search[transcript] = [info_transcript, [key], [key_peptide]]
-				if len(intersected_transcripts) > 0:
-					keys.extend([key]*len(intersected_transcripts))
-					keys_peptides.extend([key_peptide]*len(intersected_transcripts))
-			
-		pool = ProcessPool(nodes=NUM_WORKERS)
-		results = pool.map(self.biotype_gene_and_transcript_level_2, keys_peptides, keys, transcripts, info_transcripts)
-
-		# This gets for the start and the end of the peptide location, where into the transcript the peptide
-		# starts or ends, for instance: (5'utr, introns) etc...
-		#pool = ProcessPool(nodes=NUM_WORKERS)
-		#results = pool.map(self.biotype_gene_and_transcript_level, keys_peptides, keys, transcripts, info_transcripts)
-
-		transcripts_information = {}
-		for res in results:
-			key_peptide = res[0]
-			key = res[1]  
-			transcript = res[2]  
-			gene_type = res[3] 
-			transcript_type = res[4]  
-			presence = res[5]
-			info_transcript = res[6] 
-			try:
-				keys_split_peptides =  self.information_biotypes_peptides[key_peptide]
-				try:
-					keys_split_peptides[key][transcript] = [gene_type, transcript_type, presence]
-				except KeyError:
-					keys_split_peptides[key] = {transcript: [gene_type, transcript_type, presence]}
-			except KeyError:
-				self.information_biotypes_peptides[key_peptide] = {key: {transcript: [gene_type, transcript_type, presence]}}
-			
-			transcripts_information[transcript] = info_transcript
-		
-		information_final_biotypes_peptides = self.set_final_transcript_level_biotype(transcripts_information)
-		t_2 = time.time()
-		total = t_2-t_0
-		#print ('Total time ', (total/60.0))
-		return information_final_biotypes_peptides
-
-
-	def biotype_gene_and_transcript_level_2(self, key_peptide, key, transcript, info_transcript):
-
-		gene_type = info_transcript['Info'][5]
-		transcript_type = info_transcript['Info'][8]
-		peptide = key_peptide.split('_')[0]
-		to_return = [key_peptide, key, transcript, gene_type]
-
-		chr = key.split(':')[0]
-		start = int(key.split(':')[1].split('-')[0])
-		end = int(key.split(':')[1].split('-')[1])
-		strand = info_transcript['Info'][3]
-		
-		if len(info_transcript['CDS']) == 0:
-			keys = ['Introns', 'Exons']
-		else:
-			keys = ['5UTR', '3UTR', 'Introns', 'CDS']
-
-		presence = ['Intergenic','Intergenic']
-		for index, point in enumerate([start, end]):
-			for key_ in keys:
-				present_peptide = self.peptide_in_section(strand, point, info_transcript[key_])
-				if present_peptide:
-					if transcript_type != 'protein_coding' and transcript_type != 'IG_V_gene' and transcript_type != 'TEC' :
-						if key_ == 'Exons' or key_ == '5UTR' or key_ == '3UTR':
-							key_ = 'Non_coding Exons'
-
-					presence[index] = key_
-					break
-		to_return = [key_peptide, key, transcript, gene_type, transcript_type, presence, info_transcript]
 		return to_return
 
 

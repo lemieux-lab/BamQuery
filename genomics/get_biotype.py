@@ -49,7 +49,6 @@ class BiotypeAssignation:
 		self.bam_files_list_rna = bam_files_list_rna
 		self.bam_files_list_ribo = bam_files_list_ribo
 		
-		
 	def get_biotypes(self, info_peptide_alignments, peptides_by_type):
 
 		logging.info('========== Getting information to define biotyping... ============ ')

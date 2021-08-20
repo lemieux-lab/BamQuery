@@ -35,8 +35,8 @@ class BamQuery:
 
 		if self.mode == 'normal':
 			self.run_bam_query_normal_mode()
-		#else:
-		#	self.run_bam_query_translation_mode()
+		else:
+			self.run_bam_query_translation_mode()
 
 		if not self.light:
 			self.get_annotations()
@@ -65,6 +65,7 @@ class BamQuery:
 			df_all_alignments_rna = res[5] 
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
+			writer.book.use_zip64()
 			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
 			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
 			
@@ -88,62 +89,82 @@ class BamQuery:
 	def run_bam_query_translation_mode(self):
 		self.common_to_modes()
 
-		exists = os.path.exists(self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx')
-
-		writer = pd.ExcelWriter(self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx', engine='xlsxwriter')
-
-		get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.input_file_treatment.peptides_by_type)
-		perfect_alignments_to_return, df_counts_ribo, order, df_all_alignments_ribo = get_counts.ribo_counts(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list)
-		df_all_alignments_ribo.to_excel(writer, sheet_name='Alignments Read count Ribo-seq')
-		df_counts_ribo.to_excel(writer, sheet_name='Read count Ribo-seq by peptide')
-
-		if len(df_counts_ribo) < 400:
-			plots.get_heat_map(df_counts_ribo, self.path_to_output_folder, self.name_exp, '_ribo_counts', False, order)
+		if not self.light:
+			name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx'
+		else:
+			name_path = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
 		
-		logging.info('========== Get Count Ribo : Done! ============ ')
-		print ('Get Count Ribo : Done!')
+		exists = os.path.exists(name_path) 
 
-		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.input_file_treatment.all_mode_peptide, self.mode)
-		def_norm_ribo = normalization.get_normalization(df_counts_ribo, '_ribo_norm.csv')
-		
-		def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide')
-		if len(def_norm_ribo) < 400:
-			plots.get_heat_map(def_norm_ribo, self.path_to_output_folder, self.name_exp, '_ribo_norm', True, order, self.th_out)
+		if not exists:
 
-		logging.info('========== Get Norm Ribo : Done! ============ ')
-		print ('Get Norm Ribo : Done!')
+			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type)
+			perfect_alignments_to_return, df_counts_ribo, order, df_all_alignments_ribo = get_counts.ribo_counts(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list)
+			
+			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
+			writer.book.use_zip64()
+			df_all_alignments_ribo.to_excel(writer, sheet_name='Alignments Read count Ribo-seq')
+			df_counts_ribo.to_excel(writer, sheet_name='Read count Ribo-seq by peptide')
 
-		df_counts_rna, self.perfect_alignments, df_counts_filtered, order, order_f, df_all_alignments_rna = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
-		df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
-		df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
+			if not self.light and len(df_counts_ribo) < 400:
+				plots.get_heat_map(df_counts_ribo, self.path_to_output_folder, self.name_exp, '_ribo_counts', False, order, self.th_out)
+			
+			logging.info('========== Get Count Ribo : Done! ============ ')
+			print ('Get Count Ribo : Done!')
 
-		if len(df_counts_rna) < 400:
-			plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, order)
-		
-		if len(df_counts_filtered) < 400:
-			plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts', False, order_f)
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
+			def_norm_ribo = normalization.get_normalization(df_counts_ribo, '_ribo_norm.csv')
+			
+			def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide')
+			if not self.light and len(def_norm_ribo) < 400:
+				plots.get_heat_map(def_norm_ribo, self.path_to_output_folder, self.name_exp, '_ribo_norm', True, order, self.th_out)
 
-		logging.info('========== Get Count RNA : Done! ============ ')
-		print ('Get Count RNA : Done!')
+			logging.info('========== Get Norm Ribo : Done! ============ ')
+			print ('Get Norm Ribo : Done!')
 
-		normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode)
-		def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
-		def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
-		plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, order, self.th_out)
+			res = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
+			df_counts_rna = res[0] 
+			self.perfect_alignments = res[1]
+			df_counts_filtered = res[2] 
+			order = res[3] 
+			order_f = res[4] 
+			df_all_alignments_rna = res[5] 
 
-		logging.info('========== Get Norm RNA : Done! ============ ')
-		print ('Get Norm RNA : Done!')
+			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
+			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
 
-		def_norm_rna_ribo = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
-		def_norm_rna_ribo.to_excel(writer, sheet_name='log10(RPHM) RNA and Ribo counts')
-		
-		if len(def_norm_rna_ribo) < 400:
-			plots.get_heat_map(def_norm_rna_ribo, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm', True, order_f, self.th_out)
+			if not self.light and len(df_counts_rna) < 400:
+				plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, order, self.th_out)
+			
+			if not self.light and len(df_counts_filtered) < 400:
+				plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts', False, order_f, self.th_out)
 
-		logging.info('========== Get Norm Ribo-RNA : Done! ============ ')
-		print ('Get Norm Ribo-RNA : Done!')
+			logging.info('========== Get Count RNA : Done! ============ ')
+			print ('Get Count RNA : Done!')
 
-		writer.save()
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
+			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
+			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
+
+			if not self.light and len(def_norm_rna) < 400:
+				plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, order, self.th_out)
+
+			logging.info('========== Get Norm RNA : Done! ============ ')
+			print ('Get Norm RNA : Done!')
+
+			def_norm_rna_ribo = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
+			def_norm_rna_ribo.to_excel(writer, sheet_name='log10(RPHM) RNA and Ribo counts')
+			
+			if not self.light and len(def_norm_rna_ribo) < 400:
+				plots.get_heat_map(def_norm_rna_ribo, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm', True, order_f, self.th_out)
+
+			logging.info('========== Get Norm Ribo-RNA : Done! ============ ')
+			print ('Get Norm Ribo-RNA : Done!')
+
+			writer.save()
+
+		else:
+			print ('Information count and normalisation already collected !')
 		
 
 	def common_to_modes(self):
@@ -322,6 +343,44 @@ class BamQuery:
 		return info_peptide_alignments
 
 
+def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55):
+
+	path_to_input_folder = path_to_input_folder
+	name_exp = name_exp.lower()
+	mode = 'normal'
+	strandedness = strandedness
+	th_out = th_out
+	light = False
+
+	if path_to_input_folder[-1] != '/':
+		path_to_input_folder += '/'
+
+	path_to_output_folder = directories_creation(path_to_input_folder, name_exp, mode, strandedness, light)
+
+	t0 = time.time()
+
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light)
+	
+	t2 = time.time()
+	total = t2-t0
+	
+	try:
+		logging.info(' ========== Removing Temporal Files ============ ')
+		shutil.rmtree(path_to_output_folder+'genome_alignments')
+		shutil.rmtree(path_to_output_folder+'logs')
+		shutil.rmtree(path_to_output_folder+'alignments')
+		shutil.rmtree(path_to_output_folder+'res/BED_files')
+		shutil.rmtree(path_to_output_folder+'res/AUX_files')
+		shutil.rmtree(path_to_output_folder+'res/temps_files')
+
+	except FileNotFoundError:
+		pass
+
+	logging.info('Total time run function BamQuery to end : %f min', (total/60.0))
+	
+	return path_to_output_folder
+
+
 def main(argv):
 
 	parser = argparse.ArgumentParser(description='======== BamQuery ========')
@@ -338,6 +397,7 @@ def main(argv):
 						help='Threshold to assess expression comparation with other tissues')
 	parser.add_argument('--light', action='store_true',
 						help='Display only the count and norm count for peptides and regions')
+	parser.add_argument('--dev', action='store_false')
 
 	args = parser.parse_args()
 	
@@ -347,6 +407,7 @@ def main(argv):
 	strandedness = args.strandedness
 	th_out = args.th_out
 	light = args.light
+	dev = args.dev
 
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
@@ -357,25 +418,26 @@ def main(argv):
 
 	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light)
 	
-	#try:
-	#	shutil.rmtree(path_to_output_folder+'genome_alignments')
-	#except FileNotFoundError:
-	#	pass
+	if not dev:
+		try:
+			shutil.rmtree(path_to_output_folder+'genome_alignments')
+		except FileNotFoundError:
+			pass
 
-	# if not light:
-	# 	try:
-	# 		shutil.rmtree(path_to_output_folder+'res/BED_files')
-	# 		shutil.rmtree(path_to_output_folder+'res/AUX_files')
-	# 		shutil.rmtree(path_to_output_folder+'res/temps_files')
-	# 	except FileNotFoundError:
-	# 		pass
-	# else:
-	# 	try:
-	# 		shutil.rmtree(path_to_output_folder+'res_light/AUX_files')
-	# 		shutil.rmtree(path_to_output_folder+'res_light/temps_files')
-	# 		shutil.rmtree(path_to_output_folder+'res_light/BED_files')
-	# 	except FileNotFoundError:
-	# 		pass
+		if not light:
+			try:
+				shutil.rmtree(path_to_output_folder+'res/BED_files')
+				shutil.rmtree(path_to_output_folder+'res/AUX_files')
+				shutil.rmtree(path_to_output_folder+'res/temps_files')
+			except FileNotFoundError:
+				pass
+		else:
+			try:
+				shutil.rmtree(path_to_output_folder+'res_light/AUX_files')
+				shutil.rmtree(path_to_output_folder+'res_light/temps_files')
+				shutil.rmtree(path_to_output_folder+'res_light/BED_files')
+			except FileNotFoundError:
+				pass
 
 	t2 = time.time()
 	total = t2-t0

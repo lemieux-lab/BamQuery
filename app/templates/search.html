@@ -1,0 +1,126 @@
+
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+	.progress {
+		width: 100%;
+		text-align: center;
+	}
+</style>
+
+<div class="content-section">
+	<div class="media">
+		<!-- <p style="float: right;"><img class="rounded-circle account-img" src="{{ image_file }}"></p> --> 
+		<h3>New Query</h3>
+		<small class="text-muted">
+			<p >The query may take some time, please do not close the web page until you have downloaded the results. <br>
+			After submitting the form have a cup of coffee. </p>
+		</small>
+	</div>
+
+<form method="POST" action="" enctype="multipart/form-data">
+	{{ form.hidden_tag() }}
+	<fieldset class="form-group">
+		<legend class="border-bottom mb-4">Query</legend>  
+
+		<div class="row">
+			<div class="col" class="form-group">
+
+				{{ form.name_query.label(class="form-control-label") }}
+
+				{% if form.name_query.errors %}
+					{{ form.name_query(class="form-control form-control-lg is-invalid") }}
+					<div class="invalid-feedback">
+						{% for error in form.name_query.errors %}
+							<span>{{ error }}</span>
+						{% endfor %}
+					</div>
+				{% else %}
+					{{ form.name_query(class="form-control") }}
+				{% endif %}
+			</div>
+
+			<div class="col"  class="form-group">
+				{{ form.peptides.label() }} 
+				<p align="align-self-center"> {{ form.peptides(class="form-control-file") }}</p>
+
+				{% if form.peptides.errors %}
+						{% for error in form.peptides.errors %}
+						<span class="text-danger">{{ error }}</span>
+						{% endfor %}
+				{% endif %}
+
+			</div>
+		<div class="w-100"></div>
+			<div class="col">
+				<small class="text-muted">
+						Set a name to identify your Query.
+				</small>
+			</div>
+			<div class="col">
+				<small class="text-muted">
+						For more details about the format of <b>peptides.tsv</b> please see the <a class="ml-2" href="{{ url_for('documentation') }}">documentation</a>.
+				</small>
+				<small class="text-muted">
+					 Limited number of peptides = 100 per run. 
+				</small>
+				
+			</div>
+		<div class="w-100"></div>
+			<div class="col" class="form-check">
+					{{ form.strandedness.label(class="form-check-label") }}
+					<p align="align-self-center">{{ form.strandedness(class="form-check-input") }}</p>
+			</div>
+			<div  class="col" class="form-group">
+
+				{{ form.th_out.label(class="form-control-label") }}
+
+				{% if form.th_out.errors %}
+					{{ form.th_out(class="form-control form-control-lg is-invalid") }}
+					<div class="invalid-feedback">
+						{% for error in form.th_out.errors %}
+							<span>{{ error }}</span>
+						{% endfor %}
+					</div>
+				{% else %}
+					{{ form.th_out(class="form-control") }}
+				{% endif %}
+			</div>
+
+		<div class="w-100"></div>
+			
+			<div class="col">
+				<small class="text-muted">
+						When using this option, BamQuery will take into account the strand on which the peptides are located in the genome. 
+						For more details please see the <a class="ml-2" href="{{ url_for('documentation') }}">documentation</a>.
+				</small>
+			</div>
+			<div class="col">
+				<small class="text-muted">
+				This value changes the threshold that is considered for comparing the expression levels of different tissues.Default = 8.55 rphm (reads per hundred million).
+				</small>
+			</div>
+			
+		</div>
+	</fieldset>
+
+	<div class="row"> 
+		<legend class="border-bottom mb-4"></legend>
+	</div>
+
+	<div class="container">
+		<div class="row"> 
+			<div class="form-group col">
+			{{ form.submit(class="btn btn-outline-info") }}
+			</div>
+		</div>
+	</div>
+</form>
+
+</div>
+
+	
+{% endblock content %} 
+
+

@@ -3,6 +3,7 @@ warnings.filterwarnings("ignore")
 import concurrent.futures
 from pathos.multiprocessing import ProcessPool
 import multiprocessing as mp
+import multiprocessing.pool
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -32,7 +33,6 @@ CODON_TABLE = {
 	'Y': ('TAT', 'TAC'),
 	'*': ('TAA', 'TAG', 'TGA'),
 }
-
 
 class ReverseTranslation:
 

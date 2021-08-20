@@ -160,7 +160,10 @@ def read_sam_file(sam_file):
 	total = (timeFinal-time0) / 60.0
 	total_chromosomes = len(aligments_by_chromosome_strand)
 	logging.info('Time reading SAM file : %f min Chromosomes %d ', total, total_chromosomes)
-	
+	name_path = sam_file+'.dic'
+	with open(name_path, 'wb') as handle:
+		pickle.dump(aligments_by_chromosome_strand, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 	return aligments_by_chromosome_strand
 
 
@@ -262,7 +265,7 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 
 			positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 
-			
+	print ('chr done '+chr)		
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, peptides_in
 
 
@@ -325,7 +328,8 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	else:
 		if len(differences_ntds) - len(info_snps) <= 2:
-			MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+			#MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+			MCS_variant_alignments = []
 
 	return MCS_perfect_alignments, MCS_variant_alignments
 
@@ -387,13 +391,18 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 	new_sequence = "".join(list_seq_reference_local)
 	local_translation_peptide = translation_seq(chr, new_sequence)
 
-	differences_ntds = [new_sequence[i]+':'+str(i) for i in range(len(new_sequence)) if new_sequence[i]!= seq_reference_local[i]]
-	
+	try:
+		differences_ntds = [new_sequence[i]+':'+str(i) for i in range(len(new_sequence)) if new_sequence[i]!= seq_reference_local[i]]
+	except IndexError:
+		print ('Index Error ', peptide, MCS, chr, strand, new_sequence, len(new_sequence), seq_reference_local, len(seq_reference_local), rang_local_ref)
+		differences_ntds = 100
+
 	if peptide == local_translation_peptide and len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	else:
 		if len(differences_ntds) - len(info_snps) <= 2:
-			MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+			#MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+			MCS_variant_alignments = []
 	return MCS_perfect_alignments, MCS_variant_alignments
 
 
@@ -408,24 +417,36 @@ def translation_seq(chr, seq):
 
 def get_alignments(sam_file):
 
-	aligments_by_chromosome_strand = read_sam_file(sam_file)
+	exists = os.path.exists(sam_file+'.dic')
+	if not exists:
+		aligments_by_chromosome_strand = read_sam_file(sam_file)
+	else:
+		with open(sam_file+'.dic', 'rb') as fp:
+			aligments_by_chromosome_strand = pickle.load(fp)
 	
 	od = collections.OrderedDict(sorted(aligments_by_chromosome_strand.items(), reverse=True))
 
 	positions_mcs_peptides_perfect_alignment = {}
 	positions_mcs_peptides_variants_alignment = {}
 	total_peptides_in = set()
-	nodes = multiprocessing.cpu_count()
 	
-	keys = od.keys()
-	values = od.values()
+	keys = list(od.keys())
+	values = list(od.values())
+	nodes = multiprocessing.cpu_count()
 	pool = ProcessPool(nodes=nodes)
-	results = pool.map(get_alignments_chromosome, keys, values)
+	
+	cont = 0
+	for i in range(0,len(keys),10):
+		cont += 10
+		results = pool.map(get_alignments_chromosome, keys[i:cont], values[i:cont])
 
-	for res in results:
-		positions_mcs_peptides_perfect_alignment.update(res[0])
-		positions_mcs_peptides_variants_alignment.update(res[1])
-		total_peptides_in = total_peptides_in.union(res[2])
-
+		for res in results:
+			positions_mcs_peptides_perfect_alignment.update(res[0])
+			positions_mcs_peptides_variants_alignment.update(res[1])
+			total_peptides_in = total_peptides_in.union(res[2])
+		
+	pool.close()
+	pool.join()
+	pool.clear()
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, total_peptides_in
 
