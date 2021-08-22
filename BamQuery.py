@@ -397,7 +397,7 @@ def main(argv):
 						help='Threshold to assess expression comparation with other tissues')
 	parser.add_argument('--light', action='store_true',
 						help='Display only the count and norm count for peptides and regions')
-	parser.add_argument('--dev', action='store_false')
+	parser.add_argument('--dev', action='store_true')
 
 	args = parser.parse_args()
 	
@@ -418,6 +418,7 @@ def main(argv):
 
 	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light)
 	
+
 	if not dev:
 		try:
 			shutil.rmtree(path_to_output_folder+'genome_alignments')

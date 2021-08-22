@@ -90,7 +90,8 @@ class GetCounts:
 				t0_bam_file = time.time()
 				bams = [bam_file] * len(keys)
 				results = pool.map(self.get_counts_sample, bams, keys, values)
-				
+				not_permission = False
+
 				for res in results:
 
 					for index, count_align in enumerate(res):
@@ -103,6 +104,8 @@ class GetCounts:
 							to_print = [peptide, alignment, sample]
 						else:
 							count = count_align[0]
+							if count == -1:
+								not_permission = True
 							sequence = count_align[1]
 							to_print_aux = copy.deepcopy(to_print)
 							to_print_aux.append(count)
@@ -144,7 +147,10 @@ class GetCounts:
 
 				t1_bam_file = time.time()
 				time_final = (t1_bam_file-t0_bam_file)/60.0
-				logging.info('Processed Bam File : %s %s . Time : %f min', str(idx), bam_file[0], time_final)
+				if not_permission:
+					logging.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
+				else:
+					logging.info('Processed Bam File : %s %s . Time : %f min', str(idx), bam_file[0], time_final)
 
 			pool.close()
 			pool.join()
@@ -273,7 +279,6 @@ class GetCounts:
 			total_samples = len(list_bam_files_order)
 
 			keys = perfect_alignments.keys()
-			
 			logging.info('Total MCS mapped : %s ', str(len(keys)))
 
 			modif_dic = {}
@@ -293,81 +298,88 @@ class GetCounts:
 
 			keys = modif_dic.keys()
 			values = modif_dic.values()
-
+			print (info_bams[104], info_bams[105])
 			logging.info('Total unique regions : %s ', str(len(keys)))
 
 			pool = ProcessPool(nodes=NUM_WORKERS)
 
 			for idx, bam_file in enumerate(info_bams):
-				t0_bam_file = time.time()
-				bams = [bam_file] * len(keys)
-				results = pool.map(self.get_counts_sample, bams, keys, values)
-				
-				for res in results:
+				if idx == 105:
+					t0_bam_file = time.time()
+					bams = [bam_file] * len(keys)
+					results = pool.map(self.get_counts_sample, bams, keys, values)
+					not_permission = False
 
-					for index, count_align in enumerate(res):
+					for res in results:
 
-						if index == 0: 
-							peptide = count_align[0]
-							alignment = count_align[1]
-							sample = count_align[2]
-							strand = count_align[3]
-							to_print = [peptide, alignment, sample]
-						else:
-							count = count_align[0]
-							sequence = count_align[1]
-							to_print_aux = copy.deepcopy(to_print)
-							to_print_aux.append(count)
-							
-							index = get_index(sample) 
+						for index, count_align in enumerate(res):
 
-							key_aux = alignment+'_'+sequence
-							try:
-								peptide_info_to_write = to_write[peptide]
+							if index == 0: 
+								peptide = count_align[0]
+								alignment = count_align[1]
+								sample = count_align[2]
+								strand = count_align[3]
+								to_print = [peptide, alignment, sample]
+							else:
+								count = count_align[0]
+								if count == -1:
+									not_permission = True
+								sequence = count_align[1]
+								to_print_aux = copy.deepcopy(to_print)
+								to_print_aux.append(count)
+								
+								index = get_index(sample) 
 
+								key_aux = alignment+'_'+sequence
 								try:
-									peptide_info_to_write[key_aux][index] = count
+									peptide_info_to_write = to_write[peptide]
+
+									try:
+										peptide_info_to_write[key_aux][index] = count
+									except KeyError:
+										counts = [0]*total_samples
+										to_add = [strand]
+										to_add.extend(counts)
+										to_add[index] = count
+										peptide_info_to_write[key_aux] = to_add
+
 								except KeyError:
 									counts = [0]*total_samples
 									to_add = [strand]
 									to_add.extend(counts)
-									to_add[index] = count
-									peptide_info_to_write[key_aux] = to_add
+									to_add[index]  = count
+									to_write[peptide] = {key_aux: to_add}
 
-							except KeyError:
-								counts = [0]*total_samples
-								to_add = [strand]
-								to_add.extend(counts)
-								to_add[index]  = count
-								to_write[peptide] = {key_aux: to_add}
-
-							try:
-								data[peptide].append(to_print_aux)
-							except KeyError:
-								data[peptide] = [to_print_aux]
-
-							key = peptide+'_'+alignment+'_'+sequence
-							if len(perfect_alignments[key][-2]) == 0:
-								perfect_alignments[key][-2] = [0]*total_samples
-
-							perfect_alignments[key][-2][index-1] = count
-
-							if self.mode == 'translation':
 								try:
-									count_ribo = perfect_alignments_ribo[key][-1][index-1]
-									if count_ribo > 0:
-										try:
-											data_filtered.append(to_print_aux)
-										except KeyError:
-											data_filtered[peptide] = [to_print_aux]
-
+									data[peptide].append(to_print_aux)
 								except KeyError:
-									pass
+									data[peptide] = [to_print_aux]
 
-				t1_bam_file = time.time()
-				time_final = (t1_bam_file-t0_bam_file)/60.0
-				logging.info('Processed Bam File : %s %s . Time : %f min', str(idx), bam_file[0], time_final)
-			
+								key = peptide+'_'+alignment+'_'+sequence
+								if len(perfect_alignments[key][-2]) == 0:
+									perfect_alignments[key][-2] = [0]*total_samples
+
+								perfect_alignments[key][-2][index-1] = count
+
+								if self.mode == 'translation':
+									try:
+										count_ribo = perfect_alignments_ribo[key][-1][index-1]
+										if count_ribo > 0:
+											try:
+												data_filtered.append(to_print_aux)
+											except KeyError:
+												data_filtered[peptide] = [to_print_aux]
+
+									except KeyError:
+										pass
+
+					t1_bam_file = time.time()
+					time_final = (t1_bam_file-t0_bam_file)/60.0
+					if not_permission:
+						logging.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
+					else:
+						logging.info('Processed Bam File : %s %s . Time : %f min', str(idx), bam_file[0], time_final)
+				
 			pool.close()
 			pool.join()
 			pool.clear()
@@ -500,9 +512,12 @@ class GetCounts:
 		counts = self.get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequences)
 
 		to_return = [[peptide, alignment, name_sample, strand]]
-
-		for index, count in enumerate(counts):
-			sequence = sequences[index]
+		
+		for index, sequence in enumerate(sequences):
+			try:
+				count = counts[index]
+			except TypeError:
+				count = -1
 			to_return.append([count, sequence])
 		 
 		return to_return

@@ -21,10 +21,18 @@ class BamQuery_search(FlaskForm):
 	peptides = FileField('Upload peptides.tsv file', 
 		validators=[FileRequired(), FileAllowed(['tsv'])])
 
-	strandedness = BooleanField('Strandedness')
+	strandedness = BooleanField('Strandedness', default=True)
 
 	th_out = MyFloatField('Threshold :', 
-		validators=[Optional()])
+		validators=[Optional()],default=8.55)
 
 	submit = SubmitField('Submit')
+
+
+class Retrieve_results(FlaskForm):
+
+	name_query_to_retrieve = StringField('Name Query :', 
+		validators=[DataRequired(), Length(min=2, max=20)])
+
+	submit_name_query = SubmitField('Submit')
 

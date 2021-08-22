@@ -2,7 +2,7 @@ import warnings, time, logging, os, gc, pickle
 warnings.filterwarnings("ignore")
 import concurrent.futures
 from pathos.multiprocessing import ProcessPool
-import multiprocessing as mp
+import billiard as mp
 import multiprocessing.pool
 
 __author__ = "Maria Virginia Ruiz Cuevas"
@@ -62,7 +62,6 @@ class ReverseTranslation:
 			q = manager.Queue() 
 			pool = mp.Pool(NUM_WORKERS)
 			watcher = pool.apply_async(self.listener, (q,))
-			
 			results = pool.map(self.translate_reserve_peptide, peptides_list) 
 			
 			peptides_to_re_do = []

@@ -1,6 +1,6 @@
 import os, shutil
-from flask import Flask, request, render_template, url_for, redirect, send_from_directory, flash, jsonify, send_file
-from forms import BamQuery_search
+from flask import Flask, request, render_template, url_for, redirect, send_from_directory, flash, jsonify, send_file, Response
+from forms import BamQuery_search, Retrieve_results
 import secrets
 import sys
 import zipfile
@@ -21,15 +21,14 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
-@app.route('/')
 @app.route("/search", methods=['POST', 'GET'])
 def search():
 	form = BamQuery_search()
+	form_2 = Retrieve_results()
 	image_file = url_for('static', filename='favicon.png')
 	
 	if form.validate_on_submit():
 		name_exp = form.name_query.data
-		#flash(f'Query received for { name_exp }!', 'success')
 		parent_dir = os.path.join(app.root_path, 'static/temps')
 		path_search = os.path.join(parent_dir, name_exp)
 		path_input = os.path.join(path_search, 'Input')
@@ -48,13 +47,34 @@ def search():
 				else:
 					path_to_bam_directories = os.path.join(app.root_path, 'static/BAM_directories.tsv')
 					shutil.copy2(path_to_bam_directories, path_input)
-					task = running_BamQuery.apply_async(args = [path_input, name_exp, form.strandedness.data])
+					task = running_BamQuery.apply_async(args = [path_input, name_exp, form.strandedness.data, form.th_out.data])
+					flash(f'Please do not close this page, you must wait for the query to be completed !', 'success')
 					return render_template('results.html', title ='Results', image_file = image_file, name_exp = name_exp, task_id = task.id)
 
 		except FileExistsError:
 			flash(f'Name of Query { name_exp } already in use. Please change the name of the query !', 'error')
 
-	return render_template('search.html', title ='Search', image_file = image_file, form = form, block=False)
+	if form_2.validate_on_submit():
+		name_exp = form_2.name_query_to_retrieve.data
+		path_output = os.path.join(app.root_path, 'static/temps',name_exp,'output')
+		filename = 'data.zip'
+		try:
+			shutil.make_archive(path_output, 'zip', path_output)
+			path_output = path_output+'.zip'
+
+			with open(path_output, 'rb') as f:
+				data = f.readlines()
+			shutil.rmtree(os.path.join(app.root_path, 'static/temps',name_exp))
+			return Response(data, headers={
+				'Content-Type': 'application/zip',
+				'Content-Disposition': 'attachment; filename=%s;' % filename
+			})
+		except FileNotFoundError:
+			flash(f'No query with this name: { name_exp } is found in our server !', 'error')	
+
+		#return send_file(path_output, mimetype='application/zip', as_attachment=True, attachment_filename='data.zip')
+
+	return render_template('search.html', title ='Search', image_file = image_file, form = form, form_2 = form_2, block=False)
 
 def file_len(fname):
 	with open(fname) as f:
@@ -71,6 +91,7 @@ def save_peptides(form_peptides_file, path_input):
 	else:
 		return peptides_file_path, 'Success'
 
+@app.route('/')
 @app.route('/about')
 def about():
 	return render_template('about.html')
@@ -84,9 +105,8 @@ def favicon():
 	return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
 @celery.task(bind=True)
-def running_BamQuery(self, path_input, name_exp, strandedness):
-	path_output = running_for_web(path_input, name_exp, strandedness, th_out = 8.55)
-	#shutil.make_archive(path_output, 'zip', path_output)
+def running_BamQuery(self, path_input, name_exp, strandedness, th_out):
+	path_output = running_for_web(path_input, name_exp, strandedness, th_out)
 	self.update_state(state='PROGRESS', meta={'Query': name_exp, 'status': 'Running!'})
 	return {'status': 'Finished!', 'result': 'Job completed!'}
 
@@ -150,7 +170,14 @@ def request_zip(name_exp):
 	shutil.make_archive(path_output, 'zip', path_output)
 	path_output = path_output+'.zip'
 	return send_file(path_output, mimetype='application/zip', as_attachment=True, attachment_filename='data.zip')
-			  
+
+@app.route('/remove', methods=['POST'])
+def remove():
+	name_exp = request.form['name_exp']
+	shutil.rmtree(os.path.join(app.root_path, 'static/temps',name_exp))
+	return redirect(url_for('search'))
+
+
 if __name__ == '__main__':
 	app.run(debug=True)
 	port = int(os.environ.get('PORT', 33000))

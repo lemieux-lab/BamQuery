@@ -29,9 +29,8 @@ def set_strand_read(strand):
 	else:
 		return '+'
 
-def get_ranges(cigar, start, lenSeq, strand, chr):
+def get_ranges(cigar, start, lenSeq, strand, chr, faFile):
 
-	faFile = pysam.FastaFile(genomePath, genomePathFai)
 	rang = [0]*lenSeq
 	rx = re.findall('(\d+)([MISDNX=])?', cigar)
 	realReadStart = start
@@ -57,7 +56,7 @@ def get_ranges(cigar, start, lenSeq, strand, chr):
 			end = length
 			resSeq = faFile.fetch(chr, start-1, start+end-1)
 			seqReference += resSeq
-
+			
 			for i in range(0,end):
 				rang[lastIndex+i] = start
 				start = start + 1
@@ -69,6 +68,7 @@ def get_ranges(cigar, start, lenSeq, strand, chr):
 			end = start + length
 			start = end
 			realEnd += length
+
 	if strand == '-':
 		seqReference = uf.reverseComplement(seqReference)
 		rang = rang[::-1]
@@ -81,9 +81,8 @@ def get_ranges(cigar, start, lenSeq, strand, chr):
 	return rang, operators, seqReference
 
 
-def get_local_reference(start, lenSeq, chr, strand):
+def get_local_reference(start, lenSeq, chr, strand, faFile):
 
-	faFile = pysam.FastaFile(genomePath, genomePathFai)
 	seqReference = ''
 	end = start+lenSeq-1
 	rang = range(start, end+1)
@@ -177,12 +176,14 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 	peptides_in = set()
 
 	local_visited = set()
+	faFile = pysam.FastaFile(genomePath, genomePathFai)
 
 	try:
 		with open(path_to_lib+'/snps_dics/dbsnp149_all_'+chr+'.dic', 'rb') as fp:
 			chromosome = pickle.load(fp)
 	except IOError:
 		chromosome = {}
+
 
 	for position in chromosomes_alignments: 
 		snps_information = []
@@ -201,16 +202,14 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 		range_trans_local = chr+':'+positions_trans
 		key_local = peptide+'_'+range_trans_local
 		
-		rang, operators, seq_reference_align = get_ranges(cigar, readStart, lenSeq, strand, chr)
+		rang, operators, seq_reference_align = get_ranges(cigar, readStart, lenSeq, strand, chr, faFile)
 		positions_trans = find_ranges(rang)
 		range_trans = chr+':'+positions_trans
 		key = peptide+'_'+range_trans
 		
-			
 		if key_local not in local_visited:
 			local_visited.add(key_local)
-			rang_local_ref, seq_reference_local = get_local_reference(readStart, lenSeq, chr, strand)
-			
+			rang_local_ref, seq_reference_local = get_local_reference(readStart, lenSeq, chr, strand, faFile)
 			MCS_perfect_alignments_local, MCS_variant_alignments_local = get_sequences_at_position_local(peptide, seq_reference_local, MCS, list(rang_local_ref), strand, chromosome, chr)
 			
 			if len(MCS_perfect_alignments_local) > 0:
@@ -265,7 +264,7 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 
 			positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 
-	print ('chr done '+chr)		
+	print ('Chr finished ',chr, len(positions_mcs_peptides_perfect_alignment))
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, peptides_in
 
 
@@ -305,9 +304,10 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 
 			if strand == '-':
 				for ntd in snp_ntds:
-					snp_ntds_aux.append(reverse_translation(ntd))
+					if len(ntd) == 1:
+						snp_ntds_aux.append(reverse_translation(ntd))
 			else:
-				snp_ntds_aux = snp_ntds
+				snp_ntds_aux = [ snp_aux for snp_aux in snp_ntds if len(snp_aux) == 1]
 
 			if ntd_in_MCS in snp_ntds_aux:
 				info_snp_to_add = [snp[0], ntd_in_MCS, name_snp, pos_in_genome, dif]
@@ -318,14 +318,14 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 		except KeyError:
 			return MCS_perfect_alignments, MCS_variant_alignments
 
-	new_sequence = "".join(list_seq_reference_local)
-	
-	local_translation_peptide = translation_seq(chr, new_sequence)
+	# new_sequence = "".join(list_seq_reference_local)
+	# local_translation_peptide = translation_seq(chr, new_sequence)
+	# differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
+	# Uncomment this three lines if I want to get the variants alignments, also in the if below add 
 
-	differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
-
-	if peptide == local_translation_peptide and len(info_snps) == len(differences_ntds):
-		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+	differences_pep = []
+	if len(info_snps) == len(differences_ntds):
+		MCS_perfect_alignments = [MCS, [peptide, differences_pep, info_snps, differences_ntds]]
 	else:
 		if len(differences_ntds) - len(info_snps) <= 2:
 			#MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
@@ -366,9 +366,10 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 
 				if strand == '-':
 					for ntd in snp_ntds:
-						snp_ntds_aux.append(reverse_translation(ntd))
+						if len(ntd) == 1:
+							snp_ntds_aux.append(reverse_translation(ntd))
 				else:
-					snp_ntds_aux = snp_ntds
+					snp_ntds_aux = [ snp_aux for snp_aux in snp_ntds if len(snp_aux) == 1]
 
 				into = False
 				
@@ -394,7 +395,7 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 	try:
 		differences_ntds = [new_sequence[i]+':'+str(i) for i in range(len(new_sequence)) if new_sequence[i]!= seq_reference_local[i]]
 	except IndexError:
-		print ('Index Error ', peptide, MCS, chr, strand, new_sequence, len(new_sequence), seq_reference_local, len(seq_reference_local), rang_local_ref)
+		logging.info( 'Index Error %s %s %s %s %s %s %s %s %s ', peptide, MCS, chr, strand, new_sequence, str(len(new_sequence)), seq_reference_local, str(len(seq_reference_local)), str(rang_local_ref))
 		differences_ntds = 100
 
 	if peptide == local_translation_peptide and len(info_snps) == len(differences_ntds):
@@ -423,7 +424,7 @@ def get_alignments(sam_file):
 	else:
 		with open(sam_file+'.dic', 'rb') as fp:
 			aligments_by_chromosome_strand = pickle.load(fp)
-	
+
 	od = collections.OrderedDict(sorted(aligments_by_chromosome_strand.items(), reverse=True))
 
 	positions_mcs_peptides_perfect_alignment = {}
@@ -435,15 +436,22 @@ def get_alignments(sam_file):
 	nodes = multiprocessing.cpu_count()
 	pool = ProcessPool(nodes=nodes)
 	
-	cont = 0
-	for i in range(0,len(keys),10):
-		cont += 10
-		results = pool.map(get_alignments_chromosome, keys[i:cont], values[i:cont])
+	results = pool.map(get_alignments_chromosome, keys, values)
 
-		for res in results:
-			positions_mcs_peptides_perfect_alignment.update(res[0])
-			positions_mcs_peptides_variants_alignment.update(res[1])
-			total_peptides_in = total_peptides_in.union(res[2])
+	for res in results:
+		positions_mcs_peptides_perfect_alignment.update(res[0])
+		positions_mcs_peptides_variants_alignment.update(res[1])
+		total_peptides_in = total_peptides_in.union(res[2])
+
+	# cont = 0
+	# for i in range(0,len(keys),10):
+	# 	cont += 10
+	# 	results = pool.map(get_alignments_chromosome, keys[i:cont], values[i:cont])
+
+	# 	for res in results:
+	# 		positions_mcs_peptides_perfect_alignment.update(res[0])
+	# 		positions_mcs_peptides_variants_alignment.update(res[1])
+	# 		total_peptides_in = total_peptides_in.union(res[2])
 		
 	pool.close()
 	pool.join()

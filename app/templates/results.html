@@ -3,20 +3,6 @@
 
 		
 <div class="content-section">
-	<!-- <div class="modal" id="myModal" role="dialog">
-		 <div class="modal-dialog">
-			
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4 class="modal-title">Please Wait, we are preparing a zip with the results of your query...</h4>
-				</div>
-			
-				<div class="modal-body">
-					<center> <div class="loader"></div> </center>
-				</div>
-			</div>  
-		</div>
-	</div> -->
 	<div class="modal" tabindex="-1" id="myModal" role="dialog">
 	  <div class="modal-dialog" role="document">
 		<div class="modal-content">
@@ -27,11 +13,11 @@
 			</button>
 		  </div>
 		  <div class="modal-body">
-			<p>Please Wait, we are preparing a zip with the results of your query...</p>
+			<p>Please Wait, we are preparing a zip with the results of your query.</p>
+			<p>Once you have downloaded your results, they will be deleted from our server.</p>
 		  </div>
 		  <div class="modal-footer">
-			<button type="button" class="btn btn-primary" onClick="location.href='/'">New Query</button>
-			<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			<button id='new_query' type="button" class="btn btn-primary" type='submit' onClick="location.href='/'">New Query</button>
 		  </div>
 		</div>
 	  </div>
@@ -44,6 +30,7 @@
 		<div class="row">
 			<div class="col" >
 				<small class="text-muted">
+				
 				Once the query is finished, you can view and download the results.<br>
 				After downloading, the results will be deleted from our server to ensure the privacy of your query.
 				</small>
@@ -160,6 +147,21 @@ function download() {
 	$('#iframepdf').attr('src', "{{ url_for('download-zip', name_exp=''+name_exp ) }}").show();
 }
 
+function new_query() {
+	var name_exp = document.getElementById('name_exp').value;
+	$.ajax({
+		type: 'POST',
+		url: '/remove',
+		data : {'name_exp':name_exp },
+		success: function(data, status, request) {
+			status_url = request.getResponseHeader('Location');
+		},
+		error: function() {
+			alert('Unexpected error');
+		}
+	});
+}
+
 $(function() {
 	$('#status').click(get_status);
 });
@@ -174,6 +176,10 @@ $(function() {
 
 $(function() {
 	$('#download').click(download);
+});
+
+$(function() {
+	$('#new_query').click(new_query);
 });
 
 </script>
