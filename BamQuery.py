@@ -24,7 +24,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -32,6 +32,7 @@ class BamQuery:
 		self.mode = mode
 		self.th_out = th_out
 		self.light = light
+		self.dev = dev
 
 		if self.mode == 'normal':
 			self.run_bam_query_normal_mode()
@@ -40,6 +41,7 @@ class BamQuery:
 
 		if not self.light:
 			self.get_annotations()
+
 
 
 	def run_bam_query_normal_mode(self):
@@ -311,7 +313,7 @@ class BamQuery:
 			except KeyError:
 				order_sample_bam_files_ribo[group] = [name_sample]
 		
-		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo)
+		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev)
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
 		get_biotype.get_global_annotation()
 		
@@ -416,7 +418,7 @@ def main(argv):
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev)
 	
 
 	if not dev:

@@ -14,7 +14,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BiotypeAssignation:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, bam_files_list_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo):
+	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, bam_files_list_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, dev):
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
 		self.mode = mode
@@ -48,6 +48,7 @@ class BiotypeAssignation:
 		self.order_sample_bam_files_ribo = order_sample_bam_files_ribo
 		self.bam_files_list_rna = bam_files_list_rna
 		self.bam_files_list_ribo = bam_files_list_ribo
+		self.dev = dev
 		
 	def get_biotypes(self, info_peptide_alignments, peptides_by_type):
 
@@ -508,7 +509,8 @@ class BiotypeAssignation:
 			to_add = [peptide_type, peptide, consensus]
 			to_add.extend(count_bamfiles)
 			df_consensus_annotation.append(to_add)
-			biotypes_by_peptide_genome_explained.append(to_add_aux)
+			if self.dev:
+				biotypes_by_peptide_genome_explained.append(to_add_aux)
 
 		groupby_columns = ['Peptide Type', 'Peptide', 'Consenssus']
 		self.df_consensus_annotation = pd.DataFrame(df_consensus_annotation, columns = groupby_columns+bam_files_columns)
@@ -525,14 +527,15 @@ class BiotypeAssignation:
 
 		logging.info('========== Plots : Done! ============ ')
 
-		groupby_columns = ['Peptide Type', 'Peptide']
-		self.biotypes_by_peptide_genome_explained = pd.DataFrame(biotypes_by_peptide_genome_explained, columns = groupby_columns+biotype_type)
+		if self.dev:
+			groupby_columns = ['Peptide Type', 'Peptide']
+			self.biotypes_by_peptide_genome_explained = pd.DataFrame(biotypes_by_peptide_genome_explained, columns = groupby_columns+biotype_type)
 
-		with open(self.path_to_output_folder+'alignments/biotypes_by_peptide_genome_explained.list', 'wb') as handle:
-			pickle.dump(biotypes_by_peptide_genome_explained, handle, protocol=pickle.HIGHEST_PROTOCOL)
+			with open(self.path_to_output_folder+'alignments/biotypes_by_peptide_genome_explained.list', 'wb') as handle:
+				pickle.dump(biotypes_by_peptide_genome_explained, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-		biotypes_by_peptide_genome_explained = []
-		gc.collect()
+			biotypes_by_peptide_genome_explained = []
+			gc.collect()
 
 		return peptides_absent_sample_group, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated 
 
@@ -762,7 +765,8 @@ class BiotypeAssignation:
 				to_add.extend(bios)
 				consensus = ' - '.join(count_string)
 				to_add_aux.append(consensus)
-				biotypes_by_peptide_sample_explained.append(to_add)
+				if self.dev:
+					biotypes_by_peptide_sample_explained.append(to_add)
 			df_consensus_annotation_final.append(to_add_aux)
 
 		with open(self.path_to_output_folder+'alignments/biotype_info_all_alignments_annotated.dic', 'wb') as handle:
@@ -775,10 +779,11 @@ class BiotypeAssignation:
 		self.df_consensus_annotation_full_final = pd.DataFrame(df_consensus_annotation_final, columns = groupby_columns+bam_files_columns)
 		df_consensus_annotation_final = []
 
-		groupby_columns = ['Sample', 'Peptide Type', 'Peptide']
-		self.biotypes_by_peptide_sample_explained = pd.DataFrame(biotypes_by_peptide_sample_explained, columns = groupby_columns+biotype_type)
-		biotypes_by_peptide_sample_explained = []
-		gc.collect()
+		if self.dev:
+			groupby_columns = ['Sample', 'Peptide Type', 'Peptide']
+			self.biotypes_by_peptide_sample_explained = pd.DataFrame(biotypes_by_peptide_sample_explained, columns = groupby_columns+biotype_type)
+			biotypes_by_peptide_sample_explained = []
+			gc.collect()
 
 	def get_genomic_and_ere_annotation(self, bam_files_columns):
 
@@ -829,7 +834,9 @@ class BiotypeAssignation:
 	
 		logging.info('========== Writting out biotyping in xls files ============ ')
 
-		self.write_xls_info_biotypes_explained()
+		if self.dev:
+			self.write_xls_info_biotypes_explained()
+
 		self.write_xls_with_consensus_biotypes()
 		
 		logging.info('========== Writting out biotyping in xls files : Done! ============ ')
@@ -929,14 +936,19 @@ class BiotypeAssignation:
 
 	def write_xls_info_biotypes_explained(self):
 		
-		writer = pd.ExcelWriter(self.path_to_output_folder+'/res/biotypes_by_peptide_sample_explained.xlsx', engine='xlsxwriter')
+		if (len(self.biotypes_by_peptide_sample_explained) or len(self.biotypes_by_peptide_sample_explained) )  < 1048576:
+			writer = pd.ExcelWriter(self.path_to_output_folder+'/res/biotypes_by_peptide_sample_explained.xlsx', engine='xlsxwriter')
+			writer.book.use_zip64()
+			self.biotypes_by_peptide_sample_explained.to_excel(writer, sheet_name='Biotypes Sample Explained')
+			self.biotypes_by_peptide_genome_explained.to_excel(writer, sheet_name='Biotypes Genome Explained')
+			
+			writer.save()
+		else:
+			path = self.path_to_output_folder+'/res/biotypes_by_peptide_sample_explained.xlsx'
+			self.biotypes_by_peptide_sample_explained.to_csv(path, index=False)
+			path = self.path_to_output_folder+'/res/biotypes_by_peptide_genome_explained.xlsx'
+			self.biotypes_by_peptide_genome_explained.to_csv(path, index=False)
 
-		writer.book.use_zip64()
-		
-		self.biotypes_by_peptide_sample_explained.to_excel(writer, sheet_name='Biotypes Sample Explained')
-		self.biotypes_by_peptide_genome_explained.to_excel(writer, sheet_name='Biotypes Genome Explained')
-		
-		writer.save()
 
 	def write_xls_with_consensus_biotypes(self):
 		writer = pd.ExcelWriter(self.path_to_output_folder+'/res/Annotation_Biotypes_consensus.xlsx', engine='xlsxwriter')
