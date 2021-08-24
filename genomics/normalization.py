@@ -32,6 +32,7 @@ class Normalization:
 		self.peptides_types = peptides_types
 		self.mode = mode
 
+
 	def get_normalization(self, df_counts, type_save):
 
 		exists = os.path.exists(self.path_to_output_temps_folder+self.name_exp+type_save)
@@ -107,6 +108,20 @@ class Normalization:
 
 				except FileNotFoundError:
 					pass
+
+			data = [['Sample category', 'sample_ids', 'Project', 'short_list']]
+			for tissue, info_tissue in tissues_for_samples.items():
+				aux = []
+				aux.append(tissue)
+				bam_files = ' '.join(info_tissue[0])
+				aux.append(bam_files)
+				aux.append(info_tissue[1])
+				aux.append(info_tissue[2])
+				data.append(aux)
+
+			with open(self.path_to_output_folder+"info_bam_files_tissues.csv", 'w') as csvFile:
+				writer = csv.writer(csvFile)
+				writer.writerows(data)
 
 			if len(not_in) > 0 :
 				data = [['Sample', 'Tissue', 'Tissue_type', 'Short_list']]

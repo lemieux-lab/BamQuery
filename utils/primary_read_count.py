@@ -8,6 +8,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
+files_with_not_permission = []
 
 class GetPrimaryReadCountBamFiles:
 
@@ -49,8 +50,8 @@ class GetPrimaryReadCountBamFiles:
 
 		bam_files_list = {}
 
-		bams_paths_to_search = []
 		exists = os.path.exists(self.path_to_output_temps_folder+"bam_files_info.dic")
+		initial_list_paths = []
 
 		if not exists:
 			with open(bam_files) as f:
@@ -60,6 +61,7 @@ class GetPrimaryReadCountBamFiles:
 					name = line[0]
 					try:
 						path = line[1]
+						initial_list_paths.append(path)
 					except IndexError:
 						raise Exception("Sorry, your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
 
@@ -99,6 +101,9 @@ class GetPrimaryReadCountBamFiles:
 			with open(self.path_to_output_temps_folder+"bam_files_info.dic", 'wb') as handle:
 				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+			for bam_file in files_with_not_permission:
+				if bam_file in initial_list_paths:
+					logging.info('Permission Denied for this BAM file : %s ', bam_file) 
 		else:
 			try:
 				with open(self.path_to_output_temps_folder+"bam_files_info.dic", 'rb') as fp:
@@ -114,11 +119,12 @@ class GetPrimaryReadCountBamFiles:
 		logging.info('Total Bam Files to Query : %d', len(bam_files_list))
 		return bam_files_list
 	
+
 	def search_bam_files(self, path):
 
 		bam_files_found = []
 
-		for p, d, f in os.walk(path):
+		for p, d, f in os.walk(path, onerror=self.walk_error_handler, followlinks=True):
 
 			for file in f:
 				if (file.endswith('.cram') and (file+'.crai' in f or file[:-5]+'.bai' in f)) or (file.endswith('.bam') and (file+'.bai' in f or file[:-4]+'.bai' in f)):
@@ -127,6 +133,8 @@ class GetPrimaryReadCountBamFiles:
 
 		return bam_files_found
 
+	def walk_error_handler(self, exception_instance):
+		files_with_not_permission.append(exception_instance.filename)
 
 	def get_all_counts_bam_file(self, bam_file_info):
 		
@@ -160,27 +168,24 @@ class GetPrimaryReadCountBamFiles:
 				info_bam_file = dictionary_total_reads_bam_files[name_bam_file]
 				path_saved = info_bam_file[0]
 				count_reads_saved = info_bam_file[1]
+				if isinstance(count_reads_saved, str):
+					count_reads_saved = int(count_reads_saved)
+					info_bam_file[1] = count_reads_saved
 				
 				if path_saved != path:
-					
-					if  path_saved == '':
-						some_change = True
-						info_bam_file[0] = path
-					else:
-						logging.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. \
-							Path found: %s  Path in BAM_directories.tsv or BAM_Ribo_directories.tsv is %s ', path_saved, path)
+					some_change = True
+					info_bam_file[0] = path
+					prints += 1
+					logging.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. \
+							Path in BAM_directories.tsv: %s, Path already assigned %s. Total reads : %s', path, path_saved, str(count_reads_saved))
 				else:
-					logging.info('%s is already in the dictionary, total reads : %s ', path, str(count_reads_saved))
+					logging.info('%s total reads : %s ', path, str(count_reads_saved))
 			except KeyError:
 				list_bams_to_assess.append(path)
 
 		user = getpass.getuser()
 		logging.info('Total Bam Files to Query : %d %s', len(list_bams_to_assess), list_bams_to_assess)
 		
-		if some_change:
-			with open(path_to_lib+"allcounts.dic", 'wb') as handle:
-				pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
 		if len(list_bams_to_assess) > 0:
 			with concurrent.futures.ThreadPoolExecutor() as executor:   
 				futures = [executor.submit(self.get_all_counts_bam_file, param) for param in list_bams_to_assess]
@@ -189,11 +194,13 @@ class GetPrimaryReadCountBamFiles:
 				bam_file_info_to_return = f.result()
 				dictionary_total_reads_bam_files[bam_file_info_to_return[0]] = [bam_file_info_to_return[1], bam_file_info_to_return[2], user]
 
-			with open(path_to_lib+"allcounts.dic", 'wb') as handle:
-				pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 			logging.info('Saved information of read count for each BAM file')
 		else:
 			logging.info('All bam files into allcounts dictionary !')
+
+			if some_change or len(list_bams_to_assess) > 0:
+				with open(path_to_lib+"allcounts.dic", 'wb') as handle:
+					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 	def get_type_library(self, path):
 		
@@ -267,8 +274,7 @@ def main(argv):
 	bam_files_dic = {}
 	bam_files = path_to_input_folder
 	Get_Read_Count_obj = GetPrimaryReadCountBamFiles()
-	bams_paths_to_search = []
-
+	
 	with open(bam_files) as f:
 
 		for index, line in enumerate(f):

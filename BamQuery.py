@@ -361,7 +361,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55)
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, False)
 	
 	t2 = time.time()
 	total = t2-t0

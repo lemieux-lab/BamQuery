@@ -264,7 +264,6 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 
 			positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 
-	print ('Chr finished ',chr, len(positions_mcs_peptides_perfect_alignment))
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, peptides_in
 
 
