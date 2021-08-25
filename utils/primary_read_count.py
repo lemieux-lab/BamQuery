@@ -175,7 +175,6 @@ class GetPrimaryReadCountBamFiles:
 				if path_saved != path:
 					some_change = True
 					info_bam_file[0] = path
-					prints += 1
 					logging.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. \
 							Path in BAM_directories.tsv: %s, Path already assigned %s. Total reads : %s', path, path_saved, str(count_reads_saved))
 				else:
