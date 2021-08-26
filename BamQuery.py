@@ -233,8 +233,13 @@ class BamQuery:
 				with open(name_path, 'wb') as handle:
 					pickle.dump(self.perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 		else:
-			with open(name_path, 'rb') as handle:
-				self.perfect_alignments = pickle.load(handle)
+			try:
+				with open(name_path, 'rb') as handle:
+					self.perfect_alignments = pickle.load(handle)
+			except ValueError:
+				import pickle5
+				with open(name_path, 'rb') as handle:
+					self.perfect_alignments = pickle5.load(handle)
 
 			peptides_with_alignments = set()
 
@@ -422,13 +427,10 @@ def main(argv):
 	
 
 	if not dev:
-		try:
-			shutil.rmtree(path_to_output_folder+'genome_alignments')
-		except FileNotFoundError:
-			pass
-
+		
 		if not light:
 			try:
+				shutil.rmtree(path_to_output_folder+'genome_alignments')
 				shutil.rmtree(path_to_output_folder+'res/BED_files')
 				shutil.rmtree(path_to_output_folder+'res/AUX_files')
 				shutil.rmtree(path_to_output_folder+'res/temps_files')

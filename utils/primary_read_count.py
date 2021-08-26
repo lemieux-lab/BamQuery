@@ -103,7 +103,7 @@ class GetPrimaryReadCountBamFiles:
 
 			for bam_file in files_with_not_permission:
 				if bam_file in initial_list_paths:
-					logging.info('Permission Denied for this BAM file : %s ', bam_file) 
+					logging.info('Skipping BAM file : %s. This Bam file has access denied or the path does not exist..', bam_file) 
 		else:
 			try:
 				with open(self.path_to_output_temps_folder+"bam_files_info.dic", 'rb') as fp:
