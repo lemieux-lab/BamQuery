@@ -258,7 +258,7 @@ class GetCounts:
 		order_f = []
 		order = []
 
-		if not exist_rna and exist_ribo:
+		if (not exist_rna and exist_ribo):
 			t_0 = time.time()
 			to_write = {} 
 			

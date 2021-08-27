@@ -88,7 +88,6 @@ filename = sprintf('%s_%s', name, 'all_tissues.pdf')
 label = sprintf('%s%s%s', 'mean > log10(', th_out, '+ 1)' ) 
 
 
-
 g = ggplot(proSplusMerged, aes(x = Tissue, y = reorder(Peptide, + nbTissue), fill = mean,
                                color = as.factor(mean > log10(th_out + 1))) )
 
@@ -101,7 +100,10 @@ g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white
 g = g + facet_grid(Peptide_type ~ Tissue_type, scales = 'free', space = 'free')
 g = g + theme_bw() + xlab('') + ylab('')
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-total_peptides = nrow(proSplusMerged)
+
+total_peptides = length(unique(proSplusMerged$Peptide))
+
+
 if (total_peptides > 50){
   g = g + theme(axis.text.y = element_text(size = 5))
 }
@@ -127,6 +129,12 @@ g = g + facet_grid(Peptide_type ~ Tissue_type, scales = 'free', space = 'free')
 g = g + theme_bw() + xlab('') + ylab('')
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
+if (total_peptides > 50){
+  g = g + theme(axis.text.y = element_text(size = 5))
+}
+if (total_peptides > 70){
+  g = g + theme(axis.text.y = element_text(size = 3))
+}
 ggsave(sprintf('%s/%s', output_plot, filename), width = 11, height = 11, useDingbats = FALSE)
 
 

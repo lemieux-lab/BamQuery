@@ -43,11 +43,10 @@ class ReverseTranslation:
 		
 		self.output_file = path_to_output_folder+'genome_alignments/'+name_exp+'.fastq'
 		exists = os.path.exists(self.output_file)
-		exists_light = os.path.exists(path_to_output_folder+'alignments/Alignments_information_light.dic')
 		peptide_number = {}
 
 
-		if not exists and not exists_light:
+		if not exists :
 			t_0 = time.time()
 			total_reads_to_align = 0
 			to_write_reverse_translation = ''
@@ -102,10 +101,7 @@ class ReverseTranslation:
 
 			logging.info('Total time run function reverse_translation to end : %f min', (total/60.0))
 		else:
-			if exists_light:
-				logging.info('Skipping : Reverse Translation! ')
-			else:
-				logging.info('Fasta file with all the coding sequences already exists in the output path : %s --> Skipping this step! ', path_to_output_folder+'genome_alignments/'+name_exp+'.fastq')
+			logging.info('Fasta file with all the coding sequences already exists in the output path : %s --> Skipping this step! ', path_to_output_folder+'genome_alignments/'+name_exp+'.fastq')
 
 
 	def translate_reserve_peptide(self, peptide):

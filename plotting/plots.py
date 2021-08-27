@@ -89,20 +89,21 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_o
 		else:
 			ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='g', annot_kws={"size": fontsize}) #cmap="YlGnBu"
 		
-		lines = []
-		last = 0
-		for i, line in enumerate(ax_lines):
-			if i == 0:
-				lines.append(line)
-				last = line
-			else:
-				last = last + line
-				lines.append(last)
-		ax.hlines(lines, *ax.get_xlim(), color='red')
-
+		if len(ax_lines) > 0:
+			lines = []
+			last = 0
+			for i, line in enumerate(ax_lines):
+				if i == 0:
+					lines.append(line)
+					last = line
+				else:
+					last = last + line
+					lines.append(last)
+			ax.hlines(lines, *ax.get_xlim(), color='red')
+		
 		plt.yticks(rotation=0)
 		plt.tight_layout()
-		plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape', dpi=300)
+		plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape') #, dpi=300)
 		plt.show()
 
 	if norm and peptides_total < 400:
@@ -114,7 +115,7 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_o
 
 def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
 	
-	fig, ax = plt.subplots(figsize=(11, 7), dpi=300) 
+	fig, ax = plt.subplots(figsize=(11, 7)) # dpi=300) 
 
 	title=title+'\n'
 
@@ -181,7 +182,7 @@ def plot_pie_ere(title, outer_labels, outer_sizes, path_to_output_folder, name_e
 	import matplotlib.colors as mcolors
 	colors = random.choices(list(mcolors.CSS4_COLORS.values()),k = number)
 
-	fig, ax = plt.subplots(figsize=(11, 7), dpi=300) 
+	fig, ax = plt.subplots(figsize=(11, 7)) #dpi=300) 
 
 	title=title+'\n'
 
@@ -208,7 +209,7 @@ def correlation(path_to_output_folder, name_exp, dataframe):
 	rho, p = scipy.stats.pearsonr(dataframe['Read count RNA'], dataframe['Read count Ribo'])
 	x = dataframe['Read count RNA']
 
-	fig, ax = plt.subplots(figsize=(10,6), dpi=300)
+	fig, ax = plt.subplots(figsize=(10,6)) #dpi=300)
 	fontsize = 18
 	ax.grid(False)
 	ax.spines['right'].set_visible(0)

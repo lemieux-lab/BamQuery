@@ -2,6 +2,7 @@ import time, sys, os, datetime, argparse, logging, _thread, shutil, pickle
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
+from pandas import ExcelFile
 
 from readers.read_input import ReadInputFile
 from readers.info_transcripts_annotation import InfoTranscripts
@@ -24,7 +25,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -33,6 +34,7 @@ class BamQuery:
 		self.th_out = th_out
 		self.light = light
 		self.dev = dev
+		self.plots = plots
 
 		if self.mode == 'normal':
 			self.run_bam_query_normal_mode()
@@ -47,14 +49,18 @@ class BamQuery:
 	def run_bam_query_normal_mode(self):
 		self.common_to_modes()
 		
+		name_path_normal = self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx'
+		name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
+		
+		exists_normal = os.path.exists(name_path_normal) 
+		exists_light = os.path.exists(name_path_light) 
+
 		if not self.light:
 			name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx'
 		else:
 			name_path = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
-		
-		exists = os.path.exists(name_path) 
 
-		if not exists:
+		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
 			
 			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type)
 			
@@ -85,7 +91,43 @@ class BamQuery:
 
 			writer.save()
 			logging.info('========== Get Norm RNA : Done! ============ ')
+
+		elif (not self.light and not exists_normal and exists_light):
+			print ('Information count and normalisation already collected for light mode, filtering information for the peptides of interest !')
+
+			logging.info('Information count and normalisation already collected for light mode, filtering information for the peptides of interest !')
+
+			name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
+
+			#df_counts_all_alignments = pd.read_csv(self.path_to_output_folder+'/res_light/temps_files/'+self.name_exp+'_rna_count_All_alignments.csv', header=0, index_col=None)
+			df_counts_all_alignments = pd.read_excel(name_path_light, sheet_name='Alignments Read count RNA-seq', header=0, index_col=None, engine='openpyxl')
+
+			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides) == True]
+			df_all_alignments_rna = df_all_alignments_rna.set_index('Peptide')
+			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count_All_alignments.csv', index=True, header=True)
+
+			#df_counts_rna_light = pd.read_csv(self.path_to_output_folder+'/res_light/temps_files/'+self.name_exp+'_rna_count.csv', header=0, index_col=None)
+			df_counts_rna_light = pd.read_excel(name_path_light, sheet_name='Read count RNA-seq by peptide', header=0, index_col=None, engine='openpyxl')
+
+			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptides'].isin(self.set_peptides) == True]
+			df_counts_rna = df_counts_rna.set_index('Peptides')
+			df_counts_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count.csv', index=True, header=True)
+
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
+			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
+			
+			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
+			writer.book.use_zip64()
+			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
+			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
+			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
+			writer.save()
+			
+			plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, [], self.th_out)
+			plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, [], self.th_out)
+
 		else:
+			logging.info('Information count and normalisation already collected !')
 			print ('Information count and normalisation already collected !')
 		
 	def run_bam_query_translation_mode(self):
@@ -176,93 +218,76 @@ class BamQuery:
 		logging.info('========== Get Primary Counts : Done! ============ ')
 		print ('Get Primary Counts : Done!')
 
+
+		exists_normal = os.path.exists(self.path_to_output_folder+'genome_alignments/peptides_by_type.dic') 
+		exists_light = os.path.exists(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic') 
+
+		
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder)
 		self.input_file_treatment.treatment_file()
 
+		if self.dev:
+			with open(self.path_to_output_folder+'genome_alignments/peptides_by_type.dic', 'wb') as handle:
+				pickle.dump(self.input_file_treatment.peptides_by_type, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-		with open(self.path_to_output_folder+'genome_alignments/peptides_by_type.dic', 'wb') as handle:
-			pickle.dump(self.input_file_treatment.peptides_by_type, handle, protocol=pickle.HIGHEST_PROTOCOL)
+			with open(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic', 'wb') as handle:
+				pickle.dump(self.input_file_treatment.all_mode_peptide, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-		with open(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic', 'wb') as handle:
-			pickle.dump(self.input_file_treatment.all_mode_peptide, handle, protocol=pickle.HIGHEST_PROTOCOL)
+			with open(self.path_to_output_folder+'genome_alignments/CS_mode.dic', 'wb') as handle:
+				pickle.dump(self.input_file_treatment.CS_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+			with open(self.path_to_output_folder+'genome_alignments/peptides_mode.dic', 'wb') as handle:
+				pickle.dump(self.input_file_treatment.peptide_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+			with open(self.path_to_output_folder+'genome_alignments/manual_mode.dic', 'wb') as handle:
+				pickle.dump(self.input_file_treatment.manual_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		
 		
 		logging.info('========== Treatment File : Done! ============ ')
 		print ('Treatment File : Done!')
-		set_peptides = set(list(self.input_file_treatment.all_mode_peptide.keys()))
-
-		if not self.light:
-			name_path = self.path_to_output_folder+'alignments/Alignments_information.dic'
-		else:
-			name_path = self.path_to_output_folder+'alignments/Alignments_information_light.dic'
 		
-		exists = os.path.exists(name_path) 
+		self.set_peptides = set(list(self.input_file_treatment.all_mode_peptide.keys()))
 
-		if not exists:
-			if len(self.input_file_treatment.peptide_mode) > 0 or len(self.input_file_treatment.CS_mode) > 0 :
+		if len(self.input_file_treatment.peptide_mode) > 0 or len(self.input_file_treatment.CS_mode) > 0 :
 
-				if len(self.input_file_treatment.CS_mode) > 0 :			
-					with open(self.path_to_output_folder+'genome_alignments/CS_mode.dic', 'wb') as handle:
-						pickle.dump(self.input_file_treatment.CS_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-				if len(self.input_file_treatment.peptide_mode) > 0 :			
-					with open(self.path_to_output_folder+'genome_alignments/peptides_mode.dic', 'wb') as handle:
-						pickle.dump(self.input_file_treatment.peptide_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-				self.reverse_translation = ReverseTranslation()
-				self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
-				
-				logging.info('========== Reverse Translation : Done! ============ ')
-				print ('Reverse Translation : Done!')
+			self.reverse_translation = ReverseTranslation()
+			self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
 			
-				self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light)
-				self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(set_peptides)
+			logging.info('========== Reverse Translation : Done! ============ ')
+			print ('Reverse Translation : Done!')
+			
+			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light)
+			self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(self.set_peptides)
 
-				logging.info('========== Alignment : Done! ============ ')
-				print ('Alignment : Done!')
+			logging.info('========== Alignment : Done! ============ ')
+			print ('Alignment : Done!')
 
-			else:
-				self.perfect_alignments = {}
-				peptides_with_alignments = set()
+		if len(self.input_file_treatment.manual_mode) > 0 :
 
+			not_in = False
+			for peptide, info_peptide in self.input_file_treatment.manual_mode.items() :
+				coding_sequence = info_peptide[0]
+				position = info_peptide[1]
+				strand = info_peptide[2]
+				key = peptide+'_'+position+'_'+coding_sequence
+				if key not in self.perfect_alignments.keys():
+					not_in = True
+					peptides_with_alignments.add(peptide)
+					self.perfect_alignments[key] = [strand, peptide, ['NA'], ['NA'], ['NA'], [], []]
+			if not_in:
 				if not self.light:
 					name_path = self.path_to_output_folder+'alignments/Alignments_information.dic'
-				else:
+				else :
 					name_path = self.path_to_output_folder+'alignments/Alignments_information_light.dic'
 
 				with open(name_path, 'wb') as handle:
 					pickle.dump(self.perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
-		else:
-			try:
-				with open(name_path, 'rb') as handle:
-					self.perfect_alignments = pickle.load(handle)
-			except ValueError:
-				import pickle5
-				with open(name_path, 'rb') as handle:
-					self.perfect_alignments = pickle5.load(handle)
-
-			peptides_with_alignments = set()
 
 		# positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
-		exists = os.path.exists(self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx') 
-
-		if not exists:
-			if len(self.input_file_treatment.manual_mode) > 0 :
-				with open(self.path_to_output_folder+'genome_alignments/manual_mode.dic', 'wb') as handle:
-					pickle.dump(self.input_file_treatment.manual_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-				for peptide, info_peptide in self.input_file_treatment.manual_mode.items() :
-					coding_sequence = info_peptide[0]
-					position = info_peptide[1]
-					strand = info_peptide[2]
-					key = peptide+'_'+position+'_'+coding_sequence
-					peptides_with_alignments.add(peptide)
-					self.perfect_alignments[key] = [strand, peptide, ['NA'], ['NA'], ['NA'], [], []]
-
 		exists = os.path.exists(self.path_to_output_folder+'alignments/missed_peptides.info')
 
 		if not exists:
-			missed_peptides = list(set_peptides - peptides_with_alignments)
+			missed_peptides = list(self.set_peptides - peptides_with_alignments)
 
 			with open(self.path_to_output_folder+'alignments/missed_peptides.info', 'w') as f:
 				for item in missed_peptides:
@@ -281,16 +306,7 @@ class BamQuery:
 
 		get_info_transcripts = InfoTranscripts()
 		get_info_transcripts.set_values()
-
-		if len(self.perfect_alignments) == 0:
-			if not self.light:
-				name_path = self.path_to_output_folder+'alignments/Alignments_information.dic'
-			else:
-				name_path = self.path_to_output_folder+'alignments/Alignments_information_light.dic'
-
-			with open(name_path, 'rb') as fp:
-				self.perfect_alignments = pickle.load(fp)
-
+		
 		intersect_to_annotations = IntersectAnnotations(self.perfect_alignments, self.path_to_output_folder, self.name_exp)
 		intersect_to_annotations.generate_BED_files()
 		intersect_to_annotations.perform_intersection_with_annotation()
@@ -318,7 +334,7 @@ class BamQuery:
 			except KeyError:
 				order_sample_bam_files_ribo[group] = [name_sample]
 		
-		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev)
+		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev, self.plots)
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
 		get_biotype.get_global_annotation()
 		
@@ -358,6 +374,8 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55)
 	strandedness = strandedness
 	th_out = th_out
 	light = False
+	dev = False
+	plots = True
 
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
@@ -366,7 +384,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55)
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, False)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots)
 	
 	t2 = time.time()
 	total = t2-t0
@@ -405,6 +423,7 @@ def main(argv):
 	parser.add_argument('--light', action='store_true',
 						help='Display only the count and norm count for peptides and regions')
 	parser.add_argument('--dev', action='store_true')
+	parser.add_argument('--plots', action='store_true')
 
 	args = parser.parse_args()
 	
@@ -415,6 +434,7 @@ def main(argv):
 	th_out = args.th_out
 	light = args.light
 	dev = args.dev
+	plots = args.plots
 
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
@@ -423,7 +443,7 @@ def main(argv):
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots)
 	
 
 	if not dev:

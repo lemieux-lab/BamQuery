@@ -23,8 +23,10 @@ class Alignments:
 
 		exist = os.path.exists(self.path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 		exists_light = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information_light.dic')
+		exists_normal= os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information.dic')
+		exists_fastq= os.path.exists(self.path_to_output_folder_genome_alignments+'/'+self.name_exp+'.fastq')
 
-		if not exist and not exists_light:
+		if not exist and not exists_light and not exists_normal and exists_fastq:
 			t_0 = time.time()
 			inputFilesR1_1 = self.path_to_output_folder_genome_alignments+self.name_exp+'.fastq'
 			genomeDirectory = self.path_to_lib+'/Index_BAM_Query/'
@@ -49,10 +51,7 @@ class Alignments:
 			print ("Total time run function alignment_CS_to_genome End : %s min" % (total/60.0))
 			logging.info('Total time run function alignment_CS_to_genome to end : %f min', (total/60.0))
 		else:
-			if exists_light:
-				logging.info('Skipping : Alignment to genome !')
-			else:
-				logging.info('Alignment file already exists in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Aligned.out.sam')
+			logging.info('Alignment file already exists in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Aligned.out.sam')
 		
 		perfect_alignments = self.get_alignments(set_peptides)
 		
@@ -61,93 +60,96 @@ class Alignments:
 	def get_alignments(self, set_peptides):
 		t_0 = time.time()
 		sam_file = self.path_to_output_folder_genome_alignments+'/Aligned.out.sam'
-		
-		exists = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information.dic')
-		exists_light = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information_light.dic')
-
-		if not self.light and exists_light:
-			perfect_alignments, peptides_with_alignments = self.filter_peptides_from_alignments_information_light(set_peptides, self.path_to_output_folder_alignments+'/Alignments_information_light.dic')
-		
 		perfect_alignments = {}
 		peptides_with_alignments = set()
 
-		if not exists_light and not exists:
+		exists_sam_file = os.path.exists(sam_file)
+		if exists_sam_file:
 
-			res_star = get_alig.get_alignments(sam_file)
-			
-			t_2 = time.time()
-			total = t_2-t_0
+			exists = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information.dic')
+			exists_light = os.path.exists(self.path_to_output_folder_alignments+'/Alignments_information_light.dic')
 
-			print ("Total time run function get_alignments End : %s " % (total/60.0))
-			logging.info('Total time run function get_alignments to end : %f min', (total/60.0))
-			logging.info('Total perfect aligments : %s ', str(len(res_star[0])))
 			
-			perfect_alignments = res_star[0]
-			variants_alignments = res_star[1]
+			if not self.light and exists_light and not exists:
+				perfect_alignments, peptides_with_alignments = self.filter_peptides_from_alignments_information_light(set_peptides, self.path_to_output_folder_alignments+'/Alignments_information_light.dic')
 			
-			peptides_with_alignments = res_star[2]
-			
-			columns = ["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff AA", "Diff ntd", "SNVs"]
-			columns_cosmic = ["Peptide", "Strand", "Alignment", "SNV", 'Mutation genome position', 'GRCh', 'Gene', 'SNP', 'Mutation Id', 
-							'Mutation CDS', 'Mutation AA', 'Description',
-							'Mutation Strand', 'Resistance', 'Score', 'Prediction', 'Status' ]
+			if not exists_light and not exists:
 
-			alignments = [perfect_alignments, variants_alignments]
-			pool = ProcessPool(nodes = NUM_WORKERS)
-			results = pool.map(self.generer_alignments_information, alignments)
-			
-			perfect_alignments_to_print = results[0][0]
-			variants_alignments_to_print = results[1][0]
-			
-			info_cosmic = results[0][1]
-			
-			info_cosmic_to_print = self.get_info_cosmic(info_cosmic)
-			
-			if len(info_cosmic_to_print) == 0:
-				info_cosmic_to_print = [['NA']*len(columns_cosmic)]
+				res_star = get_alig.get_alignments(sam_file)
+				
+				t_2 = time.time()
+				total = t_2-t_0
 
-			self.df1 = pd.DataFrame(perfect_alignments_to_print, columns = columns)
-			self.df2 = pd.DataFrame(variants_alignments_to_print, columns = columns)
-			self.df3 = pd.DataFrame(info_cosmic_to_print, columns = columns_cosmic)
+				print ("Total time run function get_alignments End : %s " % (total/60.0))
+				logging.info('Total time run function get_alignments to end : %f min', (total/60.0))
+				logging.info('Total perfect aligments : %s ', str(len(res_star[0])))
+				
+				perfect_alignments = res_star[0]
+				variants_alignments = res_star[1]
+				
+				peptides_with_alignments = res_star[2]
+				
+				columns = ["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff AA", "Diff ntd", "SNVs"]
+				columns_cosmic = ["Peptide", "Strand", "Alignment", "SNV", 'Mutation genome position', 'GRCh', 'Gene', 'SNP', 'Mutation Id', 
+								'Mutation CDS', 'Mutation AA', 'Description',
+								'Mutation Strand', 'Resistance', 'Score', 'Prediction', 'Status' ]
 
-			self.write_xls_with_alignments_info()
-			
-			if not self.light:
-				name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+				alignments = [perfect_alignments, variants_alignments]
+				pool = ProcessPool(nodes = NUM_WORKERS)
+				results = pool.map(self.generer_alignments_information, alignments)
+				
+				perfect_alignments_to_print = results[0][0]
+				variants_alignments_to_print = results[1][0]
+				
+				info_cosmic = results[0][1]
+				
+				info_cosmic_to_print = self.get_info_cosmic(info_cosmic)
+				
+				if len(info_cosmic_to_print) == 0:
+					info_cosmic_to_print = [['NA']*len(columns_cosmic)]
+
+				self.df1 = pd.DataFrame(perfect_alignments_to_print, columns = columns)
+				self.df2 = pd.DataFrame(variants_alignments_to_print, columns = columns)
+				self.df3 = pd.DataFrame(info_cosmic_to_print, columns = columns_cosmic)
+
+				self.write_xls_with_alignments_info()
+				
+				if not self.light:
+					name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+				else:
+					name_path = self.path_to_output_folder_alignments+'/Alignments_information_light.dic'
+
+				with open(name_path, 'wb') as handle:
+					pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+				logging.info('Alignments Information save to : %s ', name_path)
+				
 			else:
-				name_path = self.path_to_output_folder_alignments+'/Alignments_information_light.dic'
+				logging.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
+				
+				if not self.light:
+					name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
+				else:
+					name_path = self.path_to_output_folder_alignments+'/Alignments_information_light.dic'
 
-			with open(name_path, 'wb') as handle:
-				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+				with open(name_path, 'rb') as fp:
+					try:
+						perfect_alignments = pickle.load(fp)
+					except ValueError:
+						import pickle5
+						perfect_alignments = pickle5.load(fp)
 
-			logging.info('Alignments Information save to : %s ', name_path)
-			
-		else:
-			logging.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
-			
-			if not self.light:
-				name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
-			else:
-				name_path = self.path_to_output_folder_alignments+'/Alignments_information_light.dic'
-
-			with open(name_path, 'rb') as fp:
+				logging.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
+				
 				try:
-					perfect_alignments = pickle.load(fp)
-				except ValueError:
-					import pickle5 as pick
-					perfect_alignments = pick.load(fp)
-
-			logging.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
-			
-			try:
-				with open(self.path_to_output_folder_alignments+'alignments/missed_peptides.info') as f:
-					for index, line in enumerate(f):
-						peptide = line.strip()
-						peptides_with_alignments.add(peptide)
-			except :
-				peptides_keys = list(perfect_alignments.keys())
-				for key in peptides_keys:
-					peptides_with_alignments.add(key.split('_')[0])
+					with open(self.path_to_output_folder_alignments+'alignments/missed_peptides.info') as f:
+						for index, line in enumerate(f):
+							peptide = line.strip()
+							peptides_with_alignments.add(peptide)
+				except :
+					peptides_keys = list(perfect_alignments.keys())
+					for key in peptides_keys:
+						peptides_with_alignments.add(key.split('_')[0])
 
 		return perfect_alignments, peptides_with_alignments
 
