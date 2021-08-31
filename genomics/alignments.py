@@ -8,7 +8,7 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
-NUM_WORKERS =  multiprocessing.cpu_count()
+NUM_WORKERS =  multiprocessing.cpu_count()/2
 
 class Alignments:
 
@@ -36,8 +36,8 @@ class Alignments:
 			maxMulti = 2000 						
 			dbSNPFile = self.path_to_lib+'dbSNP149_all.vcf'
 
-			#command = 'module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
-			command = 'module add star/2.7.1a; STAR --runThreadN 16'+\
+			#command = 'module add star/2.7.1a; STAR --runThreadN 16'+\
+			command = 'module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
 					' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
 					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
 					str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+\

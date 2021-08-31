@@ -93,7 +93,7 @@ class BamQuery:
 			logging.info('========== Get Norm RNA : Done! ============ ')
 
 		elif (not self.light and not exists_normal and exists_light):
-			print ('Information count and normalisation already collected for light mode, filtering information for the peptides of interest !')
+			print ('Information count and normalisation already collected from light mode, filtering information for the peptides of interest !')
 
 			logging.info('Information count and normalisation already collected for light mode, filtering information for the peptides of interest !')
 
@@ -106,6 +106,8 @@ class BamQuery:
 			df_all_alignments_rna = df_all_alignments_rna.set_index('Peptide')
 			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count_All_alignments.csv', index=True, header=True)
 
+			logging.info('Information All alignments for peptides of interest collected!')
+
 			#df_counts_rna_light = pd.read_csv(self.path_to_output_folder+'/res_light/temps_files/'+self.name_exp+'_rna_count.csv', header=0, index_col=None)
 			df_counts_rna_light = pd.read_excel(name_path_light, sheet_name='Read count RNA-seq by peptide', header=0, index_col=None, engine='openpyxl')
 
@@ -113,9 +115,13 @@ class BamQuery:
 			df_counts_rna = df_counts_rna.set_index('Peptides')
 			df_counts_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count.csv', index=True, header=True)
 
+			logging.info('Information rna counts for peptides of interest collected!')
+
 			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			
+			logging.info('Information norm counts for peptides of interest collected!')
+
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
 			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
@@ -125,6 +131,8 @@ class BamQuery:
 			
 			plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, [], self.th_out)
 			plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, [], self.th_out)
+
+			logging.info('Information for peptides of interest collected!')
 
 		else:
 			logging.info('Information count and normalisation already collected !')
@@ -219,10 +227,6 @@ class BamQuery:
 		print ('Get Primary Counts : Done!')
 
 
-		exists_normal = os.path.exists(self.path_to_output_folder+'genome_alignments/peptides_by_type.dic') 
-		exists_light = os.path.exists(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic') 
-
-		
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder)
 		self.input_file_treatment.treatment_file()
 
