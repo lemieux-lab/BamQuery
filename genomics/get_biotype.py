@@ -480,8 +480,10 @@ class BiotypeAssignation:
 
 				# Plots
 				if self.plots:
-					peptide_type_aux = peptide_type.split(',')[0]
+					peptide_type_aux = peptide_type.split(',')
+
 					for pep_type in peptide_type_aux:
+						
 						try:
 							types = biotypes_by_peptide_type[pep_type]
 							try:
@@ -608,7 +610,7 @@ class BiotypeAssignation:
 				if index == 0:
 					key = element
 					peptide_type = key[0]
-					peptide_type_aux = peptide_type.split(',')[0]
+					peptide_type_aux = peptide_type.split(',')
 				else:
 					key_group = element[0]
 					type_ = element[1]
@@ -642,7 +644,7 @@ class BiotypeAssignation:
 									
 							except KeyError:
 								biotypes_all_peptides_group_samples[key_group] = {type_ : value_group}
-							
+
 							for pep_type in peptide_type_aux:
 								try:
 									peptide_types = biotypes_by_peptide_type_group_samples[key_group]
