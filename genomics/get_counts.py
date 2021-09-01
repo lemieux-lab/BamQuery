@@ -1,4 +1,4 @@
-import warnings
+import warnings, os
 warnings.filterwarnings("ignore")
 import os, logging, time, subprocess, pickle, multiprocessing, os, _thread, csv, collections, pysam, copy
 import genomics.get_alignments as get_alig
@@ -36,6 +36,22 @@ class GetCounts:
 		exists = os.path.exists(self.path_to_output_temps_folder+self.name_exp+'_ribo_count.csv')
 		
 		order = []
+
+		last_treated_bam_file = os.path.exists(self.path_to_output_folder_alignments+'info_trated_ribo_bam_files.pkl')
+
+		if last_treated_bam_file:
+
+			with open(self.path_to_output_folder_alignments+'info_trated_ribo_bam_files.pkl', 'rb') as fp:
+				last_treated_bam_file = pickle.load(fp)
+		else:
+			last_treated_bam_file = 0
+
+		if self.light:
+			alignment_information = self.path_to_output_folder_alignments+'Alignments_information_light.dic'
+			alignment_information_ribo = self.path_to_output_folder_alignments+'Alignments_ribo_information_light.dic'
+		else:
+			alignment_information = self.path_to_output_folder_alignments+'Alignments_information.dic'
+			alignment_information_ribo = self.path_to_output_folder_alignments+'Alignments_ribo_information.dic'
 
 		if not exists:
 			t_0 = time.time()
@@ -87,75 +103,101 @@ class GetCounts:
 			pool = ProcessPool(nodes=NUM_WORKERS)
 
 			for idx, bam_file in enumerate(info_bams):
-				t0_bam_file = time.time()
-				bams = [bam_file] * len(keys)
-				results = pool.map(self.get_counts_sample, bams, keys, values)
-				not_permission = False
 
-				for res in results:
+				if idx > last_treated_bam_file:
 
-					for index, count_align in enumerate(res):
+					t0_bam_file = time.time()
+					bams = [bam_file] * len(keys)
+					results = pool.map(self.get_counts_sample, bams, keys, values)
+					not_permission = False
 
-						if index == 0:
-							peptide = count_align[0]
-							alignment = count_align[1]
-							sample = count_align[2]
-							strand = count_align[3]
-							to_print = [peptide, alignment, sample]
-						else:
-							count = count_align[0]
-							if count == -1:
-								not_permission = True
-							sequence = count_align[1]
-							to_print_aux = copy.deepcopy(to_print)
-							to_print_aux.append(count)
-							index = get_index(sample)
+					for res in results:
 
-							key_aux = alignment+'_'+sequence
+						for index, count_align in enumerate(res):
 
-							try:
-								peptide_info_to_write = to_write[peptide]
+							if index == 0:
+								peptide = count_align[0]
+								alignment = count_align[1]
+								sample = count_align[2]
+								strand = count_align[3]
+								to_print = [peptide, alignment, sample]
+							else:
+								count = count_align[0]
+								if count == -1:
+									not_permission = True
+								sequence = count_align[1]
+								to_print_aux = copy.deepcopy(to_print)
+								to_print_aux.append(count)
+								index = get_index(sample)
+
+								key_aux = alignment+'_'+sequence
 
 								try:
-									peptide_info_to_write[key_aux][index] = count
+									peptide_info_to_write = to_write[peptide]
+
+									try:
+										peptide_info_to_write[key_aux][index] = count
+
+									except KeyError:
+										counts = [0]*total_samples
+										to_add = [strand]
+										to_add.extend(counts)
+										to_add[index] = count
+										peptide_info_to_write[key_aux] = to_add
 
 								except KeyError:
 									counts = [0]*total_samples
 									to_add = [strand]
 									to_add.extend(counts)
 									to_add[index] = count
-									peptide_info_to_write[key_aux] = to_add
+									to_write[peptide] = {key_aux: to_add}
 
-							except KeyError:
-								counts = [0]*total_samples
-								to_add = [strand]
-								to_add.extend(counts)
-								to_add[index] = count
-								to_write[peptide] = {key_aux: to_add}
+								try:
+									data[peptide].append(to_print_aux)
+								except KeyError:
+									data[peptide] = [to_print_aux]
 
-							try:
-								data[peptide].append(to_print_aux)
-							except KeyError:
-								data[peptide] = [to_print_aux]
+								key = peptide+'_'+alignment+'_'+sequence
+								if len(perfect_alignments[key][-1]) == 0:
+									perfect_alignments[key][-1] = [0]*total_samples
 
-							key = peptide+'_'+alignment+'_'+sequence
-							if len(perfect_alignments[key][-1]) == 0:
-								perfect_alignments[key][-1] = [0]*total_samples
+								perfect_alignments[key][-1][index-1] = count
+								perfect_alignments_to_return[key] = perfect_alignments[key]
 
-							perfect_alignments[key][-1][index-1] = count
-							perfect_alignments_to_return[key] = perfect_alignments[key]
+					t1_bam_file = time.time()
+					time_final = (t1_bam_file-t0_bam_file)/60.0
 
-				t1_bam_file = time.time()
-				time_final = (t1_bam_file-t0_bam_file)/60.0
-				if not_permission:
-					logging.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
+					if not_permission:
+						logging.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
+					else:
+						logging.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
+
+					if (idx % 50) == 0:
+						with open(self.path_to_output_folder_alignments+'info_trated_ribo_bam_files.pkl', 'wb') as f:  
+							pickle.dump(idx, f)
+
+						with open(alignment_information, 'wb') as handle:
+							pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+						with open(alignment_information_ribo, 'wb') as handle:
+							pickle.dump(perfect_alignments_to_return, handle, protocol=pickle.HIGHEST_PROTOCOL)
 				else:
-					logging.info('Processed Bam File : %s %s . Time : %f min', str(idx), bam_file[0], time_final)
+					logging.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
 
 			pool.close()
 			pool.join()
 			pool.clear()
 			
+			with open(self.path_to_output_folder_alignments+'info_trated_ribo_bam_files.pkl', 'wb') as f:  
+				pickle.dump(idx, f)
+
+			with open(alignment_information, 'wb') as handle:
+				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+			with open(alignment_information_ribo, 'wb') as handle:
+				pickle.dump(perfect_alignments_to_return, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 			header = ['Peptide', 'Position', 'Strand']
 			header.extend(list_bam_files_order)
 			to_write_list = [header]
@@ -170,19 +212,6 @@ class GetCounts:
 					to_write_list.append(to_add)
 
 			df_alignments = pd.DataFrame(to_write_list[1:], columns=to_write_list[0])
-
-			if self.light:
-				name_path_info = self.path_to_output_folder_alignments+'Alignments_information_light.dic'
-				name_path_info_ribo = self.path_to_output_folder_alignments+'Alignments_ribo_information_light.dic'
-			else:
-				name_path_info = self.path_to_output_folder_alignments+'Alignments_information.dic'
-				name_path_info_ribo = self.path_to_output_folder_alignments+'Alignments_ribo_information.dic'
-
-			with open(name_path, 'wb') as handle:
-				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-			with open(name_path, 'wb') as handle:
-				pickle.dump(perfect_alignments_to_return, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			data_ordered = []
 			order_pep = []
@@ -221,12 +250,7 @@ class GetCounts:
 			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+'_ribo_count.csv')
 			df_counts = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_ribo_count.csv', index_col=0)
 
-			if self.light:
-				name_path = self.path_to_output_folder_alignments+'Alignments_information_light.dic'
-			else:
-				name_path = self.path_to_output_folder_alignments+'Alignments_information.dic'
-
-			with open(name_path, 'rb') as fp:
+			with open(alignment_information, 'rb') as fp:
 				perfect_alignments = pickle.load(fp)
 			
 			df_alignments = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_ribo_count_All_alignments.csv', index_col=0)
@@ -242,6 +266,29 @@ class GetCounts:
 		exist_rna = os.path.exists(self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv')
 		exist_ribo = True
 
+		last_treated_bam_file = os.path.exists(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl')
+
+		if last_treated_bam_file:
+
+			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'rb') as fp:
+				last_treated_bam_file = pickle.load(fp)
+
+			with open(self.path_to_output_folder_alignments+'data.pkl', 'rb') as fp:
+				data = pickle.load(fp)
+
+			with open(self.path_to_output_folder_alignments+'to_write.pkl', 'rb') as fp:
+				to_write = pickle.load(fp)
+
+		else:
+			last_treated_bam_file = -1
+			to_write = {} 
+			data = {}
+
+		if self.light:
+			alignment_information = self.path_to_output_folder_alignments+'Alignments_information_light.dic'
+		else:
+			alignment_information = self.path_to_output_folder_alignments+'Alignments_information.dic'
+			
 		if self.mode == 'translation':
 
 			if self.light:
@@ -252,17 +299,19 @@ class GetCounts:
 			with open(name_path, 'rb') as fp:
 				perfect_alignments_ribo = pickle.load(fp)
 
-			data_filtered = {}
 			exist_ribo = os.path.exists(self.path_to_output_temps_folder+self.name_exp+'_rna_ribo_count.csv')
+			try:
+				with open(self.path_to_output_folder_alignments+'data_filtered.pkl', 'rb') as fp:
+					data_filtered = pickle.load(fp)
+			except:
+				data_filtered = {}
+			
 
 		order_f = []
 		order = []
 
 		if (not exist_rna and exist_ribo):
 			t_0 = time.time()
-			to_write = {} 
-			
-			data = {}
 			
 			info_bams = []
 			bams = []
@@ -305,84 +354,113 @@ class GetCounts:
 
 			for idx, bam_file in enumerate(info_bams):
 				
-				t0_bam_file = time.time()
-				bams = [bam_file] * len(keys)
-				results = pool.map(self.get_counts_sample, bams, keys, values)
-				not_permission = False
+				if idx > last_treated_bam_file:
 
-				for res in results:
+					t0_bam_file = time.time()
+					bams = [bam_file] * len(keys)
+					results = pool.map(self.get_counts_sample, bams, keys, values)
+					not_permission = False
 
-					for index, count_align in enumerate(res):
+					for res in results:
 
-						if index == 0: 
-							peptide = count_align[0]
-							alignment = count_align[1]
-							sample = count_align[2]
-							strand = count_align[3]
-							to_print = [peptide, alignment, sample]
-						else:
-							count = count_align[0]
-							if count == -1:
-								not_permission = True
-							sequence = count_align[1]
-							to_print_aux = copy.deepcopy(to_print)
-							to_print_aux.append(count)
-							
-							index = get_index(sample) 
+						for index, count_align in enumerate(res):
 
-							key_aux = alignment+'_'+sequence
-							try:
-								peptide_info_to_write = to_write[peptide]
+							if index == 0: 
+								peptide = count_align[0]
+								alignment = count_align[1]
+								sample = count_align[2]
+								strand = count_align[3]
+								to_print = [peptide, alignment, sample]
+							else:
+								count = count_align[0]
+								if count == -1:
+									not_permission = True
+								sequence = count_align[1]
+								to_print_aux = copy.deepcopy(to_print)
+								to_print_aux.append(count)
+								
+								index = get_index(sample) 
 
+								key_aux = alignment+'_'+sequence
 								try:
-									peptide_info_to_write[key_aux][index] = count
+									peptide_info_to_write = to_write[peptide]
+
+									try:
+										peptide_info_to_write[key_aux][index] = count
+									except KeyError:
+										counts = [0]*total_samples
+										to_add = [strand]
+										to_add.extend(counts)
+										to_add[index] = count
+										peptide_info_to_write[key_aux] = to_add
+
 								except KeyError:
 									counts = [0]*total_samples
 									to_add = [strand]
 									to_add.extend(counts)
-									to_add[index] = count
-									peptide_info_to_write[key_aux] = to_add
+									to_add[index]  = count
+									to_write[peptide] = {key_aux: to_add}
 
-							except KeyError:
-								counts = [0]*total_samples
-								to_add = [strand]
-								to_add.extend(counts)
-								to_add[index]  = count
-								to_write[peptide] = {key_aux: to_add}
-
-							try:
-								data[peptide].append(to_print_aux)
-							except KeyError:
-								data[peptide] = [to_print_aux]
-
-							key = peptide+'_'+alignment+'_'+sequence
-							if len(perfect_alignments[key][-2]) == 0:
-								perfect_alignments[key][-2] = [0]*total_samples
-
-							perfect_alignments[key][-2][index-1] = count
-
-							if self.mode == 'translation':
 								try:
-									count_ribo = perfect_alignments_ribo[key][-1][index-1]
-									if count_ribo > 0:
-										try:
-											data_filtered.append(to_print_aux)
-										except KeyError:
-											data_filtered[peptide] = [to_print_aux]
-
+									data[peptide].append(to_print_aux)
 								except KeyError:
-									pass
+									data[peptide] = [to_print_aux]
 
-				t1_bam_file = time.time()
-				time_final = (t1_bam_file-t0_bam_file)/60.0
-				if not_permission:
-					logging.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
+								key = peptide+'_'+alignment+'_'+sequence
+								if len(perfect_alignments[key][-2]) == 0:
+									perfect_alignments[key][-2] = [0]*total_samples
+
+								perfect_alignments[key][-2][index-1] = count
+
+								if self.mode == 'translation':
+									try:
+										count_ribo = perfect_alignments_ribo[key][-1][index-1]
+										if count_ribo > 0:
+											try:
+												data_filtered.append(to_print_aux)
+											except KeyError:
+												data_filtered[peptide] = [to_print_aux]
+
+									except KeyError:
+										pass
+
+					t1_bam_file = time.time()
+					time_final = (t1_bam_file-t0_bam_file)/60.0
+
+					if not_permission:
+						logging.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
+					else:
+						logging.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
+
+					if (idx % 100) == 0:
+						with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
+							pickle.dump(idx, f)
+
+						with open(alignment_information, 'wb') as handle:
+							pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+						with open(self.path_to_output_folder_alignments+'to_write.pkl', 'wb') as handle:
+							pickle.dump(to_write, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+						with open(self.path_to_output_folder_alignments+'data.pkl', 'wb') as handle:
+							pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+						if self.mode == 'translation':
+							with open(self.path_to_output_folder_alignments+'data_filtered.pkl', 'wb') as handle:
+								pickle.dump(data_filtered, handle, protocol=pickle.HIGHEST_PROTOCOL)							
 				else:
-					logging.info('Processed Bam File : %s %s . Time : %f min', str(idx), bam_file[0], time_final)
-			
+					logging.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
+
 			pool.close()
 			pool.join()
 			pool.clear()
+
+			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
+				pickle.dump(idx, f)
+
+			with open(alignment_information, 'wb') as handle:
+				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 			header = ['Peptide', 'Position', 'MCS', 'Strand']
 			header.extend(list_bam_files_order)
@@ -398,14 +476,6 @@ class GetCounts:
 					to_write_list.append(to_add)
 
 			df_alignments = pd.DataFrame(to_write_list[1:], columns=to_write_list[0])
-
-			if self.light:
-				name_path = self.path_to_output_folder_alignments+'Alignments_information_light.dic'
-			else:
-				name_path = self.path_to_output_folder_alignments+'Alignments_information.dic'
-
-			with open(name_path, 'wb') as handle:
-				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			data_ordered = []
 			order_pep = []
@@ -469,6 +539,8 @@ class GetCounts:
 					df_counts_filtered.drop('order', 1, inplace = True)
 					df_counts_filtered.set_index('Peptides',inplace=True)
 					_thread.start_new_thread(self.save_info_counts, (df_counts_filtered, '', '_rna_ribo_count.csv'))
+
+					os.remove(self.path_to_output_folder_alignments+'data_filtered.pkl')
 			
 			t_2 = time.time()
 			total = t_2-t_0
@@ -477,12 +549,7 @@ class GetCounts:
 			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv')
 			df_counts = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv', index_col=0)
 			
-			if self.light:
-				name_path = self.path_to_output_folder_alignments+'Alignments_information_light.dic'
-			else:
-				name_path = self.path_to_output_folder_alignments+'Alignments_information.dic'
-
-			with open(name_path, 'rb') as fp:
+			with open(alignment_information, 'rb') as fp:
 				perfect_alignments = pickle.load(fp)
 
 			if self.mode == 'translation':
@@ -490,6 +557,9 @@ class GetCounts:
 
 			df_alignments = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_rna_count_All_alignments.csv', index_col=0)
 
+		os.remove(self.path_to_output_folder_alignments+'to_write.pkl')
+		os.remove(self.path_to_output_folder_alignments+'data.pkl')
+		
 		return df_counts, perfect_alignments, df_counts_filtered, order, order_f, df_alignments
 
 
