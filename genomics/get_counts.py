@@ -432,7 +432,9 @@ class GetCounts:
 					else:
 						logging.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
 
-					if (idx % 100) == 0:
+					if (idx % 100 == 0) and (idx != 0):
+						logging.info('Saving information for Bam Files processed')
+
 						with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
 							pickle.dump(idx, f)
 
