@@ -454,10 +454,16 @@ class BiotypeAssignation:
 				peptides_absent_sample_group[peptide] = indices
 
 			if biotypes_annotated_alignments != '':
+				in_frame = False
 				for type_ in sorted(biotypes_annotated_alignments, key=biotypes_annotated_alignments.get, reverse=True):
-					count = biotypes_annotated_alignments[type_]
-					count = count/(total_alignments_spliced_annotated*1.0)
-					type_ = self.mod_type(type_)
+					if 'In_frame' in biotypes_all_alignments.keys():
+						in_frame = True
+						count = 1
+						type_ = self.mod_type(type_)
+					else:
+						count = biotypes_annotated_alignments[type_]
+						count = count/(total_alignments_spliced_annotated*1.0)
+						type_ = self.mod_type(type_)
 
 					try:
 						type_in_dic  = biotype_info_only_alignments_annotated['Genome']
@@ -474,7 +480,9 @@ class BiotypeAssignation:
 						peptide_type_dic[peptide_type] = {type_ : count}
 						biotype_info_only_alignments_annotated['Genome'] = peptide_type_dic
 
-			
+					if in_frame:
+						break
+
 			in_frame = False
 			for type_ in sorted(biotypes_all_alignments, key=biotypes_all_alignments.get, reverse=True):
 
