@@ -377,13 +377,16 @@ class BiotypeAssignation:
 			type_ere = []
 			type_gen = []
 
-			for type_ in type_ere_aux:
-				types = type_.split(',')
-				type_ere.extend(types)
+			if 'In_frame' not in type_gen_aux:
+				for type_ in type_ere_aux:
+					types = type_.split(',')
+					type_ere.extend(types)
 
-			for type_ in type_gen_aux:
-				types = type_.split(',')
-				type_gen.extend(types)
+				for type_ in type_gen_aux:
+					types = type_.split(',')
+					type_gen.extend(types)
+			else:
+				type_gen = ['In_frame']
 
 			type_ere = list(type_ere)
 			type_gen = list(type_gen)
@@ -471,12 +474,21 @@ class BiotypeAssignation:
 						peptide_type_dic[peptide_type] = {type_ : count}
 						biotype_info_only_alignments_annotated['Genome'] = peptide_type_dic
 
+			
+			in_frame = False
 			for type_ in sorted(biotypes_all_alignments, key=biotypes_all_alignments.get, reverse=True):
-				count = biotypes_all_alignments[type_]
-				count = count/(total_alignments_pep*1.0)
-				
-				percentage = round(count*100,2)
-				count_string.append(type_+': '+str(percentage)+'%')
+
+				if 'In_frame' in biotypes_all_alignments.keys():
+					in_frame = True
+					count = 1
+					percentage = round(count*100,2)
+					count_string.append('In_frame: '+str(percentage)+'%')
+				else:
+					count = biotypes_all_alignments[type_]
+					count = count/(total_alignments_pep*1.0)
+					
+					percentage = round(count*100,2)
+					count_string.append(type_+': '+str(percentage)+'%')
 
 				# Plots
 				if self.plots:
@@ -511,6 +523,9 @@ class BiotypeAssignation:
 						type_in_dic[type_] = count
 				except KeyError:
 					biotype_info_all_alignments_annotated['Genome'] = {type_ : count}
+
+				if in_frame:
+					break
 
 			try:
 				self.counts_reads_rna_ribo[peptide_type][peptide] = [count_rna, count_ribo]
@@ -719,7 +734,6 @@ class BiotypeAssignation:
 
 		return info_peptides_alignments_by_sample, info_peptides_alignments_by_sample_group
 
-
 	def get_information_by_alignments_peptides(self, key, information_peptide, indexes_group, indexes_by_group):
 		
 		to_add = []
@@ -777,7 +791,6 @@ class BiotypeAssignation:
 		to_add.extend(count_bamfiles)
 
 		return to_add, info_peptides_alignments_by_sample, info_peptides_alignments_by_sample_group
-
 
 	def process_information_by_peptides_in_samples(self, info_peptides_alignments_by_sample, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns):
 
@@ -883,15 +896,22 @@ class BiotypeAssignation:
 		
 		# Gets the information for each peptide with the information for each alignment,
 		# and for all the alingments. 
-		info_peptides_by_alignment, self.general_info_peptides, only_annotated_splices = self.get_information_mixed_genomic_ERE(df_final_gen_sum, group_by_gen_ere)
-		
+		res = self.get_information_mixed_genomic_ERE(df_final_gen_sum, group_by_gen_ere)
+		info_peptides_by_alignment = res[0] 
+		self.general_info_peptides = res[1] 
+		only_annotated_splices = res[2]
+
 		res = self.process_general_information_alignments_peptides(self.general_info_peptides, only_annotated_splices, bam_files_columns)
 		peptides_absent_sample_group = res[0] 
 		biotype_info_all_alignments_annotated = res[1] 
 		biotype_info_only_alignments_annotated = res[2] 
 		
-		split_bams_files, indexes_group, order_columns, indexes_by_group = self.get_info_group_samples(bam_files_columns)
-		
+		res = self.get_info_group_samples(bam_files_columns)
+		split_bams_files = res[0] 
+		indexes_group = res[1] 
+		order_columns = res[2] 
+		indexes_by_group = res[3]
+
 		res = self.process_information_by_alignments_peptides(info_peptides_by_alignment, self.general_info_peptides, indexes_group, indexes_by_group, split_bams_files, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns)
 		info_peptides_alignments_by_sample = res[0] 
 		info_peptides_alignments_by_sample_group = res[1]

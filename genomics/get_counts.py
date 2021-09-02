@@ -273,11 +273,14 @@ class GetCounts:
 			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'rb') as fp:
 				last_treated_bam_file = pickle.load(fp)
 
-			with open(self.path_to_output_folder_alignments+'data.pkl', 'rb') as fp:
-				data = pickle.load(fp)
+			try:
+				with open(self.path_to_output_folder_alignments+'data.pkl', 'rb') as fp:
+					data = pickle.load(fp)
 
-			with open(self.path_to_output_folder_alignments+'to_write.pkl', 'rb') as fp:
-				to_write = pickle.load(fp)
+				with open(self.path_to_output_folder_alignments+'to_write.pkl', 'rb') as fp:
+					to_write = pickle.load(fp)
+			except FileNotFoundError:
+				pass
 
 		else:
 			last_treated_bam_file = -1
@@ -559,8 +562,11 @@ class GetCounts:
 
 			df_alignments = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_rna_count_All_alignments.csv', index_col=0)
 
-		os.remove(self.path_to_output_folder_alignments+'to_write.pkl')
-		os.remove(self.path_to_output_folder_alignments+'data.pkl')
+		try:
+			os.remove(self.path_to_output_folder_alignments+'to_write.pkl')
+			os.remove(self.path_to_output_folder_alignments+'data.pkl')
+		except FileNotFoundError:
+			pass
 		
 		return df_counts, perfect_alignments, df_counts_filtered, order, order_f, df_alignments
 
