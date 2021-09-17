@@ -12,12 +12,17 @@ NUM_WORKERS =  multiprocessing.cpu_count()
 
 class Alignments:
 
-	def __init__(self, path_to_output_folder, name_exp, light):
+	def __init__(self, path_to_output_folder, name_exp, light, dbSNP):
 		self.path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 		self.name_exp = name_exp
 		self.path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.light = light
+		self.dbSNP = dbSNP
+		if dbSNP == 149:
+			self.dbSNPFile = self.path_to_lib+'dbSNP/dbSNP149_all.vcf.gz'
+		else:
+			self.dbSNPFile = self.path_to_lib+'dbSNP/dbSNP151_all.vcf.gz'
 
 	def alignment_cs_to_genome(self, set_peptides):
 
@@ -34,14 +39,20 @@ class Alignments:
 			seed = 20
 			anchor = 2000										
 			maxMulti = 2000 						
-			dbSNPFile = self.path_to_lib+'dbSNP149_all.vcf'
+			
 			#command = 'module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
+			
+			#command = 'module add star/2.7.1a; STAR --runThreadN 16'+\
+			#		' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
+			#		' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
+			#		str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+\
+			#		self.dbSNPFile+' --readFilesIn  '+inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+self.path_to_output_folder_genome_alignments
 			
 			command = 'module add star/2.7.1a; STAR --runThreadN 16'+\
 					' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
 					' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20 --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+\
-					str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --genomeConsensusFile '+\
-					dbSNPFile+' --readFilesIn  '+inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+self.path_to_output_folder_genome_alignments # 3286 #3276
+					str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --readFilesIn  '+\
+					inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+self.path_to_output_folder_genome_alignments
 			
 			logging.info('Command to Align using STAR : %s ', command)
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
@@ -75,7 +86,7 @@ class Alignments:
 			
 			if not exists_light and not exists:
 
-				res_star = get_alig.get_alignments(sam_file)
+				res_star = get_alig.get_alignments(sam_file, self.dbSNP)
 				
 				t_2 = time.time()
 				total = t_2-t_0
@@ -98,8 +109,12 @@ class Alignments:
 				pool = ProcessPool(nodes = NUM_WORKERS)
 				results = pool.map(self.generer_alignments_information, alignments)
 				
+
 				perfect_alignments_to_print = results[0][0]
 				variants_alignments_to_print = results[1][0]
+				pool.close()
+				pool.join()
+				pool.clear()
 				
 				info_cosmic = results[0][1]
 				

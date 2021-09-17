@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from pathos.multiprocessing import ProcessPool
 import multiprocessing
+import billiard as mp
 import utils.useful_functions as uf
 import plotting.draw_biotypes as plots
 from collections import Counter, OrderedDict
@@ -68,12 +69,14 @@ class BiotypeAssignation:
 		data_gen_ere = []
 		self.biotype_type = set()
 		self.splices_annotated = set()
+		self.total_peptides = 0
 
 		spliced = 0
 		for type_peptide, peptides in peptides_by_type.items():
 
 			for peptide in peptides:
 
+				self.total_peptides += 1
 				if True:#'AAVLEYLTAE' == peptide :#'AEKLGFAGL' == peptide:
 
 					try:
@@ -135,7 +138,7 @@ class BiotypeAssignation:
 									to_add_ere.extend(rna_bam_files)
 									to_add_ere.extend(ribo_bam_files) 
 									to_add_ere.extend([sum(rna_bam_files), sum(ribo_bam_files)])
-									data_ere.append(to_add_ere)
+									#data_ere.append(to_add_ere)
 									self.biotype_type.add(repClass)
 
 							except KeyError:
@@ -208,10 +211,10 @@ class BiotypeAssignation:
 		columns_gen_ere.extend(self.bam_files_list_ribo)
 		columns_gen_ere.extend(['Total reads count RNA', 'Total reads count Ribo'])
 
-		self.df1 = pd.DataFrame(data_ere, columns = columns_ere)
+		#self.df1 = pd.DataFrame(data_ere, columns = columns_ere)
 		self.df2 = pd.DataFrame(data_gen, columns = columns_gen)
 		self.df3 = pd.DataFrame(data_gen_ere, columns = columns_gen_ere)
-
+		
 		data_gen_ere = []
 		data_gen = []
 		data_ere = []
@@ -234,21 +237,27 @@ class BiotypeAssignation:
 		bam_files_columns.extend(self.bam_files_list_ribo)
 		bam_files_columns.extend(['Total reads count RNA', 'Total reads count Ribo'])
 		
-		self.df_total_by_position_ere = self.df1.groupby(groupby_columns)[bam_files_columns].sum().reset_index()
-		self.df_total_by_position_ere = pd.DataFrame(self.df_total_by_position_ere, columns = groupby_columns+bam_files_columns)
+		#self.df_total_by_position_ere = self.df1.groupby(groupby_columns)[bam_files_columns].sum().reset_index()
+		#self.df_total_by_position_ere = pd.DataFrame(self.df_total_by_position_ere, columns = groupby_columns+bam_files_columns)
 		
 		# Genomic Annotation Full
 		groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype']
 		self.df_total_by_position_gen = self.df2.groupby(groupby_columns)[bam_files_columns].sum().reset_index()
 		self.df_total_by_position_gen = pd.DataFrame(self.df_total_by_position_gen, columns = groupby_columns+bam_files_columns)
-		
+		del self.df2
+
 		# Genomic and ERE Annotation Full
 		groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
 		self.df_total_by_position_gen_ere = self.df3.groupby(groupby_columns)[bam_files_columns].sum().reset_index()
 		self.df_total_by_position_gen_ere = pd.DataFrame(self.df_total_by_position_gen_ere, columns = groupby_columns+bam_files_columns)
 		
-		#with open(self.path_to_output_folder+'alignments/df_total_by_position_gen_ere.dic', 'wb') as handle:
-		#	pickle.dump(self.df_total_by_position_gen_ere, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		shape_df3 = self.df3.shape
+		cols = shape_df3[1]
+
+		if self.total_peptides >= 2000 and cols >= 2000 :
+			path = self.path_to_output_folder+'/res/full_info_biotypes/1_Genomic_and_ERE_Annotations_Full.csv'
+			self.df3.to_csv(path, index=False)
+			del self.df3
 
 		self.get_global_annotation_gen(bam_files_columns)
 		self.get_genomic_and_ere_annotation(bam_files_columns)
@@ -275,7 +284,7 @@ class BiotypeAssignation:
 		
 		self.df_global_gen = pd.DataFrame(data_global_annotation_gen, columns = groupby_columns+bam_files_columns)
 		data_global_annotation_gen = []
-
+		df_global_gen_construction = []
 		#with open(self.path_to_output_folder+'alignments/df_global_gen.dic', 'wb') as handle:
 		#	pickle.dump(self.df_global_gen, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -410,7 +419,7 @@ class BiotypeAssignation:
 
 		return peptides_visited_alignment, peptides_visited, only_annotated_splices
 
-	def process_general_information_alignments_peptides(self, general_info_peptides, only_annotated_splices, bam_files_columns):
+	def genome_annotations(self, general_info_peptides, only_annotated_splices, bam_files_columns):
 
 		self.counts_reads_rna_ribo = {} # This is for plot correlation if Ribosome Profiling information is available
 		df_consensus_annotation = [] # General Gen & ERE Biotype
@@ -444,10 +453,11 @@ class BiotypeAssignation:
 			count_ribo = count_bamfiles[-1]
 
 			count_string = []
+			best_guess = ''
 			count_bamfiles_ = count_bamfiles[:-2]
 			to_add_aux.extend(key)
 
-			bios = [0]*len(biotype_type)
+			bios = [0]*(len(biotype_type)+1)
 			
 			if 0 in count_bamfiles_:
 				indices = [i for i, x in enumerate(count_bamfiles_) if x == 0]
@@ -456,14 +466,14 @@ class BiotypeAssignation:
 			if biotypes_annotated_alignments != '':
 				in_frame = False
 				for type_ in sorted(biotypes_annotated_alignments, key=biotypes_annotated_alignments.get, reverse=True):
-					if 'In_frame' in biotypes_all_alignments.keys():
-						in_frame = True
-						count = 1
-						type_ = self.mod_type(type_)
-					else:
-						count = biotypes_annotated_alignments[type_]
-						count = count/(total_alignments_spliced_annotated*1.0)
-						type_ = self.mod_type(type_)
+					# if 'In_frame' in biotypes_all_alignments.keys():
+					# 	in_frame = True
+					# 	count = 1
+					# 	type_ = self.mod_type(type_)
+					# else:
+					count = biotypes_annotated_alignments[type_]
+					count = count/(total_alignments_spliced_annotated*1.0)
+					type_ = self.mod_type(type_)
 
 					try:
 						type_in_dic  = biotype_info_only_alignments_annotated['Genome']
@@ -483,20 +493,16 @@ class BiotypeAssignation:
 					if in_frame:
 						break
 
-			in_frame = False
 			for type_ in sorted(biotypes_all_alignments, key=biotypes_all_alignments.get, reverse=True):
 
-				if 'In_frame' in biotypes_all_alignments.keys():
-					in_frame = True
-					count = 1
-					percentage = round(count*100,2)
-					count_string.append('In_frame: '+str(percentage)+'%')
-				else:
-					count = biotypes_all_alignments[type_]
-					count = count/(total_alignments_pep*1.0)
-					
-					percentage = round(count*100,2)
-					count_string.append(type_+': '+str(percentage)+'%')
+				if type_ == 'In_frame':
+					best_guess = 'In_frame'
+				
+				count = biotypes_all_alignments[type_]
+				count = count/(total_alignments_pep*1.0)
+				
+				percentage = round(count*100,2)
+				count_string.append(type_+': '+str(percentage)+'%')
 
 				# Plots
 				if self.plots:
@@ -532,9 +538,6 @@ class BiotypeAssignation:
 				except KeyError:
 					biotype_info_all_alignments_annotated['Genome'] = {type_ : count}
 
-				if in_frame:
-					break
-
 			try:
 				self.counts_reads_rna_ribo[peptide_type][peptide] = [count_rna, count_ribo]
 			except KeyError:
@@ -542,16 +545,35 @@ class BiotypeAssignation:
 				dic[peptide] = [count_rna, count_ribo]
 				self.counts_reads_rna_ribo[peptide_type] = dic
 			
-			to_add_aux.extend(bios)
 			consensus = ' - '.join(count_string)
-			to_add = [peptide_type, peptide, consensus]
+			
+			if best_guess == '':
+				best_guess = consensus
+				max_best_guess = max(bios)
+				indexes = [i for i,x in enumerate(bios) if x==max_best_guess]
+				guessess = map(biotype_type.__getitem__, indexes)
+				best_guess = ','.join(guessess)
+				bios[-1] = best_guess
+
+			to_add_aux.extend(bios)
+			to_add = [peptide_type, peptide, consensus, best_guess]
 			to_add.extend(count_bamfiles)
 			df_consensus_annotation.append(to_add)
 			if self.dev:
 				biotypes_by_peptide_genome_explained.append(to_add_aux)
 
-		groupby_columns = ['Peptide Type', 'Peptide', 'Consenssus']
+		groupby_columns = ['Peptide Type', 'Peptide', 'Biotype Frequencies', 'Best Guess']
 		self.df_consensus_annotation = pd.DataFrame(df_consensus_annotation, columns = groupby_columns+bam_files_columns)
+
+		shape_df_consensus_annotation = self.df_consensus_annotation.shape
+		cols = shape_df_consensus_annotation[1]
+
+		if self.total_peptides >= 2000 and cols >= 2000 :
+			path = self.path_to_output_folder+'/res/summary_info_biotypes/1_General_Gen_and_ERE_Biotype_Consensus.csv'
+			self.df_consensus_annotation.to_csv(path, index=False)
+			del self.df_consensus_annotation
+
+
 		df_consensus_annotation = []
 		
 		if self.plots:
@@ -571,8 +593,15 @@ class BiotypeAssignation:
 		
 		if self.dev:
 			groupby_columns = ['Peptide Type', 'Peptide']
-			self.biotypes_by_peptide_genome_explained = pd.DataFrame(biotypes_by_peptide_genome_explained, columns = groupby_columns+biotype_type)
+			cols_names = groupby_columns+biotype_type
+			cols_names.append('Best Guess')
+			self.biotypes_by_peptide_genome_explained = pd.DataFrame(biotypes_by_peptide_genome_explained, columns = cols_names)
 
+			path = self.path_to_output_folder+'/res/full_info_biotypes/biotypes_by_peptide_genome_explained.csv'
+			self.biotypes_by_peptide_genome_explained.to_csv(path, index=False)
+
+			del self.biotypes_by_peptide_genome_explained
+			
 			with open(self.path_to_output_folder+'alignments/biotypes_by_peptide_genome_explained.list', 'wb') as handle:
 				pickle.dump(biotypes_by_peptide_genome_explained, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -581,7 +610,7 @@ class BiotypeAssignation:
 
 		return peptides_absent_sample_group, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated 
 
-	def process_information_by_alignments_peptides(self, info_peptides_by_alignment, general_info_peptides, indexes_group, indexes_by_group, split_bams_files, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns):
+	def transcription_annotations(self, info_peptides_by_alignment, general_info_peptides, indexes_group, indexes_by_group, split_bams_files, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns):
 		
 		info_peptides_alignments_by_sample = {}
 		info_peptides_alignments_by_sample_group = {}
@@ -590,30 +619,28 @@ class BiotypeAssignation:
 		biotypes_all_peptides_type_group_samples_all = {}
 		df_consensus_annotation_full = []
 
-		keys = info_peptides_by_alignment.keys()
-		values = info_peptides_by_alignment.values()
-		indexes_group_to_send = [indexes_group]*len(keys)
-		indexes_by_group_to_send = [indexes_by_group]*len(keys)
-
-		nodes = multiprocessing.cpu_count()
-		pool = ProcessPool(nodes=nodes)
-	
-		results = pool.map(self.get_information_by_alignments_peptides, keys, values, indexes_group_to_send, indexes_by_group_to_send)
-
-		for res in results:
+		keys = list(info_peptides_by_alignment.keys())
+		values = list(info_peptides_by_alignment.values())
+		
+		def fill_information(res):
 			to_add = res[0]
 			info_peptides_alignments_by_sample_aux = res[1]
-			info_peptides_alignments_by_sample_group_aux = res[2]
 			
+			# index, type_, value, key_group, value_group
 			for index, element in enumerate(info_peptides_alignments_by_sample_aux):
 				if index == 0:
 					key = element
+					peptide_type = key[0]
+					peptide_type_aux = peptide_type.split(',')
 				elif index == 1:
 					count_bamfiles = element
 				else:
 					index = element[0]
 					type_ = element[1]
 					value = element[2]
+					key_group = element[3]
+					value_group = element[4]
+					
 					try:
 						info_peptide = info_peptides_alignments_by_sample[key]
 						try:
@@ -628,16 +655,6 @@ class BiotypeAssignation:
 						dic_aux = [0]*len(count_bamfiles)
 						dic_aux[index] = {type_ : value}
 						info_peptides_alignments_by_sample[key] = dic_aux
-
-			for index, element in enumerate(info_peptides_alignments_by_sample_group_aux):
-				if index == 0:
-					key = element
-					peptide_type = key[0]
-					peptide_type_aux = peptide_type.split(',')
-				else:
-					key_group = element[0]
-					type_ = element[1]
-					value_group = element[2]
 
 					try:
 						info_peptide = info_peptides_alignments_by_sample_group[key]
@@ -655,7 +672,6 @@ class BiotypeAssignation:
 
 					if key_group != 'Total reads count RNA' and key_group != 'Total reads count Ribo':
 						
-
 						if self.plots:
 							try:
 								types = biotypes_all_peptides_group_samples[key_group]
@@ -695,35 +711,86 @@ class BiotypeAssignation:
 
 						type_ = self.mod_type(type_)
 
-						try:
-							type_in_dic  = biotype_info_all_alignments_annotated['All']
+						if value != 0:
 							try:
-								type_in_dic[type_]+= value
-							except KeyError:
-								type_in_dic[type_] = value
-						except KeyError:
-							biotype_info_all_alignments_annotated['All'] = {type_ : value}
-
-						try:
-							type_in_dic  = biotype_info_only_alignments_annotated['All']
-							try:
-								types_dic = type_in_dic[peptide_type]
+								type_in_dic  = biotype_info_all_alignments_annotated['All']
 								try:
-									types_dic[type_]+= value
+									type_in_dic[type_]+= value
 								except KeyError:
-									types_dic[type_] = value
+									type_in_dic[type_] = value
 							except KeyError:
-								type_in_dic[peptide_type]= {type_ : value}
-						except KeyError:
-							peptide_type_dic = {}
-							peptide_type_dic[peptide_type] = {type_ : value}
-							biotype_info_only_alignments_annotated['All'] = peptide_type_dic
+								biotype_info_all_alignments_annotated['All'] = {type_ : value}
+
+							try:
+								type_in_dic  = biotype_info_only_alignments_annotated['All']
+								try:
+									types_dic = type_in_dic[peptide_type]
+									try:
+										types_dic[type_]+= value
+									except KeyError:
+										types_dic[type_] = value
+								except KeyError:
+									type_in_dic[peptide_type]= {type_ : value}
+							except KeyError:
+								peptide_type_dic = {}
+								peptide_type_dic[peptide_type] = {type_ : value}
+								biotype_info_only_alignments_annotated['All'] = peptide_type_dic
 
 			df_consensus_annotation_full.append(to_add)
+		
+		indexes_group_to_send = [indexes_group]*len(keys)
+		indexes_by_group_to_send = [indexes_by_group]*len(keys)
+			
+		if len(keys) > 50000:
+			# cont = 0
+			# nodes = 5
+			# for i in range(0,len(keys),nodes):
+			# 	#pool = mp.Pool(processes = 1, maxtasksperchild=1000)
+			# 	print (i)
+			# 	pool = ProcessPool(nodes=nodes)
+			# 	cont += nodes
+			# 	#chunk = tasks[i:cont]
+			# 	#results = pool.starmap(self.get_information_transcription, chunk)
+			# 	results = pool.map(self.get_information_transcription, keys[i:cont], values[i:cont], indexes_group_to_send[i:cont], indexes_by_group_to_send[i:cont])
+			# 	for res in results:
+			# 		fill_information(res)
+
+			# 	print (i)
+			# 	pool.close()
+			# 	pool.join()
+			# 	pool.clear()
+			for i in range(0,len(keys)):
+				results = self.get_information_transcription (keys[i], values[i], indexes_group, indexes_by_group)
+				fill_information(results)				
+		else:
+			
+			#tasks = [*zip(keys, values, indexes_group_to_send, indexes_by_group_to_send)]
+			nodes = multiprocessing.cpu_count()
+			#pool = mp.Pool(nodes)
+			pool = ProcessPool(nodes=nodes)
+			#results = pool.starmap(self.get_information_transcription, tasks)
+			results = pool.map(self.get_information_transcription, keys, values, indexes_group_to_send, indexes_by_group_to_send)
+
+			for res in results:
+				fill_information(res)
+
+			pool.close()
+			pool.join()
+			pool.clear()
 
 		groupby_columns = ['Peptide Type', 'Peptide', 'Alignment', 'Strand', 'Consenssus']
 		self.df_consensus_annotation_full = pd.DataFrame(df_consensus_annotation_full, columns = groupby_columns+bam_files_columns)
+		
+		shape_df_consensus_annotation_full = self.df_consensus_annotation_full.shape
+		cols = shape_df_consensus_annotation_full[1]
+
+		if self.total_peptides >= 2000 and cols >= 2000 :
+			path = self.path_to_output_folder+'/res/full_info_biotypes/3_Genomic_and_ERE_Anno_by_Region_Full.csv'
+			self.df_consensus_annotation_full.to_csv(path, index=False)
+			del self.df_consensus_annotation_full 
+
 		df_consensus_annotation_full = []
+		info_peptides_by_alignment = []
 		gc.collect()
 
 		if self.plots:
@@ -742,7 +809,7 @@ class BiotypeAssignation:
 
 		return info_peptides_alignments_by_sample, info_peptides_alignments_by_sample_group
 
-	def get_information_by_alignments_peptides(self, key, information_peptide, indexes_group, indexes_by_group):
+	def get_information_transcription(self, key, information_peptide, indexes_group, indexes_by_group):
 		
 		to_add = []
 		peptide_type = key[0]
@@ -763,9 +830,7 @@ class BiotypeAssignation:
 		to_add = [peptide_type, peptide, alignment, strand]
 		
 		info_peptides_alignments_by_sample = [(peptide_type, peptide), count_bamfiles]
-		info_peptides_alignments_by_sample_group = [(peptide_type, peptide)]
 		
-
 		for type_ in sorted(biotypes_by_alignment, key=biotypes_by_alignment.get, reverse=True):
 			count = biotypes_by_alignment[type_]
 			count = count/(total_alignments_pep*1.0)
@@ -778,11 +843,10 @@ class BiotypeAssignation:
 				value_total_bam_file = count_bamfiles_total[index]
 				key_group = indexes_group[index]
 				total_group_alignment = np.array(count_bamfiles_total)[indexes_by_group[key_group]].sum()
-				
 				try:
 					value = count*(value_in_bam_file/value_total_bam_file)
 				except ZeroDivisionError:
-					value = 0
+					value = math.log(1,10)
 
 				try:
 					value_group = value*(value_total_bam_file/total_group_alignment)
@@ -791,14 +855,13 @@ class BiotypeAssignation:
 				if value == 0:
 					value_group = 0
 
-				info_peptides_alignments_by_sample.append((index, type_, value))
-				info_peptides_alignments_by_sample_group.append((key_group, type_, value_group))
+				info_peptides_alignments_by_sample.append((index, type_, value, key_group, value_group))
 
 		consensus = ' - '.join(count_string)
 		to_add.append(consensus)
 		to_add.extend(count_bamfiles)
 
-		return to_add, info_peptides_alignments_by_sample, info_peptides_alignments_by_sample_group
+		return to_add, info_peptides_alignments_by_sample
 
 	def process_information_by_peptides_in_samples(self, info_peptides_alignments_by_sample, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns):
 
@@ -817,7 +880,7 @@ class BiotypeAssignation:
 				sample = bam_files_columns[index]
 				to_add.append(sample)
 				to_add.extend(key)
-				bios = [0]*len(biotype_type)
+				bios = [0]*(len(biotype_type)+1)
 
 				for type_ in sorted(bam_file_dic, key=bam_file_dic.get, reverse=True):
 					count = bam_file_dic[type_]
@@ -854,7 +917,14 @@ class BiotypeAssignation:
 								peptide_type_dic[peptide_type] = {type_ : count}
 								biotype_info_only_alignments_annotated[sample] = peptide_type_dic
 
-
+				if sum(bios) != 0:
+					max_best_guess = max(bios)
+					indexes = [i for i,x in enumerate(bios) if x==max_best_guess]
+					guessess = map(biotype_type.__getitem__, indexes)
+					best_guess = ','.join(guessess)
+					bios[-1] = best_guess
+				else:
+					bios[-1] = 'NA'
 				to_add.extend(bios)
 				consensus = ' - '.join(count_string)
 				to_add_aux.append(consensus)
@@ -864,88 +934,103 @@ class BiotypeAssignation:
 
 		with open(self.path_to_output_folder+'alignments/biotype_info_all_alignments_annotated.dic', 'wb') as handle:
 			pickle.dump(biotype_info_all_alignments_annotated, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		biotype_info_all_alignments_annotated = []
+		gc.collect()
 
 		with open(self.path_to_output_folder+'alignments/biotype_info_only_alignments_annotated.dic', 'wb') as handle:
 			pickle.dump(biotype_info_only_alignments_annotated, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		biotype_info_only_alignments_annotated = []
+		gc.collect()
 
 		groupby_columns = ['Peptide Type', 'Peptide']
 		self.df_consensus_annotation_full_final = pd.DataFrame(df_consensus_annotation_final, columns = groupby_columns+bam_files_columns)
+		
+		try:
+			l = len(self.df_consensus_annotation)
+		except AttributeError:
+			path = self.path_to_output_folder+'/res/summary_info_biotypes/2_Sample_Gen_and_ERE_Biotype_Consensus.csv'
+			self.df_consensus_annotation_full_final.to_csv(path, index=False)
+			del self.df_consensus_annotation_full_final
+
 		df_consensus_annotation_final = []
 
 		if self.dev:
 			groupby_columns = ['Sample', 'Peptide Type', 'Peptide']
-			self.biotypes_by_peptide_sample_explained = pd.DataFrame(biotypes_by_peptide_sample_explained, columns = groupby_columns+biotype_type)
+			cols_names = groupby_columns+biotype_type
+			cols_names.append('Best Guess')
+			self.biotypes_by_peptide_sample_explained = pd.DataFrame(biotypes_by_peptide_sample_explained, columns = cols_names)
+			path = self.path_to_output_folder+'/res/full_info_biotypes/biotypes_by_peptide_sample_explained.csv'
+			self.biotypes_by_peptide_sample_explained.to_csv(path, index=False)
+			del self.biotypes_by_peptide_sample_explained
 			biotypes_by_peptide_sample_explained = []
 			gc.collect()
 
 	def get_genomic_and_ere_annotation(self, bam_files_columns):
 
-		# with open(self.path_to_output_folder+'alignments/df_total_by_position_gen_ere.dic', 'rb') as handle:
-		# 	self.df_total_by_position_gen_ere = pickle.load(handle)
-
-		# with open(self.path_to_output_folder+'alignments/df_global_gen.dic', 'rb') as handle:
-		# 	self.df_global_gen = pickle.load(handle)
-
-		# print ('Charging !')
-		# if bam_files_columns == '':
-		# 	bam_files_columns = self.bam_files_list_rna
-		# 	bam_files_columns.extend(self.bam_files_list_ribo)
-		# 	bam_files_columns.extend(['Total reads count RNA', 'Total reads count Ribo'])
-
 		logging.info('========== Init: Genomic and ERE annotation ============ ')
-
 		
 		groupby_columns = ['Peptide Type', 'Peptide', 'Alignment', 'Strand']
 		group_by_gen_ere = self.df_total_by_position_gen_ere.groupby(groupby_columns)
+
+		shape_df_total_by_position_gen_ere = self.df_total_by_position_gen_ere.shape
+		cols = shape_df_total_by_position_gen_ere[1]
+
+		if self.total_peptides >= 2000 and cols >= 2000 :
+			path = self.path_to_output_folder+'/res/full_info_biotypes/2_Genomic_and_ERE_Annotations_Summary_Full.csv'
+			self.df_total_by_position_gen_ere.to_csv(path, index=False)
+			del self.df_total_by_position_gen_ere 
 
 		groupby_columns = ['Peptide Type', 'Peptide']
 		df_final_gen_sum = self.df_global_gen.groupby(groupby_columns)[bam_files_columns].sum()
 		df_final_gen_sum = df_final_gen_sum.groupby(groupby_columns)
 		
+		del self.df_global_gen
+		
 		# Gets the information for each peptide with the information for each alignment,
-		# and for all the alingments. 
+		# and for all the alingments.
+
 		res = self.get_information_mixed_genomic_ERE(df_final_gen_sum, group_by_gen_ere)
 		info_peptides_by_alignment = res[0] 
 		self.general_info_peptides = res[1] 
 		only_annotated_splices = res[2]
+		logging.info('========== Get information from genomic and ere intersection : Done!  ============ ')
 
-		res = self.process_general_information_alignments_peptides(self.general_info_peptides, only_annotated_splices, bam_files_columns)
+		res = self.genome_annotations(self.general_info_peptides, only_annotated_splices, bam_files_columns)
 		peptides_absent_sample_group = res[0] 
 		biotype_info_all_alignments_annotated = res[1] 
 		biotype_info_only_alignments_annotated = res[2] 
 		
+		logging.info('========== Get Biotype based on absence of transcription (genome based) : Done!  ============ ')
+
 		res = self.get_info_group_samples(bam_files_columns)
 		split_bams_files = res[0] 
 		indexes_group = res[1] 
 		order_columns = res[2] 
 		indexes_by_group = res[3]
 
-		res = self.process_information_by_alignments_peptides(info_peptides_by_alignment, self.general_info_peptides, indexes_group, indexes_by_group, split_bams_files, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns)
+		res = self.transcription_annotations(info_peptides_by_alignment, self.general_info_peptides, indexes_group, indexes_by_group, split_bams_files, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns)
 		info_peptides_alignments_by_sample = res[0] 
 		info_peptides_alignments_by_sample_group = res[1]
 
+		logging.info('========== Get Biotype based on transcription : Done!  ============ ')
+
 		self.get_biotype_by_group_sample(order_columns, info_peptides_alignments_by_sample_group)
 		
-		logging.info('========== Writting out biotyping in xls files ============ ')
+		logging.info('========== Writting full biotyping in xls files ============ ')
 
 		self.write_xls_with_all_info_biotypes()
-		del self.df3
-		del self.df_total_by_position_gen_ere 
-		
+		gc.collect()
+
+		logging.info('========== Writting full biotyping in xls files : Done! ============ ')
+
 		self.process_information_by_peptides_in_samples(info_peptides_alignments_by_sample, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns)
 	
-		if self.dev:
-			self.write_xls_info_biotypes_explained()
+		logging.info('========== Writting consensus biotyping in xls files ============ ')
 
 		self.write_xls_with_consensus_biotypes()
-		
-		logging.info('========== Writting out biotyping in xls files : Done! ============ ')
-		
-		del self.df_consensus_annotation 
-		del self.df_consensus_annotation_full 
-		del self.df_consensus_annotation_full_final 
-		del self.df_consensus_annotation_final_sample 
 		gc.collect()
+
+		logging.info('========== Writting consensus biotyping in xls files : Done! ============ ')
 
 		logging.info('========== Fini: Genomic and ERE annotation : Done! ============ ')
 
@@ -993,9 +1078,7 @@ class BiotypeAssignation:
 	def get_biotype_by_group_sample(self, order_columns, peptides_visited_sample_group):
 
 		df_consensus_annotation_final_sample = []
-		#with open(self.path_to_output_folder+'alignments/peptides_visited_sample_group.dic', 'rb') as handle:
-		#	peptides_visited_sample_group = pickle.load(handle)
-
+		
 		for key, information_peptide in peptides_visited_sample_group.items():
 			to_add_aux = []
 			to_add_aux.extend(key)
@@ -1015,41 +1098,66 @@ class BiotypeAssignation:
 		self.df_consensus_annotation_final_sample = pd.DataFrame(df_consensus_annotation_final_sample, columns = groupby_columns+order_columns)
 		df_consensus_annotation_final_sample = []
 
+		try:
+			l = len(self.df_consensus_annotation)
+		except AttributeError:
+			path = self.path_to_output_folder+'/res/summary_info_biotypes/3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv'
+			self.df_consensus_annotation_final_sample.to_csv(path, index=False)
+			del df_consensus_annotation_final_sample
+
+
 	def write_xls_with_all_info_biotypes(self):
 
-		if (len(self.df3) or len(self.df_total_by_position_gen_ere) or len(self.df_consensus_annotation_full) )  < 1048576:
+		exist_df3 = True
+		try:
+			l = len(self.df3)
+		except AttributeError:
+			exist_df3 = False
 
-			writer = pd.ExcelWriter(self.path_to_output_folder+'/res/Annotation_Biotypes_full_info.xlsx', engine='xlsxwriter')
+		exist_df_total_by_position_gen_ere = True
+		try:
+			l = len(self.df_total_by_position_gen_ere)
+		except AttributeError:
+			exist_df_total_by_position_gen_ere = False
+
+		exist_df_consensus_annotation_full = True
+		try:
+			l = len(self.df_consensus_annotation_full)
+		except AttributeError:
+			exist_df_consensus_annotation_full = False
+
+
+		if  exist_df3 or exist_df_total_by_position_gen_ere or exist_df_total_by_position_gen_ere :
+
+			writer = pd.ExcelWriter(self.path_to_output_folder+'/res/full_info_biotypes/Annotation_Biotypes_full_info.xlsx', engine='xlsxwriter')
 			writer.book.use_zip64()
 			
-			self.df3.to_excel(writer, sheet_name='Genomic & ERE Annotations')
-			self.df_total_by_position_gen_ere.to_excel(writer, sheet_name='Genomic & ERE Annotations_')
-			self.df_consensus_annotation_full.to_excel(writer, sheet_name='Genomic & ERE Anno. By Region')
+			if exist_df3:
+				self.df3.to_excel(writer, sheet_name='Genomic & ERE Annotations')
+				worksheet1 = writer.sheets['Genomic & ERE Annotations']
+				worksheet1.set_tab_color('purple')
+				del self.df3
 
-			worksheet1 = writer.sheets['Genomic & ERE Annotations']
-			worksheet1.set_tab_color('purple')
-			worksheet1 = writer.sheets['Genomic & ERE Annotations_']
-			worksheet1.set_tab_color('purple')
-			worksheet1 = writer.sheets['Genomic & ERE Anno. By Region']
-			worksheet1.set_tab_color('purple')
+			if exist_df_total_by_position_gen_ere:
+				self.df_total_by_position_gen_ere.to_excel(writer, sheet_name='Genomic & ERE Annotations_')
+				worksheet1 = writer.sheets['Genomic & ERE Annotations_']
+				worksheet1.set_tab_color('purple')
+				del self.df_total_by_position_gen_ere 
+
+			if exist_df_consensus_annotation_full:
+				self.df_consensus_annotation_full.to_excel(writer, sheet_name='Genomic & ERE Anno. By Region')
+				worksheet1 = writer.sheets['Genomic & ERE Anno. By Region']
+				worksheet1.set_tab_color('purple')
+				del self.df_consensus_annotation_full 
 
 			#https://xlsxwriter.readthedocs.io/working_with_colors.html
 			writer.save()
-		else:
-			logging.info('Failing to write xls files: information overpasses the limit for rows into a xls file. ')
-			logging.info('========== Writting individual full information of biotyping in csv files ============ ')
-			path = self.path_to_output_folder+'/res/Genomic_and_ERE_Annotations_Full.csv'
-			self.df3.to_csv(path, index=False)
-			path = self.path_to_output_folder+'/res/Genomic_and_ERE_Annotations_Summary_Full.csv'
-			self.df_total_by_position_gen_ere.to_csv(path, index=False)
-			path = self.path_to_output_folder+'/res/Genomic_and_ERE_Anno_by_Region_Full.csv'
-			self.df_consensus_annotation_full.to_csv(path, index=False)
-
+		
 
 	def write_xls_info_biotypes_explained(self):
 		
 		if (len(self.biotypes_by_peptide_sample_explained) or len(self.biotypes_by_peptide_sample_explained) )  < 1048576:
-			writer = pd.ExcelWriter(self.path_to_output_folder+'/res/biotypes_by_peptide_sample_explained.xlsx', engine='xlsxwriter')
+			writer = pd.ExcelWriter(self.path_to_output_folder+'/res/full_info_biotypes/biotypes_by_peptide_sample_explained.xlsx', engine='xlsxwriter')
 			writer.book.use_zip64()
 			self.biotypes_by_peptide_sample_explained.to_excel(writer, sheet_name='Biotypes Sample Explained')
 			self.biotypes_by_peptide_genome_explained.to_excel(writer, sheet_name='Biotypes Genome Explained')
@@ -1058,46 +1166,37 @@ class BiotypeAssignation:
 		else:
 			logging.info('Failing to write xls files: information overpasses the limit for rows into a xls file. ')
 			logging.info('========== Writting individual information of biotyping in csv files ============ ')
-			path = self.path_to_output_folder+'/res/biotypes_by_peptide_sample_explained.csv'
+			path = self.path_to_output_folder+'/res/full_info_biotypes/biotypes_by_peptide_sample_explained.csv'
 			self.biotypes_by_peptide_sample_explained.to_csv(path, index=False)
-			path = self.path_to_output_folder+'/res/biotypes_by_peptide_genome_explained.csv'
+			path = self.path_to_output_folder+'/res/full_info_biotypes/biotypes_by_peptide_genome_explained.csv'
 			self.biotypes_by_peptide_genome_explained.to_csv(path, index=False)
-
 
 	def write_xls_with_consensus_biotypes(self):
 
-		if (len(self.df_consensus_annotation) or len(self.df_consensus_annotation_full_final) or len(self.df_consensus_annotation_final_sample) )  < 1048576:
+		writer = pd.ExcelWriter(self.path_to_output_folder+'/res/summary_info_biotypes/Annotation_Biotypes_consensus.xlsx', engine='xlsxwriter')
+		writer.book.use_zip64()
 
-			writer = pd.ExcelWriter(self.path_to_output_folder+'/res/Annotation_Biotypes_consensus.xlsx', engine='xlsxwriter')
-			writer.book.use_zip64()
-
+		if exist_df_consensus_annotation:
 			self.df_consensus_annotation.to_excel(writer, sheet_name='General Gen & ERE Biotype')
 			worksheet1 = writer.sheets['General Gen & ERE Biotype']
 			worksheet1.set_tab_color('pink')
+			del self.df_consensus_annotation
 
+		if exist_df_consensus_annotation_full_final:
 			self.df_consensus_annotation_full_final.to_excel(writer, sheet_name='Sample Gen & ERE Biotype')
 			worksheet1 = writer.sheets['Sample Gen & ERE Biotype']
 			worksheet1.set_tab_color('purple')
-			
+			del self.df_consensus_annotation_full_final
+
+		if exist_df_consensus_annotation_final_sample:
 			self.df_consensus_annotation_final_sample.to_excel(writer, sheet_name='Group Samples Gen & ERE Biotype')
 			worksheet1 = writer.sheets['Group Samples Gen & ERE Biotype']
 			worksheet1.set_tab_color('navy')
+			del self.df_consensus_annotation_final_sample
 
-			writer.save()
-		else:
-			logging.info('Failing to write xls files: information overpasses the limit for rows into a xls file. ')
-			logging.info('========== Writting individual consensus information of biotyping in csv files ============ ')
-
-			path = self.path_to_output_folder+'/res/General_Gen_and_ERE_Biotype_Consensus.csv'
-			self.df_consensus_annotation.to_csv(path, index=False)
-
-			path = self.path_to_output_folder+'/res/Sample_Gen_and_ERE_Biotype_Consensus.csv'
-			self.df_consensus_annotation_full_final.to_csv(path, index=False)
-
-			path = self.path_to_output_folder+'/res/Group_Samples_Gen_and_ERE_Biotype_Consensus.csv'
-			self.df_consensus_annotation_final_sample.to_csv(path, index=False)
-
-
+		writer.save()
+			
+			
 
 
 

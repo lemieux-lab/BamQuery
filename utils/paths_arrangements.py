@@ -107,6 +107,18 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness, lig
 		except OSError:
 			pass
 
+		path_to_res_full_info_folder = path_to_output_folder+'res/full_info_biotypes/'
+		try:
+			os.mkdir(path_to_res_full_info_folder)
+		except OSError:
+			pass
+
+		path_to_res_summary_info_folder = path_to_output_folder+'res/summary_info_biotypes/'
+		try:
+			os.mkdir(path_to_res_summary_info_folder)
+		except OSError:
+			pass
+
 		path_to_res_temps_files_folder = path_to_output_folder+'res/temps_files/'
 		try:
 			os.mkdir(path_to_res_temps_files_folder)

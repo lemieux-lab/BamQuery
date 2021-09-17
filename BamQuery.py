@@ -25,7 +25,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -35,6 +35,7 @@ class BamQuery:
 		self.light = light
 		self.dev = dev
 		self.plots = plots
+		self.dbSNP = dbSNP
 
 		if self.mode == 'normal':
 			self.run_bam_query_normal_mode()
@@ -260,7 +261,7 @@ class BamQuery:
 			logging.info('========== Reverse Translation : Done! ============ ')
 			print ('Reverse Translation : Done!')
 			
-			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light)
+			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light, self.dbSNP)
 			self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(self.set_peptides)
 
 			logging.info('========== Alignment : Done! ============ ')
@@ -426,19 +427,28 @@ def main(argv):
 						help='Threshold to assess expression comparation with other tissues')
 	parser.add_argument('--light', action='store_true',
 						help='Display only the count and norm count for peptides and regions')
+	parser.add_argument('--dbSNP', type=int, default = 149,
+						help='BamQuery dbSNP : 149 / 151 / 155')
 	parser.add_argument('--dev', action='store_true')
 	parser.add_argument('--plots', action='store_true')
+
 
 	args = parser.parse_args()
 	
 	path_to_input_folder = args.path_to_input_folder
 	name_exp = args.name_exp.lower()
 	mode = args.mode.lower()
+	dbSNP = args.dbSNP
 	strandedness = args.strandedness
 	th_out = args.th_out
 	light = args.light
 	dev = args.dev
 	plots = args.plots
+
+	if (mode != 'normal' and mode != 'translation') or (dbSNP != 149 and dbSNP != 151 and dbSNP != 155):
+		sys.stderr.write('error: %s\n' % 'Some arguments are not valid!')
+		parser.print_help()
+		sys.exit(2)
 
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
@@ -447,7 +457,7 @@ def main(argv):
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP)
 	
 
 	if not dev:

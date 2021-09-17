@@ -168,19 +168,24 @@ def read_sam_file(sam_file):
 
 def get_alignments_chromosome(chr, chromosomes_alignments):
 
+	#logging.info('To do %s ', chr)
 	positions_mcs_peptides_perfect_alignment = {}
 	positions_mcs_peptides_variants_alignment = {}
 	
 	chromosome = {}
-	path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 	peptides_in = set()
 
 	local_visited = set()
 	faFile = pysam.FastaFile(genomePath, genomePathFai)
 
 	try:
-		with open(path_to_lib+'/snps_dics/dbsnp149_all_'+chr+'.dic', 'rb') as fp:
-			chromosome = pickle.load(fp)
+		try:
+			with open(path_to_lib+chr+'.dic', 'rb') as fp:
+				chromosome = pickle.load(fp)
+		except ValueError:
+			import pickle5
+			with open(path_to_lib+chr+'.dic', 'rb') as fp:
+				chromosome = pickle5.load(fp)
 	except IOError:
 		chromosome = {}
 
@@ -264,6 +269,8 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 
 			positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 
+	chromosome = {}
+	logging.info('Finished %s ', chr)
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, peptides_in
 
 
@@ -415,16 +422,32 @@ def translation_seq(chr, seq):
 	return translation
 
 
-def get_alignments(sam_file):
+def get_alignments(sam_file, dbSNP):
+
+	global path_to_lib
+	if dbSNP == 149:
+		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_149/'
+	elif dbSNP == 151:
+		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_151/'
+	else:
+		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_155/'
 
 	exists = os.path.exists(sam_file+'.dic')
 	if not exists:
 		aligments_by_chromosome_strand = read_sam_file(sam_file)
 	else:
-		with open(sam_file+'.dic', 'rb') as fp:
-			aligments_by_chromosome_strand = pickle.load(fp)
+		try:
+			with open(sam_file+'.dic', 'rb') as fp:
+				aligments_by_chromosome_strand = pickle.load(fp)
+		except ValueError:
+			import pickle5
+			with open(sam_file+'.dic', 'rb') as fp:
+				aligments_by_chromosome_strand = pickle5.load(fp)
+		logging.info('Information SAM file already collected !')
 
 	od = collections.OrderedDict(sorted(aligments_by_chromosome_strand.items(), reverse=True))
+
+	del aligments_by_chromosome_strand
 
 	positions_mcs_peptides_perfect_alignment = {}
 	positions_mcs_peptides_variants_alignment = {}
@@ -433,27 +456,44 @@ def get_alignments(sam_file):
 	keys = list(od.keys())
 	values = list(od.values())
 	nodes = multiprocessing.cpu_count()
-	pool = ProcessPool(nodes=nodes)
 	
-	results = pool.map(get_alignments_chromosome, keys, values)
+	if dbSNP == 149:
+		pool = ProcessPool(nodes=nodes)
+		results = pool.map(get_alignments_chromosome, keys, values)
+	
+		for res in results:
+			positions_mcs_peptides_perfect_alignment.update(res[0])
+			positions_mcs_peptides_variants_alignment.update(res[1])
+			total_peptides_in = total_peptides_in.union(res[2])
 
-	for res in results:
-		positions_mcs_peptides_perfect_alignment.update(res[0])
-		positions_mcs_peptides_variants_alignment.update(res[1])
-		total_peptides_in = total_peptides_in.union(res[2])
+		keys.clear()
+		values.clear()
 
-	# cont = 0
-	# for i in range(0,len(keys),10):
-	# 	cont += 10
-	# 	results = pool.map(get_alignments_chromosome, keys[i:cont], values[i:cont])
+	else:
+		for chr in ['chr1', 'chr2', 'chr3', 'chr4', 'chr5']:
+			index = keys.index(chr)
+			res = get_alignments_chromosome(chr, values[index])
+			positions_mcs_peptides_perfect_alignment.update(res[0])
+			positions_mcs_peptides_variants_alignment.update(res[1])
+			total_peptides_in = total_peptides_in.union(res[2])
+			del keys[index]
+			del values[index]
+			
+		nodes = 5
+		cont = 0
+		for i in range(0,len(keys),nodes):
+			pool = ProcessPool(nodes=nodes)
+			cont += nodes
+			results = pool.map(get_alignments_chromosome, keys[i:cont], values[i:cont])
 
-	# 	for res in results:
-	# 		positions_mcs_peptides_perfect_alignment.update(res[0])
-	# 		positions_mcs_peptides_variants_alignment.update(res[1])
-	# 		total_peptides_in = total_peptides_in.union(res[2])
-		
-	pool.close()
-	pool.join()
-	pool.clear()
+			for res in results:
+				positions_mcs_peptides_perfect_alignment.update(res[0])
+				positions_mcs_peptides_variants_alignment.update(res[1])
+				total_peptides_in = total_peptides_in.union(res[2])
+
+			pool.close()
+			pool.join()
+			pool.clear()
+
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, total_peptides_in
 

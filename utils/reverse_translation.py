@@ -1,9 +1,6 @@
 import warnings, time, logging, os, gc, pickle
 warnings.filterwarnings("ignore")
-import concurrent.futures
-from pathos.multiprocessing import ProcessPool
 import billiard as mp
-import multiprocessing.pool
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
