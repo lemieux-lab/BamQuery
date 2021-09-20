@@ -573,7 +573,6 @@ class BiotypeAssignation:
 			self.df_consensus_annotation.to_csv(path, index=False)
 			del self.df_consensus_annotation
 
-
 		df_consensus_annotation = []
 		
 		if self.plots:
@@ -784,7 +783,9 @@ class BiotypeAssignation:
 		shape_df_consensus_annotation_full = self.df_consensus_annotation_full.shape
 		cols = shape_df_consensus_annotation_full[1]
 
-		if self.total_peptides >= 2000 and cols >= 2000 :
+		try:
+			l = len(self.df3)
+		except AttributeError:
 			path = self.path_to_output_folder+'/res/full_info_biotypes/3_Genomic_and_ERE_Anno_by_Region_Full.csv'
 			self.df_consensus_annotation_full.to_csv(path, index=False)
 			del self.df_consensus_annotation_full 
@@ -975,7 +976,9 @@ class BiotypeAssignation:
 		shape_df_total_by_position_gen_ere = self.df_total_by_position_gen_ere.shape
 		cols = shape_df_total_by_position_gen_ere[1]
 
-		if self.total_peptides >= 2000 and cols >= 2000 :
+		try:
+			l = len(self.df3)
+		except AttributeError:
 			path = self.path_to_output_folder+'/res/full_info_biotypes/2_Genomic_and_ERE_Annotations_Summary_Full.csv'
 			self.df_total_by_position_gen_ere.to_csv(path, index=False)
 			del self.df_total_by_position_gen_ere 
@@ -1114,45 +1117,30 @@ class BiotypeAssignation:
 		except AttributeError:
 			exist_df3 = False
 
-		exist_df_total_by_position_gen_ere = True
-		try:
-			l = len(self.df_total_by_position_gen_ere)
-		except AttributeError:
-			exist_df_total_by_position_gen_ere = False
-
-		exist_df_consensus_annotation_full = True
-		try:
-			l = len(self.df_consensus_annotation_full)
-		except AttributeError:
-			exist_df_consensus_annotation_full = False
-
-
-		if  exist_df3 or exist_df_total_by_position_gen_ere or exist_df_total_by_position_gen_ere :
+		if  exist_df3 :
 
 			writer = pd.ExcelWriter(self.path_to_output_folder+'/res/full_info_biotypes/Annotation_Biotypes_full_info.xlsx', engine='xlsxwriter')
 			writer.book.use_zip64()
 			
-			if exist_df3:
-				self.df3.to_excel(writer, sheet_name='Genomic & ERE Annotations')
-				worksheet1 = writer.sheets['Genomic & ERE Annotations']
-				worksheet1.set_tab_color('purple')
-				del self.df3
+			self.df3.to_excel(writer, sheet_name='Genomic & ERE Annotations')
+			worksheet1 = writer.sheets['Genomic & ERE Annotations']
+			worksheet1.set_tab_color('purple')
+			del self.df3
 
-			if exist_df_total_by_position_gen_ere:
-				self.df_total_by_position_gen_ere.to_excel(writer, sheet_name='Genomic & ERE Annotations_')
-				worksheet1 = writer.sheets['Genomic & ERE Annotations_']
-				worksheet1.set_tab_color('purple')
-				del self.df_total_by_position_gen_ere 
+			
+			self.df_total_by_position_gen_ere.to_excel(writer, sheet_name='Genomic & ERE Annotations_')
+			worksheet1 = writer.sheets['Genomic & ERE Annotations_']
+			worksheet1.set_tab_color('purple')
+			del self.df_total_by_position_gen_ere 
 
-			if exist_df_consensus_annotation_full:
-				self.df_consensus_annotation_full.to_excel(writer, sheet_name='Genomic & ERE Anno. By Region')
-				worksheet1 = writer.sheets['Genomic & ERE Anno. By Region']
-				worksheet1.set_tab_color('purple')
-				del self.df_consensus_annotation_full 
+			
+			self.df_consensus_annotation_full.to_excel(writer, sheet_name='Genomic & ERE Anno. By Region')
+			worksheet1 = writer.sheets['Genomic & ERE Anno. By Region']
+			worksheet1.set_tab_color('purple')
+			del self.df_consensus_annotation_full 
 
 			#https://xlsxwriter.readthedocs.io/working_with_colors.html
 			writer.save()
-		
 
 	def write_xls_info_biotypes_explained(self):
 		
@@ -1173,28 +1161,36 @@ class BiotypeAssignation:
 
 	def write_xls_with_consensus_biotypes(self):
 
-		writer = pd.ExcelWriter(self.path_to_output_folder+'/res/summary_info_biotypes/Annotation_Biotypes_consensus.xlsx', engine='xlsxwriter')
-		writer.book.use_zip64()
+		exist_df_consensus_annotation = True
+		try:
+			l = len(self.df_consensus_annotation)
+		except AttributeError:
+			exist_df_consensus_annotation = False
 
-		if exist_df_consensus_annotation:
+		if  exist_df_consensus_annotation:
+
+			writer = pd.ExcelWriter(self.path_to_output_folder+'/res/summary_info_biotypes/Annotation_Biotypes_consensus.xlsx', engine='xlsxwriter')
+			writer.book.use_zip64()
+
+			
 			self.df_consensus_annotation.to_excel(writer, sheet_name='General Gen & ERE Biotype')
 			worksheet1 = writer.sheets['General Gen & ERE Biotype']
 			worksheet1.set_tab_color('pink')
 			del self.df_consensus_annotation
 
-		if exist_df_consensus_annotation_full_final:
+		
 			self.df_consensus_annotation_full_final.to_excel(writer, sheet_name='Sample Gen & ERE Biotype')
 			worksheet1 = writer.sheets['Sample Gen & ERE Biotype']
 			worksheet1.set_tab_color('purple')
 			del self.df_consensus_annotation_full_final
 
-		if exist_df_consensus_annotation_final_sample:
+		
 			self.df_consensus_annotation_final_sample.to_excel(writer, sheet_name='Group Samples Gen & ERE Biotype')
 			worksheet1 = writer.sheets['Group Samples Gen & ERE Biotype']
 			worksheet1.set_tab_color('navy')
 			del self.df_consensus_annotation_final_sample
 
-		writer.save()
+			writer.save()
 			
 			
 

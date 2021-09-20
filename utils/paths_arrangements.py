@@ -30,9 +30,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness, lig
 		logging.info('')
 		logging.info('BamQuery analysis will continue where it left....')
 	
-	logging.info('=============== BamQuery id : %s, Mode : %s, Strandedness : %s, Light : %s ===================', name_exp, mode, strandedness, str(light))
 	
-
 	if not light :
 
 		path_to_res_folder = path_to_output_folder+'res/'
