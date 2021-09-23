@@ -766,7 +766,6 @@ class BiotypeAssignation:
 			# 	pool.join()
 			# 	pool.clear()
 			for i in range(0,len(keys)):
-				print (i)
 				results = self.get_information_transcription (keys[i], values[i], indexes_group, indexes_by_group)
 				fill_information(results)				
 		else:
@@ -893,12 +892,16 @@ class BiotypeAssignation:
 				to_add.append(sample)
 				to_add.extend(key)
 				bios = [0]*(len(biotype_type)+1)
+				best_guess = ''
 
 				for type_ in sorted(bam_file_dic, key=bam_file_dic.get, reverse=True):
 					count = bam_file_dic[type_]
 					type_ = self.mod_type(type_)
 					type_index = biotype_type.index(type_)
 					
+					if type_ == 'In_frame':
+						best_guess = 'In_frame'
+
 					if count > 0:
 						percentage = round(count*100,2)
 						count_string.append(type_+': '+str(percentage)+'%')
@@ -929,7 +932,9 @@ class BiotypeAssignation:
 								peptide_type_dic[peptide_type] = {type_ : count}
 								biotype_info_only_alignments_annotated[sample] = peptide_type_dic
 
-				if sum(bios) != 0:
+				if best_guess != '':
+					bios[-1] = best_guess
+				elif sum(bios) != 0:
 					max_best_guess = max(bios)
 					indexes = [i for i,x in enumerate(bios) if x==max_best_guess]
 					guessess = map(biotype_type.__getitem__, indexes)
@@ -937,6 +942,7 @@ class BiotypeAssignation:
 					bios[-1] = best_guess
 				else:
 					bios[-1] = 'NA'
+
 				to_add.extend(bios)
 				consensus = ' - '.join(count_string)
 				to_add_aux.append(consensus)

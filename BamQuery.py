@@ -461,7 +461,7 @@ def main(argv):
 
 	t0 = time.time()
 
-	logging.info('=============== BamQuery id : %s, Mode : %s, Strandedness : %s, Light : %s, dbSNP : %s, plots : %s ===================', name_exp, mode, strandedness, str(light), str(dbSNP), str(plots))
+	logging.info('=============== BamQuery id : %s, Mode : %s, Strandedness : %s, Light : %s, dbSNP : %s, COMMON SNPs : %s, plots : %s ===================', name_exp, mode, strandedness, str(light), str(dbSNP), str(c), str(plots))
 	
 	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c)
 	
