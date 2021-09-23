@@ -178,17 +178,20 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 	local_visited = set()
 	faFile = pysam.FastaFile(genomePath, genomePathFai)
 
-	try:
+	if path_to_db != '':
 		try:
-			with open(path_to_lib+chr+'.dic', 'rb') as fp:
-				chromosome = pickle.load(fp)
-		except ValueError:
-			import pickle5
-			with open(path_to_lib+chr+'.dic', 'rb') as fp:
-				chromosome = pickle5.load(fp)
-	except IOError:
+			try:
+				with open(path_to_db+chr+'.dic', 'rb') as fp:
+					chromosome = pickle.load(fp)
+			except ValueError:
+				import pickle5
+				with open(path_to_db+chr+'.dic', 'rb') as fp:
+					chromosome = pickle5.load(fp)
+		except IOError:
+			chromosome = {}
+	else:
 		chromosome = {}
-
+		
 
 	for position in chromosomes_alignments: 
 		snps_information = []
@@ -270,7 +273,6 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 			positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 
 	chromosome = {}
-	logging.info('Finished %s ', chr)
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, peptides_in
 
 
@@ -422,16 +424,28 @@ def translation_seq(chr, seq):
 	return translation
 
 
-def get_alignments(sam_file, dbSNP):
+def get_alignments(sam_file, dbSNP, common):
 
-	global path_to_lib
-	if dbSNP == 149:
-		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_149/'
+	global path_to_db
+	if dbSNP == 0:
+		path_to_db = ''
+	elif dbSNP == 149:
+		if common:
+			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_149_common/'
+		else:
+			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_149/'
 	elif dbSNP == 151:
-		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_151/'
+		if common:
+			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_151_common/'
+		else:
+			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_151/'
 	else:
-		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_155/'
+		if common:
+			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_155_common/'
+		else:
+			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_155/'
 
+	logging.info('Using dbSNP database %s with COMMON SNPs = %s. Database Path : %s ', str(dbSNP), str(common), str(path_to_db))
 	exists = os.path.exists(sam_file+'.dic')
 	if not exists:
 		aligments_by_chromosome_strand = read_sam_file(sam_file)
@@ -457,7 +471,7 @@ def get_alignments(sam_file, dbSNP):
 	values = list(od.values())
 	nodes = multiprocessing.cpu_count()
 	
-	if dbSNP == 149:
+	if common or dbSNP == 149 or dbSNP == 0:
 		pool = ProcessPool(nodes=nodes)
 		results = pool.map(get_alignments_chromosome, keys, values)
 	

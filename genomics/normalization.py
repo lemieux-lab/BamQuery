@@ -106,7 +106,7 @@ class Normalization:
 						except KeyError:
 							not_in.add(bam_file)
 
-				except FileNotFoundError:
+				except :
 					pass
 
 			data = [['Sample category', 'sample_ids', 'Project', 'short_list']]

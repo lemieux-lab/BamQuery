@@ -9,14 +9,14 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 	
 
 	organisation_labels = {'Protein-coding Regions':['5UTR', '3UTR', 'In_frame', 'Frameshift', 'protein_coding', 'CDS', 'Junctions', 'Other coding regions'], 
-						'Non-coding Regions':['processed_transcript', 'nonsense_mediated_decay', 'antisense', 'Non_coding Exons', 'Non_coding Junctions', 'lincRNA', 'Other non_coding regions'], 
+						'Non-coding RNAs':['processed_transcript', 'nonsense_mediated_decay', 'antisense', 'Non_coding Exons', 'Non_coding Junctions', 'lincRNA', 'Other non_coding regions'], 
 						'Intergenic Regions':['Intergenic'], 
 						'Intronic Regions':['Introns'],
 						'EREs':['LINE', 'LTR','Retroposon','SINE', 'Other EREs']}
 
 	def plot_biotype(biotypes, name):
 		title = name
-		labels_in_type_peptide = {'Protein-coding genes':{}, 'Non-coding genes': {}, 'Protein-coding Regions':{}, 'Non-coding Regions': {}, 'Protein-coding transcripts':{}, 'Non-coding transcripts': {}, 'Intergenic Regions':{}, 'Intronic Regions':{}, 'EREs':{}}
+		labels_in_type_peptide = {'Protein-coding genes':{}, 'Non-coding genes': {}, 'Protein-coding Regions':{}, 'Non-coding RNAs': {}, 'Protein-coding transcripts':{}, 'Non-coding transcripts': {}, 'Intergenic Regions':{}, 'Intronic Regions':{}, 'EREs':{}}
 		outer_labels = []
 		outer_sizes = []
 		intra_labels = []
@@ -58,9 +58,9 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 					if '-' in biotype:
 						if 'Non_coding' in biotype :
 							try:
-								labels_in_type_peptide['Non-coding Regions']['Non_coding Junctions'] += total_biotype 
+								labels_in_type_peptide['Non-coding RNAs']['Non_coding Junctions'] += total_biotype 
 							except KeyError:
-								labels_in_type_peptide['Non-coding Regions']['Non_coding Junctions'] = total_biotype
+								labels_in_type_peptide['Non-coding RNAs']['Non_coding Junctions'] = total_biotype
 						else:
 							try:
 								labels_in_type_peptide['Protein-coding Regions']['Junctions'] += total_biotype 

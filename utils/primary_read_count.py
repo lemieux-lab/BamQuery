@@ -1,7 +1,7 @@
-import os, logging, threading, time, subprocess, concurrent.futures, getpass, pickle, sys, getopt, os, pysam
+import os, logging, threading, time, subprocess, concurrent.futures, getpass, pickle, sys, getopt, os, pysam, multiprocessing
 from os import listdir
 from os.path import isfile, join
-
+from pathos.multiprocessing import ProcessPool
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -9,6 +9,8 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
 files_with_not_permission = []
+
+NUM_WORKERS =  int(multiprocessing.cpu_count()/2)
 
 class GetPrimaryReadCountBamFiles:
 
@@ -140,7 +142,7 @@ class GetPrimaryReadCountBamFiles:
 		
 		path = bam_file_info
 		name_bam_file = "_".join(path.split('/')[:-1][-2:])
-		contReads = pysam.view("-F0X100",'-c', path) 
+		contReads = int(pysam.view("-F0X100",'-c', path).strip()) 
 		bam_file_info_to_return = [name_bam_file, path, contReads]
 		logging.info('BAM file : %s Path: %s Cont Reads: %s ', name_bam_file, path, str(contReads))
 		return bam_file_info_to_return
@@ -186,20 +188,19 @@ class GetPrimaryReadCountBamFiles:
 		logging.info('Total Bam Files to Query : %d %s', len(list_bams_to_assess), list_bams_to_assess)
 		
 		if len(list_bams_to_assess) > 0:
-			with concurrent.futures.ThreadPoolExecutor() as executor:   
-				futures = [executor.submit(self.get_all_counts_bam_file, param) for param in list_bams_to_assess]
-			
-			for f in futures:
-				bam_file_info_to_return = f.result()
+			pool = ProcessPool(nodes=NUM_WORKERS)
+			results = pool.map(self.get_all_counts_bam_file, list_bams_to_assess)
+
+			for bam_file_info_to_return in results:
 				dictionary_total_reads_bam_files[bam_file_info_to_return[0]] = [bam_file_info_to_return[1], bam_file_info_to_return[2], user]
 
 			logging.info('Saved information of read count for each BAM file')
 		else:
 			logging.info('All bam files into allcounts dictionary !')
 
-			if some_change or len(list_bams_to_assess) > 0:
-				with open(path_to_lib+"allcounts.dic", 'wb') as handle:
-					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		if some_change or len(list_bams_to_assess) > 0:
+			with open(path_to_lib+"allcounts.dic", 'wb') as handle:
+				pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 	def get_type_library(self, path):
 		

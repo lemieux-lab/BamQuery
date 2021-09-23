@@ -25,7 +25,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -36,6 +36,7 @@ class BamQuery:
 		self.dev = dev
 		self.plots = plots
 		self.dbSNP = dbSNP
+		self.common = c
 
 		if self.mode == 'normal':
 			self.run_bam_query_normal_mode()
@@ -261,7 +262,7 @@ class BamQuery:
 			logging.info('========== Reverse Translation : Done! ============ ')
 			print ('Reverse Translation : Done!')
 			
-			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light, self.dbSNP)
+			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common)
 			self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(self.set_peptides)
 
 			logging.info('========== Alignment : Done! ============ ')
@@ -428,9 +429,11 @@ def main(argv):
 	parser.add_argument('--light', action='store_true',
 						help='Display only the count and norm count for peptides and regions')
 	parser.add_argument('--dbSNP', type=int, default = 149,
-						help='BamQuery dbSNP : 149 / 151 / 155')
+						help='BamQuery dbSNP : 149 / 151 / 155 / 0')
 	parser.add_argument('--dev', action='store_true')
 	parser.add_argument('--plots', action='store_true')
+	parser.add_argument('--c', action='store_true',
+						help='Take into account the COMMON SNPs from the dbSNP database chosen')
 
 
 	args = parser.parse_args()
@@ -444,8 +447,9 @@ def main(argv):
 	light = args.light
 	dev = args.dev
 	plots = args.plots
+	c = args.c
 
-	if (mode != 'normal' and mode != 'translation') or (dbSNP != 149 and dbSNP != 151 and dbSNP != 155):
+	if (mode != 'normal' and mode != 'translation') or (dbSNP != 0 and dbSNP != 149 and dbSNP != 151 and dbSNP != 155):
 		sys.stderr.write('error: %s\n' % 'Some arguments are not valid!')
 		parser.print_help()
 		sys.exit(2)
@@ -459,7 +463,7 @@ def main(argv):
 
 	logging.info('=============== BamQuery id : %s, Mode : %s, Strandedness : %s, Light : %s, dbSNP : %s, plots : %s ===================', name_exp, mode, strandedness, str(light), str(dbSNP), str(plots))
 	
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c)
 	
 
 	if not dev:

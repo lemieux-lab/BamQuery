@@ -29,7 +29,7 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'Other coding regions': blues_palette[5],
 
 						'Non-coding genes': violetes[0],
-						'Non-coding Regions': violetes[0],
+						'Non-coding RNAs': violetes[0],
 						'Non-coding transcripts': violetes[0],
 						'Non_coding Exons': violetes[1],
 						'Non_coding Junctions': violetes[2],

@@ -12,17 +12,18 @@ NUM_WORKERS =  multiprocessing.cpu_count()
 
 class Alignments:
 
-	def __init__(self, path_to_output_folder, name_exp, light, dbSNP):
+	def __init__(self, path_to_output_folder, name_exp, light, dbSNP, common):
 		self.path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 		self.name_exp = name_exp
 		self.path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.light = light
 		self.dbSNP = dbSNP
-		if dbSNP == 149:
-			self.dbSNPFile = self.path_to_lib+'dbSNP/dbSNP149_all.vcf.gz'
-		else:
-			self.dbSNPFile = self.path_to_lib+'dbSNP/dbSNP151_all.vcf.gz'
+		self.common = common
+		#if dbSNP == 149:
+		#	self.dbSNPFile = self.path_to_lib+'dbSNP/dbSNP149_all.vcf.gz'
+		#else:
+		#	self.dbSNPFile = self.path_to_lib+'dbSNP/dbSNP151_all.vcf.gz'
 
 	def alignment_cs_to_genome(self, set_peptides):
 
@@ -86,7 +87,7 @@ class Alignments:
 			
 			if not exists_light and not exists:
 
-				res_star = get_alig.get_alignments(sam_file, self.dbSNP)
+				res_star = get_alig.get_alignments(sam_file, self.dbSNP, self.common)
 				
 				t_2 = time.time()
 				total = t_2-t_0

@@ -236,8 +236,16 @@ class BiotypeGenomicSearch:
 		chr = info_transcript['Info'][0]
 		regions = info_transcript['CDS']
 		strand = info_transcript['Info'][3]
+		len_prot = info_transcript['Info'][13]
+		
 
-		protein = self.get_transcript_and_protein(chr, regions, strand)
+		protein = self.get_transcript_and_protein(chr, regions, strand, len_prot)
+		#if peptide == 'NYYKVNWTF' or peptide == 'NNSGTFSSR' or peptide == 'MTWRSVQMSSR':
+		#if not len_prot.is_integer():
+		#	print (peptide, transcript)
+		#	print (len_prot, protein, peptide in protein)
+		#	print (info_transcript)
+		#	print ()
 
 		if peptide in protein:
 			transcript_level = 'In_frame'
@@ -246,22 +254,75 @@ class BiotypeGenomicSearch:
 		return [transcript_level]
 
 
-	def get_transcript_and_protein(self, chr, regions, strand):
+	def get_transcript_and_protein(self, chr, regions, strand, len_prot):
 
 		faFile = pysam.FastaFile(genome, genome_index)
 
 		sequence_transcript = ''
-		for cds in regions:
-			start_exon = cds[0]
-			end_exon = cds[1]
-			sequence = faFile.fetch(chr,start_exon-1,end_exon)
+		check_int = len_prot.is_integer()
+		
+		if check_int:
+			for cds in regions:
+				start_exon = cds[0]
+				end_exon = cds[1]
+				sequence = faFile.fetch(chr,start_exon-1,end_exon)
 
-			if strand == '-' :
-				sequence = uf.reverseComplement(sequence)
-				sequence_transcript = sequence_transcript + sequence
-				
-			elif strand == '+':
-				sequence_transcript =  sequence_transcript + sequence
+				if strand == '-' :
+					sequence = uf.reverseComplement(sequence)
+					sequence_transcript = sequence_transcript + sequence
+					
+				elif strand == '+':
+					sequence_transcript =  sequence_transcript + sequence
+		else:
+			len_ = 0
+			for index, cds in enumerate(regions):
+				start_exon = cds[0]
+				end_exon = cds[1]
+				len_ += end_exon - start_exon
+			#print (len_)
+
+			if strand == '+':
+
+				len_ntds = int(len_prot * 3)
+				first_region_soustraction = 0
+
+				if ((len_ntds - 1) / 3.0).is_integer():
+					first_region_soustraction = 1
+
+				elif ((len_ntds - 2) / 3.0).is_integer():
+					first_region_soustraction = 2
+				else:
+					first_region_soustraction = 3
+
+				#print (len_ntds, first_region_soustraction, len_ntds-first_region_soustraction)
+
+				for index, cds in enumerate(regions):
+					start_exon = cds[0]
+					end_exon = cds[1]
+					if index == 0:
+						sequence = faFile.fetch(chr,(start_exon-first_region_soustraction),end_exon)
+					else:
+						sequence = faFile.fetch(chr,start_exon-1,end_exon)
+
+					if strand == '-' :
+						sequence = uf.reverseComplement(sequence)
+						sequence_transcript = sequence_transcript + sequence
+						
+					elif strand == '+':
+						sequence_transcript =  sequence_transcript + sequence
+			else:
+				for cds in regions:
+					start_exon = cds[0]
+					end_exon = cds[1]
+					sequence = faFile.fetch(chr,start_exon-1,end_exon)
+
+					if strand == '-' :
+						sequence = uf.reverseComplement(sequence)
+						sequence_transcript = sequence_transcript + sequence
+						
+					elif strand == '+':
+						sequence_transcript =  sequence_transcript + sequence
+
 
 		if chr == 'chrM':
 			proteine = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='mt')

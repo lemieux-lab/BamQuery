@@ -463,17 +463,19 @@ class BiotypeAssignation:
 				indices = [i for i, x in enumerate(count_bamfiles_) if x == 0]
 				peptides_absent_sample_group[peptide] = indices
 
+
 			if biotypes_annotated_alignments != '':
 				in_frame = False
 				for type_ in sorted(biotypes_annotated_alignments, key=biotypes_annotated_alignments.get, reverse=True):
-					# if 'In_frame' in biotypes_all_alignments.keys():
-					# 	in_frame = True
-					# 	count = 1
-					# 	type_ = self.mod_type(type_)
-					# else:
-					count = biotypes_annotated_alignments[type_]
-					count = count/(total_alignments_spliced_annotated*1.0)
-					type_ = self.mod_type(type_)
+					
+					if 'In_frame' in biotypes_all_alignments.keys():
+						in_frame = True
+						count = 1
+						type_ = self.mod_type('In_frame')
+					else:
+						count = biotypes_annotated_alignments[type_]
+						count = count/(total_alignments_spliced_annotated*1.0)
+						type_ = self.mod_type(type_)
 
 					try:
 						type_in_dic  = biotype_info_only_alignments_annotated['Genome']
@@ -490,9 +492,11 @@ class BiotypeAssignation:
 						peptide_type_dic[peptide_type] = {type_ : count}
 						biotype_info_only_alignments_annotated['Genome'] = peptide_type_dic
 
+					
 					if in_frame:
 						break
 
+			in_frame = False
 			for type_ in sorted(biotypes_all_alignments, key=biotypes_all_alignments.get, reverse=True):
 
 				if type_ == 'In_frame':
@@ -548,13 +552,13 @@ class BiotypeAssignation:
 			consensus = ' - '.join(count_string)
 			
 			if best_guess == '':
-				best_guess = consensus
 				max_best_guess = max(bios)
 				indexes = [i for i,x in enumerate(bios) if x==max_best_guess]
 				guessess = map(biotype_type.__getitem__, indexes)
 				best_guess = ','.join(guessess)
 				bios[-1] = best_guess
-
+			
+			bios[-1] = best_guess
 			to_add_aux.extend(bios)
 			to_add = [peptide_type, peptide, consensus, best_guess]
 			to_add.extend(count_bamfiles)
@@ -580,10 +584,12 @@ class BiotypeAssignation:
 			
 			plots.draw_biotypes(biotypes_by_peptide_type, self.path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/by_peptide_type/', False, False, self.name_exp)
 			logging.info('========== biotypes_by_peptide_type : Genome & ERE annotations : Done! ============ ')
-			
+			biotypes_by_peptide_type = []
+
 			plots.draw_biotypes(biotypes_all_peptides, self.path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/all_peptides/', True, False, self.name_exp)
 			logging.info('========== biotypes_all_peptides : Genome & ERE annotations : Done! ============ ')
-			
+			biotypes_all_peptides = []
+
 			logging.info('========== Plots : Done! ============ ')
 			
 		if self.mode == 'translation':
@@ -669,20 +675,30 @@ class BiotypeAssignation:
 						dic_aux[key_group] = {type_ : value_group}
 						info_peptides_alignments_by_sample_group[key] = dic_aux
 
-					if key_group != 'Total reads count RNA' and key_group != 'Total reads count Ribo':
+					# if key_group != 'Total reads count RNA' and key_group != 'Total reads count Ribo':
 						
+					# 	if self.plots:
+					# 		try:
+					# 			types = biotypes_all_peptides_group_samples[key_group]
+					# 			try:
+					# 				types[type_] += value_group
+
+					# 			except KeyError:
+					# 				biotypes_all_peptides_group_samples[key_group][type_] = value_group
+									
+					# 		except KeyError:
+					# 			biotypes_all_peptides_group_samples[key_group] = {type_ : value_group}
+
+					if key_group == 'Total reads count RNA':
+
 						if self.plots:
 							try:
-								types = biotypes_all_peptides_group_samples[key_group]
-								try:
-									types[type_] += value_group
+								biotypes_all_peptides_type_group_samples_all[type_] += value_group
 
-								except KeyError:
-									biotypes_all_peptides_group_samples[key_group][type_] = value_group
-									
 							except KeyError:
-								biotypes_all_peptides_group_samples[key_group] = {type_ : value_group}
+								biotypes_all_peptides_type_group_samples_all[type_] = value_group
 
+							key_group = 'All_Samples'
 							for pep_type in peptide_type_aux:
 								try:
 									peptide_types = biotypes_by_peptide_type_group_samples[key_group]
@@ -698,15 +714,6 @@ class BiotypeAssignation:
 									dic_aux = {}
 									dic_aux[pep_type] = {type_ : value_group}
 									biotypes_by_peptide_type_group_samples[key_group] = dic_aux
-
-					if key_group == 'Total reads count RNA':
-
-						if self.plots:
-							try:
-								biotypes_all_peptides_type_group_samples_all[type_] += value_group
-
-							except KeyError:
-								biotypes_all_peptides_type_group_samples_all[type_] = value_group
 
 						type_ = self.mod_type(type_)
 
@@ -759,6 +766,7 @@ class BiotypeAssignation:
 			# 	pool.join()
 			# 	pool.clear()
 			for i in range(0,len(keys)):
+				print (i)
 				results = self.get_information_transcription (keys[i], values[i], indexes_group, indexes_by_group)
 				fill_information(results)				
 		else:
@@ -797,15 +805,18 @@ class BiotypeAssignation:
 		if self.plots:
 			logging.info('========== Plots ============ ')
 
-			plots.draw_biotypes(biotypes_all_peptides_group_samples, self.path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/', True, True, self.name_exp)
-			logging.info('========== biotypes_all_peptides_group_samples : Transcription levels : Done! ============ ')
-			
+			#plots.draw_biotypes(biotypes_all_peptides_group_samples, self.path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/', True, True, self.name_exp)
+			#logging.info('========== biotypes_all_peptides_group_samples : Transcription levels : Done! ============ ')
+			#biotypes_all_peptides_group_samples = []
+
 			plots.draw_biotypes(biotypes_by_peptide_type_group_samples, self.path_to_output_folder+'plots/biotypes/biotype_by_sample_group/by_peptide_type/', False, True, self.name_exp)
 			logging.info('========== biotypes_by_peptide_type_group_samples : Transcription levels : Done! ============ ')
-			
+			biotypes_by_peptide_type_group_samples = []
+
 			plots.draw_biotypes(biotypes_all_peptides_type_group_samples_all, self.path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/', True, False, self.name_exp)
 			logging.info('========== biotypes_all_peptides_type_group_samples_all : Transcription levels : Done! ============ ')
-			
+			biotypes_all_peptides_type_group_samples_all = []
+
 			logging.info('========== Plots : Done! ============ ')
 
 		return info_peptides_alignments_by_sample, info_peptides_alignments_by_sample_group
@@ -1037,6 +1048,7 @@ class BiotypeAssignation:
 
 		logging.info('========== Fini: Genomic and ERE annotation : Done! ============ ')
 
+
 	def get_info_group_samples(self, bam_files_columns):
 
 		split_bams_files = {} 
@@ -1107,7 +1119,6 @@ class BiotypeAssignation:
 			path = self.path_to_output_folder+'/res/summary_info_biotypes/3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv'
 			self.df_consensus_annotation_final_sample.to_csv(path, index=False)
 			del df_consensus_annotation_final_sample
-
 
 	def write_xls_with_all_info_biotypes(self):
 
