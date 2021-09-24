@@ -74,10 +74,6 @@ class BamQuery:
 			order_f = res[4] 
 			df_all_alignments_rna = res[5] 
 
-			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
-			writer.book.use_zip64()
-			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
-			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
 			
 			if not self.light: 
 				plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, order, self.th_out)
@@ -86,11 +82,16 @@ class BamQuery:
 
 			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
-			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
 			
 			if not self.light: 
 				plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, order, self.th_out)
 
+			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
+			writer.book.use_zip64()
+			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
+			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
+			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
+			
 			writer.save()
 			logging.info('========== Get Norm RNA : Done! ============ ')
 

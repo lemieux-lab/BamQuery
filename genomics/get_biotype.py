@@ -748,23 +748,6 @@ class BiotypeAssignation:
 		indexes_by_group_to_send = [indexes_by_group]*len(keys)
 			
 		if len(keys) > 50000:
-			# cont = 0
-			# nodes = 5
-			# for i in range(0,len(keys),nodes):
-			# 	#pool = mp.Pool(processes = 1, maxtasksperchild=1000)
-			# 	print (i)
-			# 	pool = ProcessPool(nodes=nodes)
-			# 	cont += nodes
-			# 	#chunk = tasks[i:cont]
-			# 	#results = pool.starmap(self.get_information_transcription, chunk)
-			# 	results = pool.map(self.get_information_transcription, keys[i:cont], values[i:cont], indexes_group_to_send[i:cont], indexes_by_group_to_send[i:cont])
-			# 	for res in results:
-			# 		fill_information(res)
-
-			# 	print (i)
-			# 	pool.close()
-			# 	pool.join()
-			# 	pool.clear()
 			for i in range(0,len(keys)):
 				results = self.get_information_transcription (keys[i], values[i], indexes_group, indexes_by_group)
 				fill_information(results)				
