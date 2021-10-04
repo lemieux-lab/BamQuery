@@ -215,6 +215,17 @@ class BiotypeAssignation:
 		self.df2 = pd.DataFrame(data_gen, columns = columns_gen)
 		self.df3 = pd.DataFrame(data_gen_ere, columns = columns_gen_ere)
 		
+		# self.df2.to_pickle("/u/ruizma/BAM_Query/Scripts/EM/all_peptides/df2.pkl")
+		# self.df3.to_pickle("/u/ruizma/BAM_Query/Scripts/EM/all_peptides/df3.pkl")
+		# with open('/u/ruizma/BAM_Query/Scripts/EM/all_peptides/bam_files_list_rna.pkl', 'wb') as f:
+		# 	pickle.dump(self.bam_files_list_rna, f)
+
+		# with open('/u/ruizma/BAM_Query/Scripts/EM/all_peptides/order_sample_bam_files_rna.pkl', 'wb') as f:
+		# 	pickle.dump(self.order_sample_bam_files_rna, f)
+
+		# with open('/u/ruizma/BAM_Query/Scripts/EM/all_peptides/biotype_type.pkl', 'wb') as f:
+		# 	pickle.dump(self.biotype_type, f)
+
 		data_gen_ere = []
 		data_gen = []
 		data_ere = []
@@ -768,6 +779,7 @@ class BiotypeAssignation:
 			pool.clear()
 
 		groupby_columns = ['Peptide Type', 'Peptide', 'Alignment', 'Strand', 'Consenssus']
+
 		self.df_consensus_annotation_full = pd.DataFrame(df_consensus_annotation_full, columns = groupby_columns+bam_files_columns)
 		
 		shape_df_consensus_annotation_full = self.df_consensus_annotation_full.shape
@@ -810,17 +822,18 @@ class BiotypeAssignation:
 		peptide = key[1]
 		alignment = key[2]
 		strand = key[3]
+		info_peptides_alignments_by_sample = []
+		count_string = []
+		count_bamfiles = information_peptide[1]
 
 		total_alignments_pep = sum(information_peptide[0].values())
 		biotypes_by_alignment = information_peptide[0]
 		
-		count_bamfiles = information_peptide[1]
 		count_bamfiles_total = self.general_info_peptides[(peptide_type, peptide)][1]
 		
 		count_rna = count_bamfiles[-2]
 		count_ribo = count_bamfiles[-1]
 
-		count_string = []
 		to_add = [peptide_type, peptide, alignment, strand]
 		
 		info_peptides_alignments_by_sample = [(peptide_type, peptide), count_bamfiles]
@@ -828,7 +841,6 @@ class BiotypeAssignation:
 		for type_ in sorted(biotypes_by_alignment, key=biotypes_by_alignment.get, reverse=True):
 			count = biotypes_by_alignment[type_]
 			count = count/(total_alignments_pep*1.0)
-			
 			percentage = str(round(count*100,2))
 			count_string.append(type_+': '+percentage+'%')
 			
@@ -837,15 +849,17 @@ class BiotypeAssignation:
 				value_total_bam_file = count_bamfiles_total[index]
 				key_group = indexes_group[index]
 				total_group_alignment = np.array(count_bamfiles_total)[indexes_by_group[key_group]].sum()
+				
 				try:
 					value = count*(value_in_bam_file/value_total_bam_file)
 				except ZeroDivisionError:
-					value = math.log(1,10)
+					value = 0
 
 				try:
 					value_group = value*(value_total_bam_file/total_group_alignment)
 				except ZeroDivisionError:
 					value_group = 0
+
 				if value == 0:
 					value_group = 0
 

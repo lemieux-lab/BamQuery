@@ -89,13 +89,18 @@ class ReadInputFile:
 				else:
 					raise Exception("Sorry, You must provide peptides in the appropriate format mode : peptide/CS/manual ")
 				
-				types = peptide_type.split(';')
+				if ',' in peptide_type:
+					types = peptide_type.split(',')
+				else:
+					types = peptide_type.split(';')
+
 				for type_ in types:
 					try:
 						self.peptides_by_type[type_].append(peptide)
 					except KeyError:
 						self.peptides_by_type[type_] = [peptide]
 
+				
 		logging.info('Peptides to evaluate in Peptide Mode : %d', len(self.peptide_mode))
 		logging.info('Peptides to evaluate in Coding Sequence (CS) Mode : %d', len(self.CS_mode))
 		logging.info('Peptides to evaluate in Manual Mode: %d', len(self.manual_mode))

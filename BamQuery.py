@@ -67,14 +67,13 @@ class BamQuery:
 			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type)
 			
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
-			df_counts_rna = res[0] 
+			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
 			df_counts_filtered = res[2] 
 			order = res[3] 
 			order_f = res[4] 
 			df_all_alignments_rna = res[5] 
 
-			
 			if not self.light: 
 				plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, order, self.th_out)
 
@@ -82,6 +81,7 @@ class BamQuery:
 
 			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
+			
 			
 			if not self.light: 
 				plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, order, self.th_out)

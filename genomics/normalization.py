@@ -60,8 +60,13 @@ class Normalization:
 					with the samples in this query.')
 
 
-			with open(self.path_to_tissues_file, 'rb') as fp:
-				dictionary_tissues_bam_files = pickle.load(fp)
+			try:
+				with open(self.path_to_tissues_file, 'rb') as fp:
+					dictionary_tissues_bam_files = pickle.load(fp)
+			except ValueError:
+				import pickle5
+				with open(self.path_to_tissues_file, 'rb') as fp:
+					dictionary_tissues_bam_files = pickle5.load(fp)
 
 			if os.path.exists(self.path_to_output_aux_folder+"bam_files_tissues.csv"):
 				
@@ -73,17 +78,23 @@ class Normalization:
 					short_list = row['Short_list'].lower()
 					dictionary_tissues_bam_files[sample] = [tissue_name, tissue_type, short_list]
 				
+				
 				with open(self.path_to_tissues_file, 'wb') as handle:
 					pickle.dump(dictionary_tissues_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
+				
 			not_in = set()
 			tissues_for_samples = {}
 
 			while len(count_reads) != len(self.bam_files_list):
 				try:
-					with open(self.path_to_all_counts_file, 'rb') as fp:
-						dictionary_total_reads_bam_files = pickle.load(fp)
-
+					try:
+						with open(self.path_to_tissues_file, 'rb') as fp:
+							dictionary_tissues_bam_files = pickle.load(fp)
+					except ValueError:
+						import pickle5
+						with open(self.path_to_tissues_file, 'rb') as fp:
+							dictionary_tissues_bam_files = pickle5.load(fp)
+					
 					for bam_file, bamfile_info in self.bam_files_list.items():
 
 						try:
@@ -143,10 +154,10 @@ class Normalization:
 				peptide = row.name
 				aux[0] =  peptide
 				for bam_file, count_bam_file in count_reads.items():
-					df_counts[bam_file].astype('float')
+					#df_counts[bam_file].astype('float')
 					count = int(row[bam_file])
 					norm = math.log(((count/(int(count_bam_file)*1.0))*100000000.0)+1,10)
-					row[bam_file] = norm
+					#row[bam_file] = norm
 					index = indexes_column_names.index(bam_file)
 					aux[index] = norm
 					

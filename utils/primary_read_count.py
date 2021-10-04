@@ -154,8 +154,13 @@ class GetPrimaryReadCountBamFiles:
 		exist = os.path.exists(path_to_all_counts_file)
 		
 		if exist :
-			with open(path_to_all_counts_file, 'rb') as fp:
-				dictionary_total_reads_bam_files = pickle.load(fp)
+			try:
+				with open(path_to_all_counts_file, 'rb') as fp:
+					dictionary_total_reads_bam_files = pickle.load(fp)
+			except ValueError:
+				import pickle5
+				with open(path_to_all_counts_file, 'rb') as fp:
+					dictionary_total_reads_bam_files = pickle5.load(fp)
 		else:
 			dictionary_total_reads_bam_files = {}
 
