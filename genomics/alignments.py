@@ -1,4 +1,4 @@
-import os, logging, time, subprocess, pickle, multiprocessing, os, _thread, csv
+import os,time, subprocess, pickle, multiprocessing, os, _thread, csv
 import genomics.get_alignments as get_alig
 import collections
 from pathos.multiprocessing import ProcessPool
@@ -12,7 +12,7 @@ NUM_WORKERS =  multiprocessing.cpu_count()
 
 class Alignments:
 
-	def __init__(self, path_to_output_folder, name_exp, light, dbSNP, common):
+	def __init__(self, path_to_output_folder, name_exp, light, dbSNP, common, super_logger):
 		self.path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 		self.name_exp = name_exp
@@ -20,10 +20,7 @@ class Alignments:
 		self.light = light
 		self.dbSNP = dbSNP
 		self.common = common
-		#if dbSNP == 149:
-		#	self.dbSNPFile = self.path_to_lib+'dbSNP/dbSNP149_all.vcf.gz'
-		#else:
-		#	self.dbSNPFile = self.path_to_lib+'dbSNP/dbSNP151_all.vcf.gz'
+		self.super_logger = super_logger
 
 	def alignment_cs_to_genome(self, set_peptides):
 
@@ -55,15 +52,15 @@ class Alignments:
 					str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+' --outFilterMatchNmin '+str(outputFilterMatchInt)+' --readFilesIn  '+\
 					inputFilesR1_1+' --outSAMattributes NH HI MD --outFileNamePrefix '+self.path_to_output_folder_genome_alignments
 			
-			logging.info('Command to Align using STAR : %s ', command)
+			self.super_logger.info('Command to Align using STAR : %s ', command)
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 			out, err = p_1.communicate()
 			t_2 = time.time()
 			total = t_2-t_0
 			print ("Total time run function alignment_CS_to_genome End : %s min" % (total/60.0))
-			logging.info('Total time run function alignment_CS_to_genome to end : %f min', (total/60.0))
+			self.super_logger.info('Total time run function alignment_CS_to_genome to end : %f min', (total/60.0))
 		else:
-			logging.info('Alignment file already exists in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Aligned.out.sam')
+			self.super_logger.info('Alignment file already exists in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Aligned.out.sam')
 		
 		perfect_alignments = self.get_alignments(set_peptides)
 		
@@ -87,14 +84,14 @@ class Alignments:
 			
 			if not exists_light and not exists:
 
-				res_star = get_alig.get_alignments(sam_file, self.dbSNP, self.common)
+				res_star = get_alig.get_alignments(sam_file, self.dbSNP, self.common, self.super_logger)
 				
 				t_2 = time.time()
 				total = t_2-t_0
 
 				print ("Total time run function get_alignments End : %s " % (total/60.0))
-				logging.info('Total time run function get_alignments to end : %f min', (total/60.0))
-				logging.info('Total perfect aligments : %s ', str(len(res_star[0])))
+				self.super_logger.info('Total time run function get_alignments to end : %f min', (total/60.0))
+				self.super_logger.info('Total perfect aligments : %s ', str(len(res_star[0])))
 				
 				perfect_alignments = res_star[0]
 				variants_alignments = res_star[1]
@@ -138,10 +135,10 @@ class Alignments:
 				with open(name_path, 'wb') as handle:
 					pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-				logging.info('Alignments Information save to : %s ', name_path)
+				self.super_logger.info('Alignments Information save to : %s ', name_path)
 				
 			else:
-				logging.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
+				self.super_logger.info('Alignment information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder_alignments+'/Alignments_information.dic')
 				
 				if not self.light:
 					name_path = self.path_to_output_folder_alignments+'/Alignments_information.dic'
@@ -155,7 +152,7 @@ class Alignments:
 						import pickle5
 						perfect_alignments = pickle5.load(fp)
 
-				logging.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
+				self.super_logger.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
 				
 				try:
 					with open(self.path_to_output_folder_alignments+'alignments/missed_peptides.info') as f:

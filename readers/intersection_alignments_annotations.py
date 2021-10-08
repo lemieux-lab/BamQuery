@@ -1,4 +1,4 @@
-import os, logging, time, pickle, multiprocessing, _thread, csv, math, subprocess
+import os, time, pickle, multiprocessing, _thread, csv, math, subprocess
 import pandas as pd
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
@@ -10,18 +10,19 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class IntersectAnnotations:
 
-	def __init__(self, perfect_alignments, path_to_output_folder, name_exp):
+	def __init__(self, perfect_alignments, path_to_output_folder, name_exp, super_logger):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.perfect_alignments = perfect_alignments
 		self.path_to_output_folder = path_to_output_folder+'res/BED_files/'
 		self.name_exp = name_exp
+		self.super_logger = super_logger
 
 	def generate_BED_files(self):
 
 		exists = os.path.exists(self.path_to_output_folder+ 'to_intersect_to_annotations.bed')
 		
 		if not exists:
-			logging.info('Generating BED file to intersect with annotations. ')
+			self.super_logger.info('Generating BED file to intersect with annotations. ')
 
 			t_0 = time.time()
 
@@ -57,10 +58,10 @@ class IntersectAnnotations:
 
 			t_2 = time.time()
 			total = t_2-t_0
-			logging.info('Total time run function generate_BED_files to end : %f min', (total/60.0))
+			self.super_logger.info('Total time run function generate_BED_files to end : %f min', (total/60.0))
 
 		else:
-			logging.info('to_intersect_to_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'to_intersect_to_annotations.bed')
+			self.super_logger.info('to_intersect_to_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'to_intersect_to_annotations.bed')
 			self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
 
 	
@@ -72,7 +73,7 @@ class IntersectAnnotations:
 		if not exists and not exists_2:
 			t_0 = time.time()
 
-			logging.info('Using bedtools to intersect alignments to annotations.')
+			self.super_logger.info('Using bedtools to intersect alignments to annotations.')
 
 			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed; bedtools intersect -a '+self.bed_file+' -b '+annotation_EREs+' -wao > '+self.path_to_output_folder + '/intersection_with_annotated_EREs.bed'
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
@@ -80,9 +81,9 @@ class IntersectAnnotations:
 
 			t_2 = time.time()
 			total = t_2-t_0
-			logging.info('Total time run function perform_intersection_with_annotation to end : %f min', (total/60.0))
+			self.super_logger.info('Total time run function perform_intersection_with_annotation to end : %f min', (total/60.0))
 		else:
-			logging.info('intersection_with_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'intersection_with_annotations.bed')
+			self.super_logger.info('intersection_with_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'intersection_with_annotations.bed')
 	
 
 	def get_string_for_alignment(self, place, chr, key, strand):

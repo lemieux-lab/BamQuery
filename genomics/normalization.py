@@ -1,4 +1,4 @@
-import os, logging, time, pickle, subprocess, multiprocessing, _thread, csv, math
+import os, time, pickle, subprocess, multiprocessing, _thread, csv, math, copy
 import pandas as pd
 import numpy as np
 
@@ -9,7 +9,7 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class Normalization:
 
-	def __init__(self, path_to_output_folder, name_exp, bam_files_list, peptides_types, mode, light):
+	def __init__(self, path_to_output_folder, name_exp, peptides_types, mode, light, super_logger):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.light = light
 		
@@ -26,11 +26,10 @@ class Normalization:
 			
 
 		self.name_exp = name_exp
-		self.path_to_all_counts_file = path_to_lib+"allcounts.dic"
-		self.path_to_tissues_file = path_to_lib+"tissues.dic"
-		self.bam_files_list = bam_files_list
+		self.path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 		self.peptides_types = peptides_types
 		self.mode = mode
+		self.super_logger = super_logger
 
 
 	def get_normalization(self, df_counts, type_save):
@@ -46,80 +45,62 @@ class Normalization:
 			indexes_column_names.extend(list(df_counts.columns))
 			norm_matrix = []
 
-			try:
-				with open(self.path_to_all_counts_file, 'rb') as fp:
-					dictionary_total_reads_bam_files = pickle.load(fp)
-			except FileNotFoundError:
-				print ('Allcounts dictionary is not found in the lib path. If this is the first time you are running \
-					BAMQuery or you are querying new samples, this will take a bit of time. Go for coffee! If it is not \
-					the case you should be worried, the Allcounts dictionary have been lost, now is generating a new Allcounts dictionary \
-					with the samples in this query.')
-				logging.info('Allcounts dictionary is not found in the lib path. If this is the first time you are running \
-					BAMQuery or you are querying new samples, this will take a bit of time. Go for coffee! If it is not \
-					the case you should be worried, the Allcounts dictionary have been lost, now is generating a new Allcounts dictionary \
-					with the samples in this query.')
-
-
-			try:
-				with open(self.path_to_tissues_file, 'rb') as fp:
-					dictionary_tissues_bam_files = pickle.load(fp)
-			except ValueError:
-				import pickle5
-				with open(self.path_to_tissues_file, 'rb') as fp:
-					dictionary_tissues_bam_files = pickle5.load(fp)
-
+			with open(self.path_to_all_counts_file, 'rb') as fp:
+				dictionary_total_reads_bam_files = pickle.load(fp)
+			
+			# 0: path, 1: number, 2: Tissue, 3: Tissue_type, 4: Shortlist, 5: sequencing, 6: library, 7: user
 			if os.path.exists(self.path_to_output_aux_folder+"bam_files_tissues.csv"):
+				self.super_logger.info('Adding tissue information to Bam Files !')
 				
 				df = pd.read_csv(self.path_to_output_aux_folder+"bam_files_tissues.csv", header = 0)
 				for index, row in df.iterrows():
-					sample = row['Sample']
-					tissue_name = row['Tissue']
-					tissue_type = row['Tissue_type']
-					short_list = row['Short_list'].lower()
-					dictionary_tissues_bam_files[sample] = [tissue_name, tissue_type, short_list]
-				
-				
-				with open(self.path_to_tissues_file, 'wb') as handle:
-					pickle.dump(dictionary_tissues_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
-				
-			not_in = set()
-			tissues_for_samples = {}
-
-			while len(count_reads) != len(self.bam_files_list):
-				try:
 					try:
-						with open(self.path_to_tissues_file, 'rb') as fp:
-							dictionary_tissues_bam_files = pickle.load(fp)
-					except ValueError:
-						import pickle5
-						with open(self.path_to_tissues_file, 'rb') as fp:
-							dictionary_tissues_bam_files = pickle5.load(fp)
+						sample = str(row['Sample'])
+						tissue_name = str(row['Tissue'])
+						tissue_type = str(row['Tissue_type'])
+						short_list = str(row['Short_list']).lower()
+						if sample != 'nan' and tissue_name != 'nan' and tissue_type != 'nan':
+							dictionary_total_reads_bam_files[sample][2] = tissue_name
+							dictionary_total_reads_bam_files[sample][3] = tissue_type
+							dictionary_total_reads_bam_files[sample][4] = short_list
+						else:
+							raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+					except:
+						raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+				with open(self.path_to_all_counts_file, 'wb') as handle:
+					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
+				
+			tissues_for_samples = {}
+			bam_files_list = list(df_counts.columns)
+			counts_bam_files = []
+			
+			for name_bam_file in bam_files_list:
+
+				try:
+					info_bam_file = dictionary_total_reads_bam_files[name_bam_file]
+					path = info_bam_file[0]
+					count = info_bam_file[1]
+					tissue = info_bam_file[2]
+					tissue_type = info_bam_file[3]
+					shortlist = info_bam_file[4]
+					sequencing = info_bam_file[5]
+					library = info_bam_file[6]
+					user = info_bam_file[7]
+					counts_bam_files.append(count*1.0)
+
+					if count == 0:
+						raise Exception("\nBefore to continue you need to verify that the primary read count for the bam file "+name_bam_file+" is already included in the dictionary. To do so: verify in the log Get_Read_Count_BAM_directories.log that the primary read count processes have finished. Please re-launch BamQuery, once all the primary read counts have been included." )
 					
-					for bam_file, bamfile_info in self.bam_files_list.items():
-
-						try:
-							info_bam_file = dictionary_total_reads_bam_files[bam_file]
-							count_reads_saved = info_bam_file[1]
-							count_reads[bam_file] = count_reads_saved
-						except KeyError:
-							pass
-
-						try:
-							tissue_info = dictionary_tissues_bam_files[bam_file]
-							tissue = tissue_info[0]
-							tissue_type = tissue_info[1]
-							short_list = tissue_info[2]
-							try:
-								tissues_for_samples[tissue][0].append(bam_file)
-							except KeyError:
-								tissues_for_samples[tissue] = [[bam_file], tissue_type, short_list]
-
-						except KeyError:
-							not_in.add(bam_file)
-
-				except :
-					pass
-
+					if tissue == '' or tissue_type == '' or shortlist == '':
+						print (name_bam_file, info_bam_file)
+						raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+					try:
+						tissues_for_samples[tissue][0].append(name_bam_file)
+					except KeyError:
+						tissues_for_samples[tissue] = [[name_bam_file], tissue_type, shortlist]
+				except KeyError:
+					raise Exception("\nBefore to continue you need to verify that the primary read count for the bam file "+name_bam_file+" is already included in the dictionary. To do so: verify in the log Get_Read_Count_BAM_directories.log that the primary read count processes have finished. Please re-launch BamQuery, once all the primary read counts have been included." )
+					
 			data = [['Sample category', 'sample_ids', 'Project', 'short_list']]
 			for tissue, info_tissue in tissues_for_samples.items():
 				aux = []
@@ -134,82 +115,68 @@ class Normalization:
 				writer = csv.writer(csvFile)
 				writer.writerows(data)
 
-			if len(not_in) > 0 :
-				data = [['Sample', 'Tissue', 'Tissue_type', 'Short_list']]
-				for sample in not_in:
-					to_add = ['']*4
-					to_add[0] = sample
-					data.append(to_add)
-
-				with open(self.path_to_output_aux_folder+"bam_files_tissues.csv", 'w') as csvFile:
-					writer = csv.writer(csvFile)
-					writer.writerows(data)
-
-				raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
-			
 			info_tissue_peptide = {}
 			
-			for index, row in df_counts.iterrows():
-				aux = [0.0]*len(indexes_column_names)
+			def_norm = copy.deepcopy(df_counts)
+
+			def normalize(row):
+				new_row = ((row / counts_bam_files)*100000000.0)+1
+				return new_row
+
+			def_norm = def_norm.apply(lambda row : normalize(row), axis = 1)
+			def_norm_log = def_norm.apply(np.log10, axis = 1)
+			
+			for index, row in def_norm_log.iterrows():
 				peptide = row.name
-				aux[0] =  peptide
-				for bam_file, count_bam_file in count_reads.items():
-					#df_counts[bam_file].astype('float')
-					count = int(row[bam_file])
-					norm = math.log(((count/(int(count_bam_file)*1.0))*100000000.0)+1,10)
-					#row[bam_file] = norm
-					index = indexes_column_names.index(bam_file)
-					aux[index] = norm
-					
-					tissue_info = dictionary_tissues_bam_files[bam_file]
-					tissue = tissue_info[0]
-					
+				for bam_file_name, norm in row.items():
+					tissue_name = dictionary_total_reads_bam_files[bam_file_name][2]
+					tissue_type = dictionary_total_reads_bam_files[bam_file_name][3]
+					short_list = dictionary_total_reads_bam_files[bam_file_name][4]
+
+					if tissue_name == '':
+						print (bam_file_name)
+					key = (tissue_name, tissue_type, short_list)
 					try:
-						info_tissue = info_tissue_peptide[tissue]
+						info_tissue = info_tissue_peptide[key]
 						try:
 							info_tissue[peptide][0].append(norm)
 						except KeyError:
 							info_tissue[peptide] = [[norm]]
 					except KeyError:
-						info_tissue_peptide[tissue] = {peptide: [[norm]]}
-					
-
-				norm_matrix.append(aux)
+						info_tissue_peptide[key] = {peptide: [[norm]]}
 
 			exp = type_save[1:].split('.csv')[0]+'/'
-			for tissue, peptides in info_tissue_peptide.items():
+
+			for key_info_tissue, peptides in info_tissue_peptide.items():
+				
 				to_write = 'Peptide\tPeptide_type\tTissue\tTissue_type\tShort_list\tmedian\tmean\n'
+				tissue_name = key_info_tissue[0]
+				tissue_type = key_info_tissue[1]
+				short_list = key_info_tissue[2]
+
 				for peptide, info in peptides.items():
 					mean = np.mean(info[0])
 					median = np.median(info[0])
-					info.append(mean)
-					info.append(median)
 					peptide_type = self.peptides_types[peptide]
-					tissue_type = tissues_for_samples[tissue][1]
-					short_list = tissues_for_samples[tissue][2]
-					to_write += peptide+'\t'+peptide_type+'\t'+tissue+'\t'+tissue_type+'\t'+short_list+'\t'+str(median)+'\t'+str(mean)+'\n'
+					to_write += peptide+'\t'+peptide_type+'\t'+tissue_name+'\t'+tissue_type+'\t'+short_list+'\t'+str(median)+'\t'+str(mean)+'\n'
 
-				with open(self.path_to_output_aux_processed_folder+exp+tissue+"_processed.txt", 'w') as f:
+				with open(self.path_to_output_aux_processed_folder+exp+tissue_name+"_processed.txt", 'w') as f:
 					f.write(to_write)
 					f.close()
-
-			def_norm = pd.DataFrame(norm_matrix, columns = indexes_column_names)
-			def_norm = def_norm.set_index(['Peptides'])
-
-			_thread.start_new_thread(self.save_info_counts, (def_norm, type_save))
+			_thread.start_new_thread(self.save_info_counts, (def_norm_log, type_save))
 			
 			t_2 = time.time()
 			total = t_2-t_0
-			logging.info('Total time run function get_normalization to end : %f min', (total/60.0))
+			self.super_logger.info('Total time run function get_normalization to end : %f min', (total/60.0))
 		else:
-			logging.info('Normalization information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+type_save)
-			def_norm = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index_col=0)
+			self.super_logger.info('Normalization information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+type_save)
+			def_norm_log = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index_col=0)
 		
-		return def_norm
+		return def_norm_log
 
 	def save_info_counts(self, df, type_save):
 		df.to_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index=True, header=True)
-		logging.info('Normalization Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
+		self.super_logger.info('Normalization Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
 
 # 				t1 				ts2 			ts3 			ts4
 # rphm			x				x				x				x

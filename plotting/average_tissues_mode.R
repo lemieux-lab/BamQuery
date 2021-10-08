@@ -19,7 +19,6 @@ if(!file.exists(output_plot)) {lapply(output_plot, dir.create)}
 # # Do the actual heat map
 lf_process = list.files(path = norm_results, pattern = '*_processed.txt', full.names = TRUE)
 
-
 procFiles = lapply(lf_process, function(x) {
   tmp = fread(x)
   return(tmp)

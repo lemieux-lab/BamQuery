@@ -1,4 +1,4 @@
-import os, logging, time, pickle, multiprocessing, _thread, csv, math, copy, pysam, copy, xlsxwriter, gc
+import os, time, pickle, multiprocessing, _thread, csv, math, copy, pysam, copy, xlsxwriter, gc
 import pandas as pd
 import numpy as np
 from pathos.multiprocessing import ProcessPool
@@ -16,11 +16,12 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BiotypeAssignation:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, bam_files_list_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, dev, plots):
+	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, bam_files_list_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, dev, plots, super_logger):
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
 		self.mode = mode
 		self.plots = plots
+		self.super_logger = super_logger
 
 		exists = os.path.exists(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic') 
 		exists_2 = os.path.exists(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic') 
@@ -53,7 +54,7 @@ class BiotypeAssignation:
 		with open(path_to_lib+'splices_information.dic', 'rb') as handle:
 			self.splices_information = pickle.load(handle)
 
-		logging.info('========== Get information from Genomic and ERE annotation : Done! ============ ')
+		self.super_logger.info('========== Get information from Genomic and ERE annotation : Done! ============ ')
 
 		self.order_sample_bam_files_rna = order_sample_bam_files_rna
 		self.order_sample_bam_files_ribo = order_sample_bam_files_ribo
@@ -61,9 +62,10 @@ class BiotypeAssignation:
 		self.bam_files_list_ribo = bam_files_list_ribo
 		self.dev = dev
 		
+		
 	def get_biotypes(self, info_peptide_alignments, peptides_by_type):
 
-		logging.info('========== Getting information to define biotyping... ============ ')
+		self.super_logger.info('========== Getting information to define biotyping... ============ ')
 		data_ere = []
 		data_gen = []
 		data_gen_ere = []
@@ -230,7 +232,7 @@ class BiotypeAssignation:
 		data_gen = []
 		data_ere = []
 
-		logging.info('========== Getting information to define biotyping : Done! ============ ')
+		self.super_logger.info('========== Getting information to define biotyping : Done! ============ ')
 
 	def mod_type(self, type_):
 		if '-' in type_:
@@ -273,7 +275,7 @@ class BiotypeAssignation:
 		self.get_global_annotation_gen(bam_files_columns)
 		self.get_genomic_and_ere_annotation(bam_files_columns)
 
-		logging.info('========== Global genomic and ERE annotation : Done! ============ ')
+		self.super_logger.info('========== Global genomic and ERE annotation : Done! ============ ')
 		
 	def get_global_annotation_gen(self, bam_files_columns):
 
@@ -591,17 +593,17 @@ class BiotypeAssignation:
 		df_consensus_annotation = []
 		
 		if self.plots:
-			logging.info('========== Plots ============ ')
+			self.super_logger.info('========== Plots ============ ')
 			
 			plots.draw_biotypes(biotypes_by_peptide_type, self.path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/by_peptide_type/', False, False, self.name_exp)
-			logging.info('========== biotypes_by_peptide_type : Genome & ERE annotations : Done! ============ ')
+			self.super_logger.info('========== biotypes_by_peptide_type : Genome & ERE annotations : Done! ============ ')
 			biotypes_by_peptide_type = []
 
 			plots.draw_biotypes(biotypes_all_peptides, self.path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/all_peptides/', True, False, self.name_exp)
-			logging.info('========== biotypes_all_peptides : Genome & ERE annotations : Done! ============ ')
+			self.super_logger.info('========== biotypes_all_peptides : Genome & ERE annotations : Done! ============ ')
 			biotypes_all_peptides = []
 
-			logging.info('========== Plots : Done! ============ ')
+			self.super_logger.info('========== Plots : Done! ============ ')
 			
 		if self.mode == 'translation':
 			plots.draw_correlation(counts_reads_rna_ribo, self.name_exp, self.path_to_output_folder)
@@ -797,21 +799,21 @@ class BiotypeAssignation:
 		gc.collect()
 
 		if self.plots:
-			logging.info('========== Plots ============ ')
+			self.super_logger.info('========== Plots ============ ')
 
 			#plots.draw_biotypes(biotypes_all_peptides_group_samples, self.path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/', True, True, self.name_exp)
-			#logging.info('========== biotypes_all_peptides_group_samples : Transcription levels : Done! ============ ')
+			#self.super_logger.info('========== biotypes_all_peptides_group_samples : Transcription levels : Done! ============ ')
 			#biotypes_all_peptides_group_samples = []
 
 			plots.draw_biotypes(biotypes_by_peptide_type_group_samples, self.path_to_output_folder+'plots/biotypes/biotype_by_sample_group/by_peptide_type/', False, True, self.name_exp)
-			logging.info('========== biotypes_by_peptide_type_group_samples : Transcription levels : Done! ============ ')
+			self.super_logger.info('========== biotypes_by_peptide_type_group_samples : Transcription levels : Done! ============ ')
 			biotypes_by_peptide_type_group_samples = []
 
 			plots.draw_biotypes(biotypes_all_peptides_type_group_samples_all, self.path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/', True, False, self.name_exp)
-			logging.info('========== biotypes_all_peptides_type_group_samples_all : Transcription levels : Done! ============ ')
+			self.super_logger.info('========== biotypes_all_peptides_type_group_samples_all : Transcription levels : Done! ============ ')
 			biotypes_all_peptides_type_group_samples_all = []
 
-			logging.info('========== Plots : Done! ============ ')
+			self.super_logger.info('========== Plots : Done! ============ ')
 
 		return info_peptides_alignments_by_sample, info_peptides_alignments_by_sample_group
 
@@ -982,7 +984,7 @@ class BiotypeAssignation:
 
 	def get_genomic_and_ere_annotation(self, bam_files_columns):
 
-		logging.info('========== Init: Genomic and ERE annotation ============ ')
+		self.super_logger.info('========== Init: Genomic and ERE annotation ============ ')
 		
 		groupby_columns = ['Peptide Type', 'Peptide', 'Alignment', 'Strand']
 		group_by_gen_ere = self.df_total_by_position_gen_ere.groupby(groupby_columns)
@@ -1010,14 +1012,14 @@ class BiotypeAssignation:
 		info_peptides_by_alignment = res[0] 
 		self.general_info_peptides = res[1] 
 		only_annotated_splices = res[2]
-		logging.info('========== Get information from genomic and ere intersection : Done!  ============ ')
+		self.super_logger.info('========== Get information from genomic and ere intersection : Done!  ============ ')
 
 		res = self.genome_annotations(self.general_info_peptides, only_annotated_splices, bam_files_columns)
 		peptides_absent_sample_group = res[0] 
 		biotype_info_all_alignments_annotated = res[1] 
 		biotype_info_only_alignments_annotated = res[2] 
 		
-		logging.info('========== Get Biotype based on absence of transcription (genome based) : Done!  ============ ')
+		self.super_logger.info('========== Get Biotype based on absence of transcription (genome based) : Done!  ============ ')
 
 		res = self.get_info_group_samples(bam_files_columns)
 		split_bams_files = res[0] 
@@ -1029,27 +1031,27 @@ class BiotypeAssignation:
 		info_peptides_alignments_by_sample = res[0] 
 		info_peptides_alignments_by_sample_group = res[1]
 
-		logging.info('========== Get Biotype based on transcription : Done!  ============ ')
+		self.super_logger.info('========== Get Biotype based on transcription : Done!  ============ ')
 
 		self.get_biotype_by_group_sample(order_columns, info_peptides_alignments_by_sample_group)
 		
-		logging.info('========== Writting full biotyping in xls files ============ ')
+		self.super_logger.info('========== Writting full biotyping in xls files ============ ')
 
 		self.write_xls_with_all_info_biotypes()
 		gc.collect()
 
-		logging.info('========== Writting full biotyping in xls files : Done! ============ ')
+		self.super_logger.info('========== Writting full biotyping in xls files : Done! ============ ')
 
 		self.process_information_by_peptides_in_samples(info_peptides_alignments_by_sample, biotype_info_all_alignments_annotated, biotype_info_only_alignments_annotated, bam_files_columns)
 	
-		logging.info('========== Writting consensus biotyping in xls files ============ ')
+		self.super_logger.info('========== Writting consensus biotyping in xls files ============ ')
 
 		self.write_xls_with_consensus_biotypes()
 		gc.collect()
 
-		logging.info('========== Writting consensus biotyping in xls files : Done! ============ ')
+		self.super_logger.info('========== Writting consensus biotyping in xls files : Done! ============ ')
 
-		logging.info('========== Fini: Genomic and ERE annotation : Done! ============ ')
+		self.super_logger.info('========== Fini: Genomic and ERE annotation : Done! ============ ')
 
 
 	def get_info_group_samples(self, bam_files_columns):
@@ -1166,8 +1168,8 @@ class BiotypeAssignation:
 			
 			writer.save()
 		else:
-			logging.info('Failing to write xls files: information overpasses the limit for rows into a xls file. ')
-			logging.info('========== Writting individual information of biotyping in csv files ============ ')
+			self.super_logger.info('Failing to write xls files: information overpasses the limit for rows into a xls file. ')
+			self.super_logger.info('========== Writting individual information of biotyping in csv files ============ ')
 			path = self.path_to_output_folder+'/res/full_info_biotypes/biotypes_by_peptide_sample_explained.csv'
 			self.biotypes_by_peptide_sample_explained.to_csv(path, index=False)
 			path = self.path_to_output_folder+'/res/full_info_biotypes/biotypes_by_peptide_genome_explained.csv'

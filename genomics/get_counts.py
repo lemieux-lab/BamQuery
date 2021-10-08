@@ -1,6 +1,6 @@
 import warnings, os
 warnings.filterwarnings("ignore")
-import os, logging, time, subprocess, pickle, multiprocessing, os, _thread, csv, collections, pysam, copy
+import os, time, subprocess, pickle, multiprocessing, os, _thread, csv, collections, pysam, copy
 import genomics.get_alignments as get_alig
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
@@ -16,7 +16,7 @@ path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
 class GetCounts:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type):
+	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger):
 		self.light = light
 
 		if self.light:
@@ -28,6 +28,7 @@ class GetCounts:
 		self.mode = mode
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 		self.peptides_by_type = peptides_by_type
+		self.super_logger = super_logger
 		
 
 	def ribo_counts(self, perfect_alignments, bam_files_list):
@@ -53,9 +54,11 @@ class GetCounts:
 			alignment_information = self.path_to_output_folder_alignments+'Alignments_information.dic'
 			alignment_information_ribo = self.path_to_output_folder_alignments+'Alignments_ribo_information.dic'
 
+		times = []
+
 		if not exists:
 			t_0 = time.time()
-			logging.info('Alignments on ribosome profiling information ')
+			self.super_logger.info('Alignments on ribosome profiling information ')
 
 			to_write = {} 
 			
@@ -78,7 +81,7 @@ class GetCounts:
 
 			keys = perfect_alignments.keys()
 			
-			logging.info('Total MCS mapped : %s ', str(len(keys)))
+			self.super_logger.info('Total MCS mapped : %s ', str(len(keys)))
 
 			modif_dic = {}
 			for key in keys:
@@ -98,7 +101,7 @@ class GetCounts:
 			keys = modif_dic.keys()
 			values = modif_dic.values()
 
-			logging.info('Total unique regions : %s ', str(len(keys)))
+			self.super_logger.info('Total unique regions : %s ', str(len(keys)))
 			
 			pool = ProcessPool(nodes=NUM_WORKERS)
 
@@ -166,11 +169,12 @@ class GetCounts:
 
 					t1_bam_file = time.time()
 					time_final = (t1_bam_file-t0_bam_file)/60.0
+					times.append(time_final)
 
 					if not_permission:
-						logging.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
+						self.super_logger.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
 					else:
-						logging.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
+						self.super_logger.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
 
 					if (idx % 50) == 0:
 						with open(self.path_to_output_folder_alignments+'info_trated_ribo_bam_files.pkl', 'wb') as f:  
@@ -182,7 +186,7 @@ class GetCounts:
 						with open(alignment_information_ribo, 'wb') as handle:
 							pickle.dump(perfect_alignments_to_return, handle, protocol=pickle.HIGHEST_PROTOCOL)
 				else:
-					logging.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
+					self.super_logger.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
 
 			pool.close()
 			pool.join()
@@ -197,6 +201,7 @@ class GetCounts:
 			with open(alignment_information_ribo, 'wb') as handle:
 				pickle.dump(perfect_alignments_to_return, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+			self.super_logger.info('Average time to process a BamFile : %f min', np.mean(times))
 
 			header = ['Peptide', 'Position', 'Strand']
 			header.extend(list_bam_files_order)
@@ -245,9 +250,9 @@ class GetCounts:
 			
 			t_2 = time.time()
 			total = t_2-t_0
-			logging.info('Total time run function get_counts to end : %f min', (total/60.0))
+			self.super_logger.info('Total time run function get_counts to end : %f min', (total/60.0))
 		else:
-			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+'_ribo_count.csv')
+			self.super_logger.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+'_ribo_count.csv')
 			df_counts = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_ribo_count.csv', index_col=0)
 
 			with open(alignment_information, 'rb') as fp:
@@ -331,7 +336,7 @@ class GetCounts:
 			total_samples = len(list_bam_files_order)
 
 			keys = perfect_alignments.keys()
-			logging.info('Total MCS mapped : %s ', str(len(keys)))
+			self.super_logger.info('Total MCS mapped : %s ', str(len(keys)))
 
 			modif_dic = {}
 			for key in keys:
@@ -351,7 +356,7 @@ class GetCounts:
 			keys = modif_dic.keys()
 			values = modif_dic.values()
 			
-			logging.info('Total unique regions : %s ', str(len(keys)))
+			self.super_logger.info('Total unique regions : %s ', str(len(keys)))
 
 			pool = ProcessPool(nodes=NUM_WORKERS)
 
@@ -431,12 +436,12 @@ class GetCounts:
 					time_final = (t1_bam_file-t0_bam_file)/60.0
 
 					if not_permission:
-						logging.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
+						self.super_logger.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
 					else:
-						logging.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
+						self.super_logger.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
 
 					if (idx % 100 == 0) and (idx != 0):
-						logging.info('Saving information for Bam Files processed')
+						self.super_logger.info('Saving information for Bam Files processed')
 
 						with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
 							pickle.dump(idx, f)
@@ -454,7 +459,7 @@ class GetCounts:
 							with open(self.path_to_output_folder_alignments+'data_filtered.pkl', 'wb') as handle:
 								pickle.dump(data_filtered, handle, protocol=pickle.HIGHEST_PROTOCOL)							
 				else:
-					logging.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
+					self.super_logger.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
 
 			pool.close()
 			pool.join()
@@ -549,9 +554,9 @@ class GetCounts:
 			
 			t_2 = time.time()
 			total = t_2-t_0
-			logging.info('Total time run function get_counts to end : %f min', (total/60.0))
+			self.super_logger.info('Total time run function get_counts to end : %f min', (total/60.0))
 		else:
-			logging.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv')
+			self.super_logger.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv')
 			df_counts = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv', index_col=0)
 			
 			with open(alignment_information, 'rb') as fp:
@@ -610,7 +615,7 @@ class GetCounts:
 			csvFile.close()
 
 		df.to_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index=True, header=True)
-		logging.info('Counts Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
+		self.super_logger.info('Counts Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
 
 
 	def get_depth_with_view(self, region_to_query, bam_file, library, sens, strand, sequences):

@@ -3,7 +3,7 @@ import pysam, re
 from itertools import groupby
 from operator import itemgetter
 import utils.useful_functions as uf
-import pickle, logging
+import pickle
 import numpy as np
 from pathos.multiprocessing import ProcessPool
 import multiprocessing
@@ -158,7 +158,7 @@ def read_sam_file(sam_file):
 	timeFinal = time.time()
 	total = (timeFinal-time0) / 60.0
 	total_chromosomes = len(aligments_by_chromosome_strand)
-	logging.info('Time reading SAM file : %f min Chromosomes %d ', total, total_chromosomes)
+	super_logger.info('Time reading SAM file : %f min Chromosomes %d ', total, total_chromosomes)
 	name_path = sam_file+'.dic'
 	with open(name_path, 'wb') as handle:
 		pickle.dump(aligments_by_chromosome_strand, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -403,7 +403,7 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 	try:
 		differences_ntds = [new_sequence[i]+':'+str(i) for i in range(len(new_sequence)) if new_sequence[i]!= seq_reference_local[i]]
 	except IndexError:
-		logging.info( 'Index Error %s %s %s %s %s %s %s %s %s ', peptide, MCS, chr, strand, new_sequence, str(len(new_sequence)), seq_reference_local, str(len(seq_reference_local)), str(rang_local_ref))
+		super_logger.info( 'Index Error %s %s %s %s %s %s %s %s %s ', peptide, MCS, chr, strand, new_sequence, str(len(new_sequence)), seq_reference_local, str(len(seq_reference_local)), str(rang_local_ref))
 		differences_ntds = 100
 
 	if peptide == local_translation_peptide and len(info_snps) == len(differences_ntds):
@@ -424,9 +424,12 @@ def translation_seq(chr, seq):
 	return translation
 
 
-def get_alignments(sam_file, dbSNP, common):
+def get_alignments(sam_file, dbSNP, common, super_logger_aux):
 
 	global path_to_db
+	global super_logger
+	super_logger = super_logger_aux
+
 	if dbSNP == 0:
 		path_to_db = ''
 	elif dbSNP == 149:
@@ -445,7 +448,7 @@ def get_alignments(sam_file, dbSNP, common):
 		else:
 			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_155/'
 
-	logging.info('Using dbSNP database %s with COMMON SNPs = %s. Database Path : %s ', str(dbSNP), str(common), str(path_to_db))
+	super_logger.info('Using dbSNP database %s with COMMON SNPs = %s. Database Path : %s ', str(dbSNP), str(common), str(path_to_db))
 	exists = os.path.exists(sam_file+'.dic')
 	if not exists:
 		aligments_by_chromosome_strand = read_sam_file(sam_file)
@@ -457,7 +460,7 @@ def get_alignments(sam_file, dbSNP, common):
 			import pickle5
 			with open(sam_file+'.dic', 'rb') as fp:
 				aligments_by_chromosome_strand = pickle5.load(fp)
-		logging.info('Information SAM file already collected !')
+		super_logger.info('Information SAM file already collected !')
 
 	od = collections.OrderedDict(sorted(aligments_by_chromosome_strand.items(), reverse=True))
 

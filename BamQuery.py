@@ -8,7 +8,7 @@ from readers.read_input import ReadInputFile
 from readers.info_transcripts_annotation import InfoTranscripts
 from readers.intersection_alignments_annotations import IntersectAnnotations
 
-from utils.primary_read_count import GetPrimaryReadCountBamFiles
+from utils.get_information_bam_files import GetInformationBamFiles
 from utils.reverse_translation import ReverseTranslation
 from utils.paths_arrangements import *
 
@@ -25,7 +25,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -37,19 +37,20 @@ class BamQuery:
 		self.plots = plots
 		self.dbSNP = dbSNP
 		self.common = c
+		self.super_logger = super_logger
 
 		if self.mode == 'normal':
-			self.run_bam_query_normal_mode()
+			self.run_bam_query_normal_mode(bam_files_logger)
 		else:
-			self.run_bam_query_translation_mode()
+			self.run_bam_query_translation_mode(bam_files_logger)
 
 		if not self.light:
 			self.get_annotations()
 
 
 
-	def run_bam_query_normal_mode(self):
-		self.common_to_modes()
+	def run_bam_query_normal_mode(self, bam_files_logger):
+		self.common_to_modes(bam_files_logger)
 		
 		name_path_normal = self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx'
 		name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
@@ -64,7 +65,7 @@ class BamQuery:
 
 		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
 			
-			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type)
+			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type, self.super_logger)
 			
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
 			df_counts_rna = res[0]
@@ -77,9 +78,9 @@ class BamQuery:
 			if not self.light: 
 				plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, order, self.th_out)
 
-			logging.info('========== Get Count RNA : Done! ============ ')
+			self.super_logger.info('========== Get Count RNA : Done! ============ ')
 
-			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger)
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			
 			
@@ -93,12 +94,12 @@ class BamQuery:
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
 			
 			writer.save()
-			logging.info('========== Get Norm RNA : Done! ============ ')
+			self.super_logger.info('========== Get Norm RNA : Done! ============ ')
 
 		elif (not self.light and not exists_normal and exists_light):
 			print ('Information count and normalisation already collected from light mode, filtering information for the peptides of interest !')
 
-			logging.info('Information count and normalisation already collected for light mode, filtering information for the peptides of interest !')
+			self.super_logger.info('Information count and normalisation already collected for light mode, filtering information for the peptides of interest !')
 
 			name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
 
@@ -109,7 +110,7 @@ class BamQuery:
 			df_all_alignments_rna = df_all_alignments_rna.set_index('Peptide')
 			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count_All_alignments.csv', index=True, header=True)
 
-			logging.info('Information All alignments for peptides of interest collected!')
+			self.super_logger.info('Information All alignments for peptides of interest collected!')
 
 			#df_counts_rna_light = pd.read_csv(self.path_to_output_folder+'/res_light/temps_files/'+self.name_exp+'_rna_count.csv', header=0, index_col=None)
 			df_counts_rna_light = pd.read_excel(name_path_light, sheet_name='Read count RNA-seq by peptide', header=0, index_col=None, engine='openpyxl')
@@ -118,12 +119,12 @@ class BamQuery:
 			df_counts_rna = df_counts_rna.set_index('Peptides')
 			df_counts_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count.csv', index=True, header=True)
 
-			logging.info('Information rna counts for peptides of interest collected!')
+			self.super_logger.info('Information rna counts for peptides of interest collected!')
 
-			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger)
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			
-			logging.info('Information norm counts for peptides of interest collected!')
+			self.super_logger.info('Information norm counts for peptides of interest collected!')
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
@@ -135,14 +136,14 @@ class BamQuery:
 			plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, [], self.th_out)
 			plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, [], self.th_out)
 
-			logging.info('Information for peptides of interest collected!')
+			self.super_logger.info('Information for peptides of interest collected!')
 
 		else:
-			logging.info('Information count and normalisation already collected !')
+			self.super_logger.info('Information count and normalisation already collected !')
 			print ('Information count and normalisation already collected !')
 		
-	def run_bam_query_translation_mode(self):
-		self.common_to_modes()
+	def run_bam_query_translation_mode(self, bam_files_logger):
+		self.common_to_modes(bam_files_logger)
 
 		if not self.light:
 			name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx'
@@ -164,17 +165,17 @@ class BamQuery:
 			if not self.light and len(df_counts_ribo) < 400:
 				plots.get_heat_map(df_counts_ribo, self.path_to_output_folder, self.name_exp, '_ribo_counts', False, order, self.th_out)
 			
-			logging.info('========== Get Count Ribo : Done! ============ ')
+			self.super_logger.info('========== Get Count Ribo : Done! ============ ')
 			print ('Get Count Ribo : Done!')
 
-			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_ribo_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger)
 			def_norm_ribo = normalization.get_normalization(df_counts_ribo, '_ribo_norm.csv')
 			
 			def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide')
 			if not self.light and len(def_norm_ribo) < 400:
 				plots.get_heat_map(def_norm_ribo, self.path_to_output_folder, self.name_exp, '_ribo_norm', True, order, self.th_out)
 
-			logging.info('========== Get Norm Ribo : Done! ============ ')
+			self.super_logger.info('========== Get Norm Ribo : Done! ============ ')
 			print ('Get Norm Ribo : Done!')
 
 			res = get_counts.get_counts(perfect_alignments_to_return, self.bam_files_info.bam_files_list)
@@ -194,17 +195,17 @@ class BamQuery:
 			if not self.light and len(df_counts_filtered) < 400:
 				plots.get_heat_map(df_counts_filtered, self.path_to_output_folder, self.name_exp, '_rna_ribo_counts', False, order_f, self.th_out)
 
-			logging.info('========== Get Count RNA : Done! ============ ')
+			self.super_logger.info('========== Get Count RNA : Done! ============ ')
 			print ('Get Count RNA : Done!')
 
-			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.bam_files_info.bam_files_list, self.input_file_treatment.all_mode_peptide, self.mode, self.light)
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger)
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
 
 			if not self.light and len(def_norm_rna) < 400:
 				plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, order, self.th_out)
 
-			logging.info('========== Get Norm RNA : Done! ============ ')
+			self.super_logger.info('========== Get Norm RNA : Done! ============ ')
 			print ('Get Norm RNA : Done!')
 
 			def_norm_rna_ribo = normalization.get_normalization(df_counts_filtered, '_rna_ribo_norm.csv')
@@ -213,7 +214,7 @@ class BamQuery:
 			if not self.light and len(def_norm_rna_ribo) < 400:
 				plots.get_heat_map(def_norm_rna_ribo, self.path_to_output_folder, self.name_exp, '_rna_ribo_norm', True, order_f, self.th_out)
 
-			logging.info('========== Get Norm Ribo-RNA : Done! ============ ')
+			self.super_logger.info('========== Get Norm Ribo-RNA : Done! ============ ')
 			print ('Get Norm Ribo-RNA : Done!')
 
 			writer.save()
@@ -222,15 +223,13 @@ class BamQuery:
 			print ('Information count and normalisation already collected !')
 		
 
-	def common_to_modes(self):
-		self.bam_files_info = GetPrimaryReadCountBamFiles()
-		self.bam_files_info.get_all_counts(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light)
+	def common_to_modes(self, bam_files_logger):
+		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger)
 
-		logging.info('========== Get Primary Counts : Done! ============ ')
+		self.super_logger.info('========== Get Primary Counts : Done! ============ ')
 		print ('Get Primary Counts : Done!')
 
-
-		self.input_file_treatment = ReadInputFile(self.path_to_input_folder)
+		self.input_file_treatment = ReadInputFile(self.path_to_input_folder, self.super_logger)
 		self.input_file_treatment.treatment_file()
 
 		if self.dev:
@@ -250,7 +249,7 @@ class BamQuery:
 				pickle.dump(self.input_file_treatment.manual_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
 		
 		
-		logging.info('========== Treatment File : Done! ============ ')
+		self.super_logger.info('========== Treatment File : Done! ============ ')
 		print ('Treatment File : Done!')
 		
 		self.set_peptides = set(list(self.input_file_treatment.all_mode_peptide.keys()))
@@ -258,15 +257,17 @@ class BamQuery:
 		if len(self.input_file_treatment.peptide_mode) > 0 or len(self.input_file_treatment.CS_mode) > 0 :
 
 			self.reverse_translation = ReverseTranslation()
-			self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
+			output_message = self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
 			
-			logging.info('========== Reverse Translation : Done! ============ ')
+			self.super_logger.info(output_message)
+
+			self.super_logger.info('========== Reverse Translation : Done! ============ ')
 			print ('Reverse Translation : Done!')
 			
-			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common)
+			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common, self.super_logger)
 			self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(self.set_peptides)
 
-			logging.info('========== Alignment : Done! ============ ')
+			self.super_logger.info('========== Alignment : Done! ============ ')
 			print ('Alignment : Done!')
 
 		if len(self.input_file_treatment.manual_mode) > 0 :
@@ -300,25 +301,25 @@ class BamQuery:
 				for item in missed_peptides:
 					f.write("%s\t\n" % item)
 
-			logging.info('Total missed_peptides : %s. Find the list in : %s.', str(len(missed_peptides)), self.path_to_output_folder+'alignments/missed_peptides.info')
+			self.super_logger.info('Total missed_peptides : %s. Find the list in : %s.', str(len(missed_peptides)), self.path_to_output_folder+'alignments/missed_peptides.info')
 
-		logging.info('========== Common_to_modes : Done! ============ ')
+		self.super_logger.info('========== Common_to_modes : Done! ============ ')
 		print ('common_to_modes : Done!')
 
 
 	def get_annotations(self):
 
-		logging.info('========== Running get_annotations ============ ')
+		self.super_logger.info('========== Running get_annotations ============ ')
 		info_peptide_alignments = self.get_info_peptide_alignments()
 
 		get_info_transcripts = InfoTranscripts()
 		get_info_transcripts.set_values()
 		
-		intersect_to_annotations = IntersectAnnotations(self.perfect_alignments, self.path_to_output_folder, self.name_exp)
+		intersect_to_annotations = IntersectAnnotations(self.perfect_alignments, self.path_to_output_folder, self.name_exp, self.super_logger)
 		intersect_to_annotations.generate_BED_files()
 		intersect_to_annotations.perform_intersection_with_annotation()
 
-		logging.info('========== Intersect to Annotations : Done! ============ ')
+		self.super_logger.info('========== Intersect to Annotations : Done! ============ ')
 
 		list_bam_files_order_rna = []
 		order_sample_bam_files_rna = {}
@@ -341,11 +342,11 @@ class BamQuery:
 			except KeyError:
 				order_sample_bam_files_ribo[group] = [name_sample]
 		
-		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev, self.plots)
+		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev, self.plots, self.super_logger)
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
 		get_biotype.get_global_annotation()
 		
-		logging.info('========== Annotations : Done! ============ ')
+		self.super_logger.info('========== Annotations : Done! ============ ')
 
 
 	def get_info_peptide_alignments(self):
@@ -397,7 +398,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55)
 	total = t2-t0
 	
 	try:
-		logging.info(' ========== Removing Temporal Files ============ ')
+		super_logger.info(' ========== Removing Temporal Files ============ ')
 		shutil.rmtree(path_to_output_folder+'genome_alignments')
 		shutil.rmtree(path_to_output_folder+'logs')
 		shutil.rmtree(path_to_output_folder+'alignments')
@@ -408,7 +409,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55)
 	except FileNotFoundError:
 		pass
 
-	logging.info('Total time run function BamQuery to end : %f min', (total/60.0))
+	super_logger.info('Total time run function BamQuery to end : %f min', (total/60.0))
 	
 	return path_to_output_folder
 
@@ -458,13 +459,13 @@ def main(argv):
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
 
-	path_to_output_folder = directories_creation(path_to_input_folder, name_exp, mode, strandedness, light)
+	path_to_output_folder, super_logger, bam_files_logger = directories_creation(path_to_input_folder, name_exp, mode, strandedness, light)
 
 	t0 = time.time()
 
-	logging.info('=============== BamQuery id : %s, Mode : %s, Strandedness : %s, Light : %s, dbSNP : %s, COMMON SNPs : %s, plots : %s ===================', name_exp, mode, strandedness, str(light), str(dbSNP), str(c), str(plots))
+	super_logger.info('=============== BamQuery id : %s, Mode : %s, Strandedness : %s, Light : %s, dbSNP : %s, COMMON SNPs : %s, plots : %s ===================', name_exp, mode, strandedness, str(light), str(dbSNP), str(c), str(plots))
 	
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger)
 	
 
 	if not dev:
@@ -488,7 +489,7 @@ def main(argv):
 	t2 = time.time()
 	total = t2-t0
 	
-	logging.info('Total time run function BamQuery to end : %f min', (total/60.0))
+	super_logger.info('Total time run function BamQuery to end : %f min', (total/60.0))
 
 
 if __name__ == "__main__":

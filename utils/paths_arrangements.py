@@ -21,14 +21,32 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness, lig
 	except OSError:
 		pass
 
+	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+
+	def setup_logger(name, log_file, mode, level=logging.INFO):
+		
+		handler = logging.FileHandler(log_file, mode=mode)        
+		handler.setFormatter(formatter)
+
+		logger = logging.getLogger(name)
+		logger.setLevel(level)
+		logger.addHandler(handler)
+
+		return logger
+	
+	# First logger
 	nameLog = path_to_logs_folder+'BamQuery_Res_'+name_exp+'.log'
 	exists = os.path.exists(nameLog)
-	logging.basicConfig(filename=nameLog, filemode='a', level=logging.INFO, format='%(asctime)s %(message)s')
-
+	
+	super_logger = setup_logger('Super_Logger', nameLog, 'a')
 	if exists:
-		logging.info('')
-		logging.info('')
-		logging.info('BamQuery analysis will continue where it left....')
+		super_logger.info('')
+		super_logger.info('')
+		super_logger.info('BamQuery analysis will continue where it left....')
+	
+	# Second logger
+	nameLog = path_to_logs_folder+'Information_BAM_directories.log'
+	bam_files_logger = setup_logger('Bam_Files_Logger', nameLog, 'a')
 	
 	
 	if not light :
@@ -206,8 +224,8 @@ def directories_creation(path_to_input_folder, name_exp, mode, strandedness, lig
 			pass
 
 
-	logging.info('Path to input folder : %s ', path_to_input_folder)
-	logging.info('Path to output folder : %s ', path_to_output_folder)
-	logging.info('=============== # ===================')
+	super_logger.info('Path to input folder : %s ', path_to_input_folder)
+	super_logger.info('Path to output folder : %s ', path_to_output_folder)
+	super_logger.info('=============== # ===================')
 
-	return path_to_output_folder
+	return path_to_output_folder, super_logger, bam_files_logger

@@ -1,4 +1,4 @@
-import time, logging, pysam, os
+import time, pysam, os
 import utils.useful_functions as uf
 
 ATGC = set()
@@ -17,8 +17,9 @@ genomePath = path_to_lib + 'GRCh38.primary_assembly.genome.fa'
 
 class ReadInputFile:
 
-	def __init__(self, path_to_input_folder):
+	def __init__(self, path_to_input_folder, super_logger):
 		self.path_to_input_folder = path_to_input_folder
+		self.super_logger = super_logger
 
 	def treatment_file(self):
 		self.peptide_mode = {}
@@ -101,10 +102,10 @@ class ReadInputFile:
 						self.peptides_by_type[type_] = [peptide]
 
 				
-		logging.info('Peptides to evaluate in Peptide Mode : %d', len(self.peptide_mode))
-		logging.info('Peptides to evaluate in Coding Sequence (CS) Mode : %d', len(self.CS_mode))
-		logging.info('Peptides to evaluate in Manual Mode: %d', len(self.manual_mode))
-		logging.info('Total Peptides to evaluate : %d', len(self.peptide_mode)+len(self.CS_mode)+len(self.manual_mode))
+		self.super_logger.info('Peptides to evaluate in Peptide Mode : %d', len(self.peptide_mode))
+		self.super_logger.info('Peptides to evaluate in Coding Sequence (CS) Mode : %d', len(self.CS_mode))
+		self.super_logger.info('Peptides to evaluate in Manual Mode: %d', len(self.manual_mode))
+		self.super_logger.info('Total Peptides to evaluate : %d', len(self.peptide_mode)+len(self.CS_mode)+len(self.manual_mode))
 
 
 	def evaluate_cs_ntd(self, cs):

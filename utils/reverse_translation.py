@@ -1,4 +1,4 @@
-import warnings, time, logging, os, gc, pickle
+import warnings, time, os, gc, pickle
 warnings.filterwarnings("ignore")
 import billiard as mp
 
@@ -38,10 +38,12 @@ class ReverseTranslation:
 
 	def reverse_translation(self, peptide_mode, CS_mode, path_to_output_folder, name_exp):
 		
+		output_message = ''
 		self.output_file = path_to_output_folder+'genome_alignments/'+name_exp+'.fastq'
 		exists = os.path.exists(self.output_file)
 		peptide_number = {}
-
+		global q 
+		
 
 		if not exists :
 			t_0 = time.time()
@@ -54,7 +56,6 @@ class ReverseTranslation:
 			total_pep = 0
 			
 			manager = mp.Manager()
-			global q   
 			q = manager.Queue() 
 			pool = mp.Pool(NUM_WORKERS)
 			watcher = pool.apply_async(self.listener, (q,))
@@ -84,7 +85,7 @@ class ReverseTranslation:
 				sequence = info_peptide[0]
 				to_write_reverse_translation+= '>'+peptide+'\n'+sequence+'\n'
 
-			logging.info('Total Coding Sequences : %d', total_reads_to_align)
+			output_message += 'Total Coding Sequences : ' + str(total_reads_to_align)+'\n'
 			
 			file_to_open = open(self.output_file, 'a')
 			file_to_open.write(to_write_reverse_translation)
@@ -96,9 +97,11 @@ class ReverseTranslation:
 			t_2 = time.time()
 			total = t_2-t_0
 
-			logging.info('Total time run function reverse_translation to end : %f min', (total/60.0))
+			output_message += 'Total time run function reverse_translation to end : '+ str((total/60.0)) +'min' 
 		else:
-			logging.info('Fasta file with all the coding sequences already exists in the output path : %s --> Skipping this step! ', path_to_output_folder+'genome_alignments/'+name_exp+'.fastq')
+			path = path_to_output_folder+'genome_alignments/'+name_exp+'.fastq'
+			output_message += 'Fasta file with all the coding sequences already exists in the output path : '+path+' --> Skipping this step!'
+		return output_message
 
 
 	def translate_reserve_peptide(self, peptide):
