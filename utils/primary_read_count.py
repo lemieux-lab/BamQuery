@@ -37,7 +37,11 @@ class GetPrimaryReadCountBamFiles:
 		
 		logging.info('Total Bam Files to Query : %d %s', len(bam_files_list), bam_files_list)
 		
-		pool = ProcessPool(nodes=NUM_WORKERS)
+		if len(bam_files_list) >= NUM_WORKERS:
+			pool = ProcessPool(nodes=NUM_WORKERS)
+		else:
+			pool = ProcessPool(nodes=len(bam_files_list))
+		
 		results = pool.map(self.get_all_counts_bam_file, bam_files_list)
 
 		try:

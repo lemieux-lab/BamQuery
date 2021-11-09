@@ -51,7 +51,8 @@ class ReverseTranslation:
 			to_write_reverse_translation = ''
 		
 			peptides_list = list(peptide_mode.keys())
-			list_of_list_peptides = [peptides_list[x:x+100] for x in range(0, len(peptides_list), 100)]
+			
+			#list_of_list_peptides = [peptides_list[x:x+100] for x in range(0, len(peptides_list), 100)]
 			
 			total_pep = 0
 			
@@ -135,32 +136,30 @@ class ReverseTranslation:
 		return count_to_return, peptide
 
 	def translate_reserve_peptide_2(self, peptides):
-		file_to_open = open(self.output_file, 'a')
-
-		for peptide in peptides:
-			sequences = [codon for codon in CODON_TABLE[peptide[0]]]
-			count_to_return = 0
-			to_print = ''
-			for index, amino_acid in enumerate(peptide[1:]):
-				to_extend = sequences
-				sequences = []
-				for index_codon, codon in enumerate(CODON_TABLE[amino_acid]):
-					for index_seq,sequence in enumerate(to_extend):
-						sequence += codon
-						sequences.append(sequence)
-						if index == len(peptide[1:])-1 :
-							count_to_return += 1
-							to_print += '>'+peptide+'\n'+sequence+'\n'
-							if count_to_return == 100000000:
-								file_to_open.write(to_print)
-								file_to_open.flush()
-								to_print = ''
+		
+		with open(self.output_file, 'a') as oC :
+			for entry in peptides :
+				seq = entry.rstrip()
+				sequences = [codon for codon in CODON_TABLE[seq[0]]]
+				count_to_return = 0
+				
+				for index, amino_acid in enumerate(seq[1:]):
+					to_extend = sequences
+					sequences = []
+					for codon in CODON_TABLE[amino_acid]:
+						for sequence in to_extend:
+							sequence += codon
+							sequences.append(sequence)
+							if index == len(seq[1:])-1 :
+								count_to_return += 1
+							if count_to_return == 1000000:
+								for peptide in sequences :
+									oC.write('>' + seq + '\n' + peptide + '\n')
+								sequences = []
 								count_to_return = 0
-			file_to_open.write(to_print)
-			file_to_open.flush()
 
-
-		file_to_open.close()
+				for peptide in sequences :
+					oC.write('>' + seq + '\n' + peptide + '\n')
 
 
 	def listener(self, q):

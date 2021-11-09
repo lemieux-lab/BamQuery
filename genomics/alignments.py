@@ -38,6 +38,8 @@ class Alignments:
 			anchor = 2000										
 			maxMulti = 2000 						
 			
+			# https://github.com/alexdobin/STAR/issues/169
+			
 			#command = 'module add star/2.7.1a; STAR --runThreadN '+ str(NUM_WORKERS)+\
 			
 			#command = 'module add star/2.7.1a; STAR --runThreadN 16'+\

@@ -192,7 +192,6 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 	else:
 		chromosome = {}
 		
-
 	for position in chromosomes_alignments: 
 		snps_information = []
 		
@@ -325,19 +324,19 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 				return MCS_perfect_alignments, MCS_variant_alignments
 		except KeyError:
 			return MCS_perfect_alignments, MCS_variant_alignments
-
-	# new_sequence = "".join(list_seq_reference_local)
-	# local_translation_peptide = translation_seq(chr, new_sequence)
-	# differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
-	# Uncomment this three lines if I want to get the variants alignments, also in the if below add 
+			#pass
 
 	differences_pep = []
 	if len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [MCS, [peptide, differences_pep, info_snps, differences_ntds]]
 	else:
-		if len(differences_ntds) - len(info_snps) <= 2:
-			#MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
-			MCS_variant_alignments = []
+		# Uncomment this three lines if I want to get the variants alignments, also in the if below add 
+		#new_sequence = "".join(list_seq_reference_local)
+		#local_translation_peptide = translation_seq(chr, new_sequence)
+		#differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
+		#if len(differences_ntds) - len(info_snps) <= 2:
+		#MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+		MCS_variant_alignments = []
 
 	return MCS_perfect_alignments, MCS_variant_alignments
 
@@ -394,6 +393,7 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 					break
 			except KeyError:
 				pass
+
 		if len(info_snps) != ind + 1:
 			return MCS_perfect_alignments, MCS_variant_alignments
 
@@ -409,9 +409,9 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 	if peptide == local_translation_peptide and len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	else:
-		if len(differences_ntds) - len(info_snps) <= 2:
-			#MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
-			MCS_variant_alignments = []
+		#if len(differences_ntds) - len(info_snps) <= 2:
+		#MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+		MCS_variant_alignments = []
 	return MCS_perfect_alignments, MCS_variant_alignments
 
 

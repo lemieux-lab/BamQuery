@@ -240,13 +240,7 @@ class BiotypeGenomicSearch:
 		
 
 		protein = self.get_transcript_and_protein(chr, regions, strand, len_prot)
-		#if peptide == 'NYYKVNWTF' or peptide == 'NNSGTFSSR' or peptide == 'MTWRSVQMSSR':
-		if not len_prot.is_integer() and '*' in protein:
-			print (peptide, transcript)
-			print (len_prot, protein, peptide in protein)
-			print (info_transcript)
-			print ()
-
+		
 		if peptide in protein:
 			transcript_level = 'In_frame'
 		else:

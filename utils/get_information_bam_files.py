@@ -14,7 +14,7 @@ NUM_WORKERS =  int(multiprocessing.cpu_count()/2)
 
 class GetInformationBamFiles:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light, bam_files_logger):
+	def __init__(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light, bam_files_logger, sc):
 		
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		path_to_all_counts_file = path_to_lib+"allcounts.dic"
@@ -23,6 +23,7 @@ class GetInformationBamFiles:
 		self.bam_files_list = {}
 		self.bam_ribo_files_list = {}
 		self.bam_files_logger = bam_files_logger
+		self.sc = sc
 
 		if light:
 			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
@@ -96,13 +97,11 @@ class GetInformationBamFiles:
 					except IndexError:
 						raise Exception("Sorry, your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
 
-
-					if '.bam' not in path or '.cram' not in path:
-						bam_files_found = self.search_bam_files(path)
-					else:
+					if '.bam' in path or '.cram' in path:
 						bam_files_found = [path]
-
-
+					else:
+						bam_files_found = self.search_bam_files(path)
+					
 					for bam_file_path in bam_files_found:
 
 						name_bam_file = "_".join(bam_file_path.split('/')[:-1][-2:])
@@ -131,8 +130,8 @@ class GetInformationBamFiles:
 							tissue = ''
 							tissue_type = ''
 							shortlist = ''
+							library = '' 
 							sequencing = ''
-							library = ''
 							user = getpass.getuser()
 							info_bam_file = [bam_file_path, count, tissue, tissue_type, shortlist, sequencing, library, user]
 							dictionary_total_reads_bam_files[name_bam_file] = info_bam_file
@@ -192,7 +191,7 @@ class GetInformationBamFiles:
 
 		self.bam_files_logger.info('Total Bam Files to Query : %d.', len(bam_files_list))
 
-		if len(bam_files_to_get_primary_read_count) > 0 :
+		if len(bam_files_to_get_primary_read_count) > 0 and not self.sc:
 				
 			path_to_save_bam_files_to_search = self.path_to_output_aux_folder+"bam_files_to_get_primary_read_count.dic"
 			
@@ -205,7 +204,7 @@ class GetInformationBamFiles:
 			subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 			self.bam_files_logger.info('Total Bam Files to get primary read counts : %d ', len(data) - 1)
 
-		if len(data) > 1:
+		if len(data) > 1 and not self.sc:
 			self.bam_files_logger.info('Please enter the tissue information for the new BamFiles into the %s file. ', self.path_to_output_aux_folder+'bam_files_tissues.csv')
 			
 			with open(self.path_to_output_aux_folder+"bam_files_tissues.csv", 'w') as csvFile:
@@ -227,7 +226,6 @@ class GetInformationBamFiles:
 				if (file.endswith('.cram') and (file+'.crai' in f or file[:-5]+'.bai' in f)) or (file.endswith('.bam') and (file+'.bai' in f or file[:-4]+'.bai' in f)):
 					bam_file = join(p, file)
 					bam_files_found.append(bam_file)
-
 		return bam_files_found
 
 	def walk_error_handler(self, exception_instance):

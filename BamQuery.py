@@ -14,6 +14,7 @@ from utils.paths_arrangements import *
 
 from genomics.alignments import Alignments
 from genomics.get_counts import GetCounts
+from genomics.get_counts_sc import GetCountsSC
 from genomics.normalization import Normalization
 from genomics.get_biotype import BiotypeAssignation
 
@@ -25,7 +26,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -38,16 +39,72 @@ class BamQuery:
 		self.dbSNP = dbSNP
 		self.common = c
 		self.super_logger = super_logger
+		self.sc = sc
 
 		if self.mode == 'normal':
-			self.run_bam_query_normal_mode(bam_files_logger)
+			if self.sc :
+				self.run_bam_query_sc_mode(bam_files_logger)
+			else:
+				self.run_bam_query_normal_mode(bam_files_logger)
 		else:
 			self.run_bam_query_translation_mode(bam_files_logger)
 
 		if not self.light:
 			self.get_annotations()
 
+	def run_bam_query_sc_mode(self, bam_files_logger):
+		self.common_to_modes(bam_files_logger)
+		
+		name_path_normal = self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv'
+		name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv'
+		
+		exists_normal = os.path.exists(name_path_normal) 
+		exists_light = os.path.exists(name_path_light) 
 
+		if not self.light:
+			name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv'
+		else:
+			name_path = self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv'
+
+		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
+			
+			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type, self.super_logger)
+			
+			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
+			df_counts_rna = res[0]
+			self.perfect_alignments = res[1]
+			df_all_alignments_rna = res[2] 
+
+			self.super_logger.info('========== Get Norm RNA : Done! ============ ')
+
+		elif (not self.light and not exists_normal and exists_light):
+			print ('Information count already collected from light mode, filtering information for the peptides of interest !')
+
+			self.super_logger.info('Information count already collected for light mode, filtering information for the peptides of interest !')
+
+			name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv'
+
+			df_counts_all_alignments = pd.read_csv(self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count_All_alignments.csv', header=0, index_col=None)
+			
+			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides) == True]
+			df_all_alignments_rna = df_all_alignments_rna.set_index('Peptide')
+			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count_All_alignments.csv', index=True, header=True)
+
+			self.super_logger.info('Information All alignments for peptides of interest collected!')
+
+			df_counts_rna_light = pd.read_csv(self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv', header=0, index_col=None)
+			
+			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptides'].isin(self.set_peptides) == True]
+			df_counts_rna = df_counts_rna.set_index('Peptides')
+			df_counts_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv', index=True, header=True)
+
+			self.super_logger.info('Information rna counts for peptides of interest collected!')
+
+			self.super_logger.info('Information for peptides of interest collected!')
+
+		else:
+			self.super_logger.info('Information count and normalisation already collected !')
+			print ('Information count and normalisation already collected !')
 
 	def run_bam_query_normal_mode(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
@@ -224,10 +281,14 @@ class BamQuery:
 		
 
 	def common_to_modes(self, bam_files_logger):
-		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger)
 
-		self.super_logger.info('========== Get Primary Counts : Done! ============ ')
-		print ('Get Primary Counts : Done!')
+		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger, self.sc)
+
+		self.super_logger.info('Total Bam Files to Query : %d.', len(self.bam_files_info.bam_files_list))
+
+		if not self.sc :
+			self.super_logger.info('========== Get Primary Counts : Done! ============ ')
+			print ('Get Primary Counts : Done!')
 
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder, self.super_logger)
 		self.input_file_treatment.treatment_file()
@@ -384,15 +445,18 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55)
 	light = False
 	dev = False
 	plots = True
+	dbSNP = 149
+	c = False
+	sc = False
 
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
 
-	path_to_output_folder = directories_creation(path_to_input_folder, name_exp, mode, strandedness, light)
+	path_to_output_folder, super_logger, bam_files_logger  = directories_creation(path_to_input_folder, name_exp, mode, strandedness, light)
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc)
 	
 	t2 = time.time()
 	total = t2-t0
@@ -436,6 +500,8 @@ def main(argv):
 	parser.add_argument('--plots', action='store_true')
 	parser.add_argument('--c', action='store_true',
 						help='Take into account the COMMON SNPs from the dbSNP database chosen')
+	parser.add_argument('--sc', action='store_true',
+						help='Query Single Cell Bam Files')
 
 
 	args = parser.parse_args()
@@ -450,6 +516,11 @@ def main(argv):
 	dev = args.dev
 	plots = args.plots
 	c = args.c
+	sc = args.sc
+
+	if sc :
+		mode = 'normal'
+		plots = False
 
 	if (mode != 'normal' and mode != 'translation') or (dbSNP != 0 and dbSNP != 149 and dbSNP != 151 and dbSNP != 155):
 		sys.stderr.write('error: %s\n' % 'Some arguments are not valid!')
@@ -463,9 +534,9 @@ def main(argv):
 
 	t0 = time.time()
 
-	super_logger.info('=============== BamQuery id : %s, Mode : %s, Strandedness : %s, Light : %s, dbSNP : %s, COMMON SNPs : %s, plots : %s ===================', name_exp, mode, strandedness, str(light), str(dbSNP), str(c), str(plots))
+	super_logger.info('=============== BamQuery id : %s, Mode : %s, SC : %s, Strandedness : %s, Light : %s, dbSNP : %s, COMMON SNPs : %s, plots : %s ===================', name_exp, mode, str(sc),strandedness, str(light), str(dbSNP), str(c), str(plots))
 	
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc)
 	
 
 	if not dev:

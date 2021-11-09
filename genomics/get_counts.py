@@ -18,7 +18,6 @@ class GetCounts:
 
 	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger):
 		self.light = light
-
 		if self.light:
 			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
 		else:
@@ -161,6 +160,7 @@ class GetCounts:
 									data[peptide] = [to_print_aux]
 
 								key = peptide+'_'+alignment+'_'+sequence
+
 								if len(perfect_alignments[key][-1]) == 0:
 									perfect_alignments[key][-1] = [0]*total_samples
 
@@ -409,11 +409,7 @@ class GetCounts:
 									to_add[index]  = count
 									to_write[peptide] = {key_aux: to_add}
 
-								try:
-									data[peptide].append(to_print_aux)
-								except KeyError:
-									data[peptide] = [to_print_aux]
-
+				
 								key = peptide+'_'+alignment+'_'+sequence
 								if len(perfect_alignments[key][-2]) == 0:
 									perfect_alignments[key][-2] = [0]*total_samples
@@ -467,7 +463,7 @@ class GetCounts:
 
 			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
 				pickle.dump(idx, f)
-
+			
 			with open(alignment_information, 'wb') as handle:
 				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -487,70 +483,62 @@ class GetCounts:
 
 			df_alignments = pd.DataFrame(to_write_list[1:], columns=to_write_list[0])
 
-			data_ordered = []
 			order_pep = []
 			peptides_order = []
 			
 			for peptide_type, peptides in self.peptides_by_type.items():
 				for peptide in peptides:
-					try:
-						data_ordered.extend(data[peptide])
-						peptides_order.append(peptide)
-						if peptide_type not in order_pep:
-							order_pep.append(peptide_type)
-							order.append(1)
-						else:
-							ind = order_pep.index(peptide_type)
-							order[ind] += 1
-					except KeyError:
-						pass
+					peptides_order.append(peptide)
+					if peptide_type not in order_pep:
+						order_pep.append(peptide_type)
+						order.append(1)
+					else:
+						ind = order_pep.index(peptide_type)
+						order[ind] += 1
+			
+			# https://stackoverflow.com/questions/23482668/sorting-by-a-custom-list-in-pandas
 
-			if len(data_ordered) > 0 :
-				# https://stackoverflow.com/questions/23482668/sorting-by-a-custom-list-in-pandas
+			df_counts = df_alignments.groupby(['Peptide']).sum().reset_index()
 
-				df_counts = pd.DataFrame(data_ordered, columns=['Peptides', 'Alignments', 'BAM Files', 'Read Counts'])
-				df_counts = df_counts.groupby(['Peptides', 'BAM Files'])['Read Counts'].sum().reset_index()
-				df_counts = df_counts.pivot("Peptides", "BAM Files", "Read Counts").reset_index() 
+			sorterIndex = dict(zip(peptides_order, range(len(peptides_order))))
+			df_counts['order'] = df_counts['Peptide'].map(sorterIndex)
+			df_counts.sort_values(['order'], ascending = [True], inplace = True)
+			df_counts.drop('order', 1, inplace = True)
+			df_counts.set_index('Peptide',inplace=True)
 
+			_thread.start_new_thread(self.save_info_counts, (df_counts, to_write_list, '_rna_count.csv'))
+			
+			if self.mode == 'translation':
+				data_ordered_filtered = []
+				order_pep_f = []
+				peptides_order = []
+
+				for peptide_type, peptides in self.peptides_by_type.items():
+					for peptide in peptides:
+						try:
+							data_ordered_filtered.extend(data_filtered[peptide])
+							peptides_order.append(peptide)
+
+							if peptide_type not in order_pep_f:
+								order_pep_f.append(peptide_type)
+								order_f.append(1)
+							else:
+								ind = order_pep_f.index(peptide_type)
+								order_f[ind] += 1
+						except KeyError:
+							pass
+
+				df_counts_filtered = pd.DataFrame(data_ordered_filtered, columns=['Peptides', 'Alignments', 'BAM Files', 'Read Counts'])
+				df_counts_filtered = df_counts_filtered.groupby(['Peptides', 'BAM Files'])['Read Counts'].sum().reset_index()
+				df_counts_filtered = df_counts_filtered.pivot("Peptides", "BAM Files", "Read Counts").reset_index()
 				sorterIndex = dict(zip(peptides_order, range(len(peptides_order))))
-				df_counts['order'] = df_counts['Peptides'].map(sorterIndex)
-				df_counts.sort_values(['order'], ascending = [True], inplace = True)
-				df_counts.drop('order', 1, inplace = True)
-				df_counts.set_index('Peptides',inplace=True)
+				df_counts_filtered['order'] = df_counts_filtered['Peptides'].map(sorterIndex)
+				df_counts_filtered.sort_values(['order'], ascending = [True], inplace = True)
+				df_counts_filtered.drop('order', 1, inplace = True)
+				df_counts_filtered.set_index('Peptides',inplace=True)
+				_thread.start_new_thread(self.save_info_counts, (df_counts_filtered, '', '_rna_ribo_count.csv'))
 
-				_thread.start_new_thread(self.save_info_counts, (df_counts, to_write_list, '_rna_count.csv'))
-				
-				if self.mode == 'translation':
-					data_ordered_filtered = []
-					order_pep_f = []
-					peptides_order = []
-
-					for peptide_type, peptides in self.peptides_by_type.items():
-						for peptide in peptides:
-							try:
-								data_ordered_filtered.extend(data_filtered[peptide])
-								peptides_order.append(peptide)
-
-								if peptide_type not in order_pep_f:
-									order_pep_f.append(peptide_type)
-									order_f.append(1)
-								else:
-									ind = order_pep_f.index(peptide_type)
-									order_f[ind] += 1
-							except KeyError:
-								pass
-
-					df_counts_filtered = pd.DataFrame(data_ordered_filtered, columns=['Peptides', 'Alignments', 'BAM Files', 'Read Counts'])
-					df_counts_filtered = df_counts_filtered.groupby(['Peptides', 'BAM Files'])['Read Counts'].sum().reset_index()
-					df_counts_filtered = df_counts_filtered.pivot("Peptides", "BAM Files", "Read Counts").reset_index()
-					sorterIndex = dict(zip(peptides_order, range(len(peptides_order))))
-					df_counts_filtered['order'] = df_counts_filtered['Peptides'].map(sorterIndex)
-					df_counts_filtered.sort_values(['order'], ascending = [True], inplace = True)
-					df_counts_filtered.drop('order', 1, inplace = True)
-					df_counts_filtered.set_index('Peptides',inplace=True)
-					_thread.start_new_thread(self.save_info_counts, (df_counts_filtered, '', '_rna_ribo_count.csv'))
-
-					os.remove(self.path_to_output_folder_alignments+'data_filtered.pkl')
+				os.remove(self.path_to_output_folder_alignments+'data_filtered.pkl')
 			
 			t_2 = time.time()
 			total = t_2-t_0

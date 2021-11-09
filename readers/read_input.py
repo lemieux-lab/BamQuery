@@ -101,7 +101,6 @@ class ReadInputFile:
 					except KeyError:
 						self.peptides_by_type[type_] = [peptide]
 
-				
 		self.super_logger.info('Peptides to evaluate in Peptide Mode : %d', len(self.peptide_mode))
 		self.super_logger.info('Peptides to evaluate in Coding Sequence (CS) Mode : %d', len(self.CS_mode))
 		self.super_logger.info('Peptides to evaluate in Manual Mode: %d', len(self.manual_mode))
