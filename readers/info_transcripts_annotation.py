@@ -3,9 +3,8 @@ import os, logging, time, pickle, threading, csv, math, pysam, subprocess, sys
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
-annotation = path_to_lib + 'gencode.v26.primary_assembly.annotation.gtf'
-
 __author__ = "Maria Virginia Ruiz Cuevas"
+__email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
 class InfoTranscripts:
@@ -13,17 +12,30 @@ class InfoTranscripts:
 	def __init__(self):
 		pass
 
-	def set_values(self):
+	def set_values(self, genome_version):
 
-		exist = os.path.exists(path_to_lib+'Info_Transcripts_Annotations.dic')
+		if genome_version == 'v26_88': 
+			exist = os.path.exists(path_to_lib+'genome_versions/genome_v26_88/Info_Transcripts_Annotations.dic')
+			annotation = path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
+			output_path = path_to_lib+'genome_versions/genome_v26_88/'
+		elif genome_version == 'v33_99':
+			exist = os.path.exists(path_to_lib+'genome_versions/genome_v33_99/Info_Transcripts_Annotations.dic')
+			annotation = path_to_lib+'genome_versions/genome_v33_99/gencode.v33.primary_assembly.annotation.gtf'
+			output_path = path_to_lib+'genome_versions/genome_v33_99/'
+		else:
+			exist = os.path.exists(path_to_lib+'genome_versions/genome_v38_104/Info_Transcripts_Annotations.dic')
+			annotation = path_to_lib+'genome_versions/genome_v38_104/gencode.v38.primary_assembly.annotation.gtf'
+			output_path = path_to_lib+'genome_versions/genome_v38_104/'
 
 		if not exist:
-			get_info_transcripts_path = os.path.abspath(__file__)
-			command = 'python '+get_info_transcripts_path
-			subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True) 
+			# get_info_transcripts_path = os.path.abspath(__file__)
+			# command = 'python '+get_info_transcripts_path+' '+annotation+' '+output_path
+			# subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True) 
+			print ('Getting information from Annotations Reference Ensembl')
+			self.get_info_transcripts(annotation, output_path)
 
 
-	def get_info_transcripts(self):
+	def get_info_transcripts(self, annotation, output_path):
 
 		self.info_transcript = {}
 		transcript_count = 0
@@ -142,7 +154,7 @@ class InfoTranscripts:
 						strand_old = strand 
 						transcript_old = transcript_id
 						
-		with open(path_to_lib+'Info_Transcripts_Annotations.dic', 'wb') as handle:
+		with open(output_path+'Info_Transcripts_Annotations.dic', 'wb') as handle:
 			pickle.dump(self.info_transcript, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -187,8 +199,10 @@ class InfoTranscripts:
 
 def main(argv):
 
+	annotation = sys.argv[0]
+	path_output = sys.argv[1]
 	info_transcript = InfoTranscripts()
-	info_transcript.get_info_transcripts()
+	info_transcript.get_info_transcripts(annotation, path_output)
 	
 
 if __name__ == "__main__":

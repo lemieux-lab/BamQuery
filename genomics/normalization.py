@@ -45,8 +45,13 @@ class Normalization:
 			indexes_column_names.extend(list(df_counts.columns))
 			norm_matrix = []
 
-			with open(self.path_to_all_counts_file, 'rb') as fp:
-				dictionary_total_reads_bam_files = pickle.load(fp)
+			try:
+				with open(self.path_to_all_counts_file, 'rb') as fp:
+					dictionary_total_reads_bam_files = pickle.load(fp)
+			except ValueError:
+				import pickle5
+				with open(self.path_to_all_counts_file, 'rb') as fp:
+					dictionary_total_reads_bam_files = pickle5.load(fp)
 			
 			# 0: path, 1: number, 2: Tissue, 3: Tissue_type, 4: Shortlist, 5: sequencing, 6: library, 7: user
 			if os.path.exists(self.path_to_output_aux_folder+"bam_files_tissues.csv"):

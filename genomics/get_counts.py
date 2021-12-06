@@ -1,10 +1,11 @@
 import warnings, os
 warnings.filterwarnings("ignore")
 import os, time, subprocess, pickle, multiprocessing, os, _thread, csv, collections, pysam, copy
-import genomics.get_alignments as get_alig
+import genomics.get_counts_from_sample as get_counts_sample
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
+import numpy as np
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -110,7 +111,7 @@ class GetCounts:
 
 					t0_bam_file = time.time()
 					bams = [bam_file] * len(keys)
-					results = pool.map(self.get_counts_sample, bams, keys, values)
+					results = pool.map(get_counts_sample.get_counts_sample, bams, keys, values)
 					not_permission = False
 
 					for res in results:
@@ -285,7 +286,8 @@ class GetCounts:
 				with open(self.path_to_output_folder_alignments+'to_write.pkl', 'rb') as fp:
 					to_write = pickle.load(fp)
 			except FileNotFoundError:
-				pass
+				to_write = {} 
+				data = {}
 
 		else:
 			last_treated_bam_file = -1
@@ -317,6 +319,7 @@ class GetCounts:
 
 		order_f = []
 		order = []
+		times = []
 
 		if (not exist_rna and exist_ribo):
 			t_0 = time.time()
@@ -366,7 +369,7 @@ class GetCounts:
 
 					t0_bam_file = time.time()
 					bams = [bam_file] * len(keys)
-					results = pool.map(self.get_counts_sample, bams, keys, values)
+					results = pool.map(get_counts_sample.get_counts_sample, bams, keys, values)
 					not_permission = False
 
 					for res in results:
@@ -430,6 +433,7 @@ class GetCounts:
 
 					t1_bam_file = time.time()
 					time_final = (t1_bam_file-t0_bam_file)/60.0
+					times.append(time_final)
 
 					if not_permission:
 						self.super_logger.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
@@ -460,6 +464,8 @@ class GetCounts:
 			pool.close()
 			pool.join()
 			pool.clear()
+
+			self.super_logger.info('Average time to process a BamFile : %f min', np.mean(times))
 
 			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
 				pickle.dump(idx, f)
@@ -564,36 +570,6 @@ class GetCounts:
 		return df_counts, perfect_alignments, df_counts_filtered, order, order_f, df_alignments
 
 
-	def get_counts_sample(self, bam, peptide_alignment, sequences):
-		
-		name_sample = bam[0]
-		bam_file = bam[1][0]
-		library = bam[1][1]
-		sens = bam[1][2]
-
-		count = 0
-		peptide = peptide_alignment.split('_')[0]
-		alignment = peptide_alignment.split('_')[1]
-		strand = peptide_alignment.split('_')[2]
-
-		chr = alignment.split(':')[0]
-		
-		region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
-
-		counts = self.get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequences)
-
-		to_return = [[peptide, alignment, name_sample, strand]]
-		
-		for index, sequence in enumerate(sequences):
-			try:
-				count = counts[index]
-			except TypeError:
-				count = -1
-			to_return.append([count, sequence])
-		 
-		return to_return
-
-
 	def save_info_counts(self, df, to_write, type_save):
 		if to_write != '':
 			with open(self.path_to_output_temps_folder+self.name_exp+type_save.split('.')[0]+'_All_alignments.csv', 'w') as csvFile:
@@ -606,81 +582,5 @@ class GetCounts:
 		self.super_logger.info('Counts Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
 
 
-	def get_depth_with_view(self, region_to_query, bam_file, library, sens, strand, sequences):
-
-		contReads_to_return = []
-
-		library = library.lower()
-		sens = sens.lower()
-		
-		if library == 'unstranded':
-			try:
-				count_1 = pysam.view("-F0X100", bam_file, region_to_query)
-			except pysam.utils.SamtoolsError: 
-				return -1
-
-			for seq in sequences:
-				contReads = 0
-				rcmcs = uf.reverseComplement(seq)
-				contReads += count_1.count(seq)
-				contReads += count_1.count(rcmcs)
-				contReads_to_return.append(contReads)
-
-		elif library == 'single-end':
-
-			if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
-				try:
-					count_1 = pysam.view("-F0X110", bam_file, region_to_query)
-				except pysam.utils.SamtoolsError: 
-					return -1
-			elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
-				try:
-					count_1 = pysam.view("-F0X100", "-f0X10", bam_file, region_to_query)
-				except pysam.utils.SamtoolsError: 
-					return -1
-
-			for seq in sequences:
-				contReads = 0
-				contReads += count_1.count(seq)
-				contReads_to_return.append(contReads)
-				
-		elif library == 'pair-end':
-			if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
-				try:
-					count_1 = pysam.view("-F0X100", "-f0X60", bam_file, region_to_query)
-					count_2 = pysam.view("-F0X100", "-f0X90", bam_file, region_to_query)
-				except pysam.utils.SamtoolsError: 
-					return -1
-
-			elif ((strand == '-' and sens == 'forward') or(strand == '+' and sens == 'reverse')):
-				try:
-					count_1 = pysam.view("-F0X100", "-f0X50", bam_file, region_to_query)
-					count_2 = pysam.view("-F0X100", "-f0XA0", bam_file, region_to_query)
-				except pysam.utils.SamtoolsError: 
-					return -1
-
-			count_1_split = count_1.split('\n')
-			count_2_split = count_2.split('\n')
-			
-			for seq in sequences:
-				contReads = 0
-				reads_name = set()
-				rcmcs = uf.reverseComplement(seq)
-
-				for read in count_1_split:
-					if seq in read :
-						name = read.split('\t')[0]
-						reads_name.add(name)
-
-				for read in count_2_split:
-					if rcmcs in read :
-						name = read.split('\t')[0]
-						reads_name.add(name)
-
-				contReads = len(reads_name)
-				contReads_to_return.append(contReads)
-
-			# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
-		return contReads_to_return
 
 	

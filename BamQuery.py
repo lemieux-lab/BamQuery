@@ -12,7 +12,7 @@ from utils.get_information_bam_files import GetInformationBamFiles
 from utils.reverse_translation import ReverseTranslation
 from utils.paths_arrangements import *
 
-from genomics.alignments import Alignments
+from genomics.alignments import *
 from genomics.get_counts import GetCounts
 from genomics.get_counts_sc import GetCountsSC
 from genomics.normalization import Normalization
@@ -26,7 +26,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -40,6 +40,9 @@ class BamQuery:
 		self.common = c
 		self.super_logger = super_logger
 		self.sc = sc
+		self.var = var
+		self.maxmm = maxmm
+		self.genome_version = genome_version
 
 		if self.mode == 'normal':
 			if self.sc :
@@ -51,6 +54,7 @@ class BamQuery:
 
 		if not self.light:
 			self.get_annotations()
+
 
 	def run_bam_query_sc_mode(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
@@ -293,21 +297,21 @@ class BamQuery:
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder, self.super_logger)
 		self.input_file_treatment.treatment_file()
 
-		if self.dev:
-			with open(self.path_to_output_folder+'genome_alignments/peptides_by_type.dic', 'wb') as handle:
-				pickle.dump(self.input_file_treatment.peptides_by_type, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		# if self.dev:
+		# 	with open(self.path_to_output_folder+'genome_alignments/peptides_by_type.dic', 'wb') as handle:
+		# 		pickle.dump(self.input_file_treatment.peptides_by_type, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			with open(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic', 'wb') as handle:
-				pickle.dump(self.input_file_treatment.all_mode_peptide, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		# 	with open(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic', 'wb') as handle:
+		# 		pickle.dump(self.input_file_treatment.all_mode_peptide, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			with open(self.path_to_output_folder+'genome_alignments/CS_mode.dic', 'wb') as handle:
-				pickle.dump(self.input_file_treatment.CS_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		# 	with open(self.path_to_output_folder+'genome_alignments/CS_mode.dic', 'wb') as handle:
+		# 		pickle.dump(self.input_file_treatment.CS_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			with open(self.path_to_output_folder+'genome_alignments/peptides_mode.dic', 'wb') as handle:
-				pickle.dump(self.input_file_treatment.peptide_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		# 	with open(self.path_to_output_folder+'genome_alignments/peptides_mode.dic', 'wb') as handle:
+		# 		pickle.dump(self.input_file_treatment.peptide_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			with open(self.path_to_output_folder+'genome_alignments/manual_mode.dic', 'wb') as handle:
-				pickle.dump(self.input_file_treatment.manual_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		# 	with open(self.path_to_output_folder+'genome_alignments/manual_mode.dic', 'wb') as handle:
+		# 		pickle.dump(self.input_file_treatment.manual_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
 		
 		
 		self.super_logger.info('========== Treatment File : Done! ============ ')
@@ -325,8 +329,8 @@ class BamQuery:
 			self.super_logger.info('========== Reverse Translation : Done! ============ ')
 			print ('Reverse Translation : Done!')
 			
-			self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common, self.super_logger)
-			self.perfect_alignments, peptides_with_alignments = self.alignments.alignment_cs_to_genome(self.set_peptides)
+			#self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common, self.super_logger, self.var, self.maxmm, self.genome_version)
+			self.perfect_alignments, peptides_with_alignments = alignment_cs_to_genome(self.set_peptides, self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common, self.super_logger, self.var, self.maxmm, self.genome_version)
 
 			self.super_logger.info('========== Alignment : Done! ============ ')
 			print ('Alignment : Done!')
@@ -374,9 +378,9 @@ class BamQuery:
 		info_peptide_alignments = self.get_info_peptide_alignments()
 
 		get_info_transcripts = InfoTranscripts()
-		get_info_transcripts.set_values()
+		get_info_transcripts.set_values(self.genome_version)
 		
-		intersect_to_annotations = IntersectAnnotations(self.perfect_alignments, self.path_to_output_folder, self.name_exp, self.super_logger)
+		intersect_to_annotations = IntersectAnnotations(self.perfect_alignments, self.path_to_output_folder, self.name_exp, self.super_logger, self.genome_version)
 		intersect_to_annotations.generate_BED_files()
 		intersect_to_annotations.perform_intersection_with_annotation()
 
@@ -403,7 +407,7 @@ class BamQuery:
 			except KeyError:
 				order_sample_bam_files_ribo[group] = [name_sample]
 		
-		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev, self.plots, self.super_logger)
+		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev, self.plots, self.super_logger, self.genome_version)
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
 		get_biotype.get_global_annotation()
 		
@@ -435,19 +439,27 @@ class BamQuery:
 		return info_peptide_alignments
 
 
-def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55):
+def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version, dbSNP, th_out = 8.55,):
 
 	path_to_input_folder = path_to_input_folder
-	name_exp = name_exp.lower()
 	mode = 'normal'
 	strandedness = strandedness
 	th_out = th_out
 	light = False
-	dev = False
+	dev = True
 	plots = True
-	dbSNP = 149
 	c = False
 	sc = False
+	var = False
+	maxmm = False
+	
+	if dbSNP == 'dbSNP_149':
+		dbSNP = 149
+	elif dbSNP == 'dbSNP_151':
+		dbSNP = 151
+	elif dbSNP == 'dbSNP_155':
+		dbSNP = 155
+	else: dbSNP = 0
 
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
@@ -456,22 +468,23 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, th_out = 8.55)
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version)
 	
 	t2 = time.time()
 	total = t2-t0
 	
-	try:
-		super_logger.info(' ========== Removing Temporal Files ============ ')
-		shutil.rmtree(path_to_output_folder+'genome_alignments')
-		shutil.rmtree(path_to_output_folder+'logs')
-		shutil.rmtree(path_to_output_folder+'alignments')
-		shutil.rmtree(path_to_output_folder+'res/BED_files')
-		shutil.rmtree(path_to_output_folder+'res/AUX_files')
-		shutil.rmtree(path_to_output_folder+'res/temps_files')
+	# try:
+	# 	super_logger.info(' ========== Removing Temporal Files ============ ')
+	# 	shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)
+	# 	shutil.rmtree(path_to_output_folder+'genome_alignments', ignore_errors=True)
+	# 	shutil.rmtree(path_to_output_folder+'alignments', ignore_errors=True)
+	# 	shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
+	# 	shutil.rmtree(path_to_output_folder+'res/AUX_files', ignore_errors=True)
+	# 	shutil.rmtree(path_to_output_folder+'res/temps_files', ignore_errors=True)
+	# 	os.remove(path_to_output_folder+"res/info_bam_files_tissues.csv")
 
-	except FileNotFoundError:
-		pass
+	# except FileNotFoundError:
+	# 	pass
 
 	super_logger.info('Total time run function BamQuery to end : %f min', (total/60.0))
 	
@@ -502,12 +515,17 @@ def main(argv):
 						help='Take into account the COMMON SNPs from the dbSNP database chosen')
 	parser.add_argument('--sc', action='store_true',
 						help='Query Single Cell Bam Files')
-
+	parser.add_argument('--var', action='store_true',
+						help='Keep Variants Alignments')
+	parser.add_argument('--maxmm', action='store_true',
+						help='Keep High Amount Alignments')
+	parser.add_argument('--genome_version', type=str, default = 'v26_88',
+						help='Genome version supported : v26_88 / v33_99 / v38_104')
 
 	args = parser.parse_args()
 	
 	path_to_input_folder = args.path_to_input_folder
-	name_exp = args.name_exp.lower()
+	name_exp = args.name_exp
 	mode = args.mode.lower()
 	dbSNP = args.dbSNP
 	strandedness = args.strandedness
@@ -517,12 +535,15 @@ def main(argv):
 	plots = args.plots
 	c = args.c
 	sc = args.sc
+	var = args.var
+	maxmm = args.maxmm
+	genome_version = args.genome_version
 
 	if sc :
 		mode = 'normal'
 		plots = False
 
-	if (mode != 'normal' and mode != 'translation') or (dbSNP != 0 and dbSNP != 149 and dbSNP != 151 and dbSNP != 155):
+	if (mode != 'normal' and mode != 'translation') or (dbSNP != 0 and dbSNP != 149 and dbSNP != 151 and dbSNP != 155) or (genome_version != 'v26_88' and genome_version != 'v33_99' and genome_version != 'v38_104' ):
 		sys.stderr.write('error: %s\n' % 'Some arguments are not valid!')
 		parser.print_help()
 		sys.exit(2)
@@ -534,9 +555,15 @@ def main(argv):
 
 	t0 = time.time()
 
-	super_logger.info('=============== BamQuery id : %s, Mode : %s, SC : %s, Strandedness : %s, Light : %s, dbSNP : %s, COMMON SNPs : %s, plots : %s ===================', name_exp, mode, str(sc),strandedness, str(light), str(dbSNP), str(c), str(plots))
-	
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc)
+	super_logger.info('=============== BamQuery id : %s ===============', name_exp)
+	super_logger.info('=============== Parameters ===============')
+	super_logger.info(' - Mode : %s , Strandedness :  %s, Light:  %s ', mode, strandedness, str(light) )
+	super_logger.info(' - Single-Cell experiment (sc) :  %s', str(sc))
+	super_logger.info(' - dbSNP :  %s, COMMON SNPs : %s, Genome Version %s  :', str(dbSNP), str(c) ,genome_version)
+	super_logger.info(' - Plots : %s', str(plots))
+	super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
+
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version)
 	
 
 	if not dev:

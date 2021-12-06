@@ -33,26 +33,33 @@ def search():
 		path_search = os.path.join(parent_dir, name_exp)
 		path_input = os.path.join(path_search, 'Input')
 
-		try:
+		exists_search = os.path.exists(path_search) 
+		exists_light = os.path.exists(path_input) 
+		genome_version = form.genome_version.data
+		data_base_snp = form.data_base_snp.data
+
+		#try:
+		if not exists_search and not exists_light:
+			
 			os.mkdir(path_search)
 			os.mkdir(path_input)
 			
-			if form.peptides.data:
-				path_saved, state = save_peptides(form.peptides.data, path_input)
-				
-				if state == 'Error':
-					shutil.rmtree(path_search)
-					task_ids[name_exp] = 'No task'
-					flash(f'Sorry, peptides.tsv file contains more than 100 entries !', 'error')
-				else:
-					path_to_bam_directories = os.path.join(app.root_path, 'static/BAM_directories.tsv')
-					shutil.copy2(path_to_bam_directories, path_input)
-					task = running_BamQuery.apply_async(args = [path_input, name_exp, form.strandedness.data, form.th_out.data])
-					flash(f'Please do not close this page, you must wait for the query to be completed !', 'success')
-					return render_template('results.html', title ='Results', image_file = image_file, name_exp = name_exp, task_id = task.id)
+		if form.peptides.data:
+			path_saved, state = save_peptides(form.peptides.data, path_input)
+			
+			if state == 'Error':
+				shutil.rmtree(path_search)
+				task_ids[name_exp] = 'No task'
+				flash(f'Sorry, peptides.tsv file contains more than 100 entries !', 'error')
+			else:
+				path_to_bam_directories = os.path.join(app.root_path, 'static/BAM_directories.tsv')
+				shutil.copy2(path_to_bam_directories, path_input)
+				task = running_BamQuery.apply_async(args = [path_input, name_exp, form.strandedness.data, form.th_out.data, genome_version, data_base_snp])
+				flash(f'Please do not close this page, you must wait for the query to be completed !', 'success')
+				return render_template('results.html', title ='Results', image_file = image_file, name_exp = name_exp, task_id = task.id)
 
-		except FileExistsError:
-			flash(f'Name of Query { name_exp } already in use. Please change the name of the query !', 'error')
+		#except FileExistsError:
+		#	flash(f'Name of Query { name_exp } already in use. Please change the name of the query !', 'error')
 
 	if form_2.validate_on_submit():
 		name_exp = form_2.name_query_to_retrieve.data
@@ -105,8 +112,8 @@ def favicon():
 	return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
 @celery.task(bind=True)
-def running_BamQuery(self, path_input, name_exp, strandedness, th_out):
-	path_output = running_for_web(path_input, name_exp, strandedness, th_out)
+def running_BamQuery(self, path_input, name_exp, strandedness, th_out, genome_version, db_SNP):
+	path_output = running_for_web(path_input, name_exp, strandedness, genome_version, db_SNP, th_out)
 	self.update_state(state='PROGRESS', meta={'Query': name_exp, 'status': 'Running!'})
 	return {'status': 'Finished!', 'result': 'Job completed!'}
 
@@ -179,7 +186,6 @@ def remove():
 
 
 if __name__ == '__main__':
-	app.run(debug=True)
-	port = int(os.environ.get('PORT', 33000))
-	app.run(host='0.0.0.0', port=port)
+	port = int(os.environ.get('PORT', 35000))
+	app.run(host='0.0.0.0', port=port, debug=True)
 

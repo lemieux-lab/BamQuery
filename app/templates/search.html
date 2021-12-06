@@ -24,13 +24,13 @@
 	<fieldset class="form-group">
 		<legend class="border-bottom mb-4">Query</legend>  
 
-		<div class="row">
+		<div class="row" >
 			<div class="col" class="form-group">
 
 				{{ form.name_query.label(class="form-control-label") }}
 
 				{% if form.name_query.errors %}
-					{{ form.name_query(class="form-control form-control-lg is-invalid") }}
+					{{ form.name_query(class="form-control form-control-sm is-invalid") }}
 					<div class="invalid-feedback">
 						{% for error in form.name_query.errors %}
 							<span>{{ error }}</span>
@@ -77,7 +77,7 @@
 				{{ form.th_out.label(class="form-control-label") }}
 
 				{% if form.th_out.errors %}
-					{{ form.th_out(class="form-control form-control-lg is-invalid") }}
+					{{ form.th_out(class="form-control form-control-sm is-invalid") }}
 					<div class="invalid-feedback">
 						{% for error in form.th_out.errors %}
 							<span>{{ error }}</span>
@@ -103,6 +103,36 @@
 			</div>
 			
 		</div>
+
+		<div class="row" style="margin-top:20px;">
+
+		<div class="col" >
+			{{ form.genome_version.label(class="form-control-label") }}
+			{{ form.genome_version }}
+		</div>
+		
+		<div class="col" >
+			{{ form.data_base_snp.label(class="form-control-label") }}
+			{{ form.data_base_snp}}
+				
+		</div>
+
+		<div class="w-100"></div>
+			
+			<div class="col">
+				<small class="text-muted">
+						Genome version supported : v26_88 / v33_99 / v38_104.
+				</small>
+			</div>
+			<div class="col">
+				<small class="text-muted">
+					dbSNP supported : 149 / 151 / 155 / Any.
+				</small>
+			</div>
+			
+		</div>
+		</div>
+
 	</fieldset>
 
 	<div class="row"> 
@@ -116,10 +146,11 @@
 			</div>
 		</div>
 	</div>
+	</fieldset>
 </form>
 
 </div>
-<div class="col-sm-8">
+<div class="col-sm-8" style="margin-top:20px;">
 	<div class="content-section">
 		<div class="media">
 			<!-- <p style="float: right;"><img class="rounded-circle account-img" src="{{ image_file }}"></p> --> 

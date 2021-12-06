@@ -15,10 +15,6 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
-genomePathFai = path_to_lib + 'GRCh38.primary_assembly.genome.fa.fai'
-genomePath = path_to_lib + 'GRCh38.primary_assembly.genome.fa'
-
-
 def set_strand_read(strand):
 	number = "{0:b}".format(int(strand))
 	if len(number)>= 5:
@@ -168,7 +164,6 @@ def read_sam_file(sam_file):
 
 def get_alignments_chromosome(chr, chromosomes_alignments):
 
-	#logging.info('To do %s ', chr)
 	positions_mcs_peptides_perfect_alignment = {}
 	positions_mcs_peptides_variants_alignment = {}
 	
@@ -320,20 +315,26 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 				info_snp_to_add = [snp[0], ntd_in_MCS, name_snp, pos_in_genome, dif]
 				list_seq_reference_local[dif] = ntd_in_MCS
 				info_snps.append(info_snp_to_add)
-			else:
+			elif not var:
 				return MCS_perfect_alignments, MCS_variant_alignments
 		except KeyError:
-			return MCS_perfect_alignments, MCS_variant_alignments
-			#pass
+			if not var:
+				return MCS_perfect_alignments, MCS_variant_alignments
+			else:
+				pass
 
-	differences_pep = []
+	if var:
+		new_sequence = "".join(list_seq_reference_local)
+		local_translation_peptide = translation_seq(chr, new_sequence)
+		differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
+	else:
+		differences_pep = []
+	
 	if len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [MCS, [peptide, differences_pep, info_snps, differences_ntds]]
+	elif var and local_translation_peptide == peptide:
+		MCS_perfect_alignments = [MCS, [peptide, differences_pep, info_snps, differences_ntds]]
 	else:
-		# Uncomment this three lines if I want to get the variants alignments, also in the if below add 
-		#new_sequence = "".join(list_seq_reference_local)
-		#local_translation_peptide = translation_seq(chr, new_sequence)
-		#differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
 		#if len(differences_ntds) - len(info_snps) <= 2:
 		#MCS_variant_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 		MCS_variant_alignments = []
@@ -394,7 +395,7 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 			except KeyError:
 				pass
 
-		if len(info_snps) != ind + 1:
+		if not var and (len(info_snps) != ind + 1):
 			return MCS_perfect_alignments, MCS_variant_alignments
 
 	new_sequence = "".join(list_seq_reference_local)
@@ -407,6 +408,8 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 		differences_ntds = 100
 
 	if peptide == local_translation_peptide and len(info_snps) == len(differences_ntds):
+		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+	elif var and local_translation_peptide == peptide :
 		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	else:
 		#if len(differences_ntds) - len(info_snps) <= 2:
@@ -424,31 +427,49 @@ def translation_seq(chr, seq):
 	return translation
 
 
-def get_alignments(sam_file, dbSNP, common, super_logger_aux):
+def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version):
 
 	global path_to_db
 	global super_logger
-	super_logger = super_logger_aux
+	global var
+	global genomePathFai
+	global genomePath
 
+	super_logger = super_logger_aux
+	var = var_aux
+
+	if genome_version == 'v26_88': 
+		genomePathFai = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa.fai'
+		genomePath = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa'
+	elif genome_version == 'v33_99':
+		genomePathFai = path_to_lib + 'genome_versions/genome_v33_99/GRCh38.primary_assembly.genome.fa.fai'
+		genomePath = path_to_lib + 'genome_versions/genome_v33_99/GRCh38.primary_assembly.genome.fa'
+	else:
+		genomePathFai = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa.fai'
+		genomePath = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
+
+	super_logger.info('Using genome version %s. ', genomePath)
+	
 	if dbSNP == 0:
 		path_to_db = ''
 	elif dbSNP == 149:
 		if common:
-			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_149_common/'
+			path_to_db = path_to_lib+'/snps_dics_149_common/'
 		else:
-			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_149/'
+			path_to_db = path_to_lib+'/snps_dics_149/'
 	elif dbSNP == 151:
 		if common:
-			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_151_common/'
+			path_to_db = path_to_lib+'/snps_dics_151_common/'
 		else:
-			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_151/'
+			path_to_db = path_to_lib+'/snps_dics_151/'
 	else:
 		if common:
-			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_155_common/'
+			path_to_db = path_to_lib+'/snps_dics_155_common/'
 		else:
-			path_to_db = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/snps_dics_155/'
+			path_to_db = path_to_lib+'/snps_dics_155/'
 
 	super_logger.info('Using dbSNP database %s with COMMON SNPs = %s. Database Path : %s ', str(dbSNP), str(common), str(path_to_db))
+	
 	exists = os.path.exists(sam_file+'.dic')
 	if not exists:
 		aligments_by_chromosome_strand = read_sam_file(sam_file)
@@ -488,13 +509,16 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux):
 
 	else:
 		for chr in ['chr1', 'chr2', 'chr3', 'chr4', 'chr5']:
-			index = keys.index(chr)
-			res = get_alignments_chromosome(chr, values[index])
-			positions_mcs_peptides_perfect_alignment.update(res[0])
-			positions_mcs_peptides_variants_alignment.update(res[1])
-			total_peptides_in = total_peptides_in.union(res[2])
-			del keys[index]
-			del values[index]
+			try:
+				index = keys.index(chr)
+				res = get_alignments_chromosome(chr, values[index])
+				positions_mcs_peptides_perfect_alignment.update(res[0])
+				positions_mcs_peptides_variants_alignment.update(res[1])
+				total_peptides_in = total_peptides_in.union(res[2])
+				del keys[index]
+				del values[index]
+			except ValueError:
+				pass
 			
 		nodes = 5
 		cont = 0

@@ -7,18 +7,26 @@ import utils.useful_functions as uf
 NUM_WORKERS =  multiprocessing.cpu_count()
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
-annotations_file = path_to_lib+'Info_Transcripts_Annotations.dic'
-
-genome = path_to_lib+'GRCh38.primary_assembly.genome.fa'
-genome_index = path_to_lib+'GRCh38.primary_assembly.genome.fa.fai'
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 
 
 class BiotypeGenomicSearch:
 
-	def __init__(self, peptides_intersected):
+	def __init__(self, peptides_intersected, genome_version):
 		self.peptides_intersected = peptides_intersected
+		if genome_version == 'v26_88': 
+			self.genome_index = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa'
+			self.annotations_file = path_to_lib+'genome_versions/genome_v26_88/Info_Transcripts_Annotations.dic'
+		elif genome_version == 'v33_99':
+			self.genome_index = path_to_lib + 'genome_versions/genome_v33_99/GRCh38.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_v33_99/GRCh38.primary_assembly.genome.fa'
+			self.annotations_file = path_to_lib+'genome_versions/genome_v33_99/Info_Transcripts_Annotations.dic'
+		else:
+			self.genome_index = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
+			self.annotations_file = path_to_lib+'genome_versions/genome_v38_104/Info_Transcripts_Annotations.dic'
 
 
 	def get_biotype_from_intersected_transcripts(self):
@@ -27,7 +35,7 @@ class BiotypeGenomicSearch:
 
 		self.information_biotypes_peptides = {}
 
-		with open(annotations_file, 'rb') as fp:
+		with open(self.annotations_file, 'rb') as fp:
 			info_transcripts_dic = pickle.load(fp)
 
 		# Get the information of the transcript from dictionary information
@@ -250,7 +258,7 @@ class BiotypeGenomicSearch:
 
 	def get_transcript_and_protein(self, chr, regions, strand, len_prot):
 
-		faFile = pysam.FastaFile(genome, genome_index)
+		faFile = pysam.FastaFile(self.genome, self.genome_index)
 
 		sequence_transcript = ''
 		check_int = len_prot.is_integer()

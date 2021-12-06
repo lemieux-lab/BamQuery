@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, SubmitField, BooleanField
+from wtforms import StringField, FloatField, SubmitField, BooleanField, SelectField
 from wtforms.validators import DataRequired, Length, Optional
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
@@ -13,6 +13,7 @@ class MyFloatField(FloatField):
 				self.data = None
 				raise ValueError(self.gettext('Not a valid float value'))
 
+# https://getbootstrap.com/docs/5.0/forms/form-control/
 class BamQuery_search(FlaskForm):
 
 	name_query = StringField('Name Query :', 
@@ -21,10 +22,13 @@ class BamQuery_search(FlaskForm):
 	peptides = FileField('Upload peptides.tsv file', 
 		validators=[FileRequired(), FileAllowed(['tsv'])])
 
-	strandedness = BooleanField('Strandedness', default=True)
+	strandedness = BooleanField('Strandedness :', default=True)
 
 	th_out = MyFloatField('Threshold :', 
 		validators=[Optional()],default=8.55)
+
+	genome_version = SelectField('Genome Version :', choices=['v26_88', 'v33_99', 'v38_104']) 
+	data_base_snp = SelectField('dbSNP Release :', choices=['dbSNP_149', 'dbSNP_151', 'dbSNP_155' , 'No_db']) 
 
 	submit = SubmitField('Submit')
 

@@ -28,8 +28,10 @@ class ReadInputFile:
 		self.region_quantification_mode = {}
 		self.all_mode_peptide = {}
 		self.peptides_by_type = {}
+		peptide_cs = set()
 		
 		peptides_list = self.path_to_input_folder+'peptides.tsv'
+		cont = 0
 
 		with open(peptides_list) as f:
 			for index, line in enumerate(f):
@@ -65,9 +67,17 @@ class ReadInputFile:
 							raise Exception("Sorry, Nucleotide sequence doesn\'t correspond to the peptide. ' ", peptide, cs)
 						peptide_type = line[2].strip()
 
-						if peptide not in self.all_mode_peptide:
-							self.CS_mode[peptide] = [cs,'','',peptide_type]
-							self.all_mode_peptide[peptide] = peptide_type
+						key = peptide+'_'+cs
+						if key not in peptide_cs:
+							peptide_cs.add(key)
+							if peptide not in self.all_mode_peptide:
+								self.CS_mode[peptide] = [cs,'','',peptide_type]
+								self.all_mode_peptide[peptide] = peptide_type
+							else:
+								peptide = peptide+'_'+str(cont)
+								self.CS_mode[peptide] = [cs,'','',peptide_type]
+								self.all_mode_peptide[peptide] = peptide_type
+								cont += 1
 
 				elif len(line) == 5:
 					peptide = line[0].strip()

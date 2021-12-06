@@ -1,8 +1,6 @@
-import os, time, pickle, multiprocessing, _thread, csv, math, copy, pysam, copy, xlsxwriter, gc
+import os, time, pickle, _thread, csv, math, copy, pysam, copy, xlsxwriter, gc
 import pandas as pd
 import numpy as np
-from pathos.multiprocessing import ProcessPool
-import multiprocessing
 import billiard as mp
 import utils.useful_functions as uf
 import plotting.draw_biotypes as plots
@@ -18,7 +16,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BiotypeAssignation:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, bam_files_list_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, dev, plots, super_logger):
+	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, bam_files_list_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, dev, plots, super_logger, genome_version):
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
 		self.mode = mode
@@ -45,7 +43,7 @@ class BiotypeAssignation:
 
 		else:
 			self.get_info_bed_files = GetInformationBEDIntersection(path_to_output_folder)
-			self.get_info_bed_files.get_information_genomic_annotation()
+			self.get_info_bed_files.get_information_genomic_annotation(genome_version)
 			self.get_info_bed_files.get_information_ERE_annotation()
 			self.peptides_intersected_ere = self.get_info_bed_files.peptides_intersected_ere
 			self.information_final_biotypes_peptides = self.get_info_bed_files.information_final_biotypes_peptides
@@ -140,7 +138,7 @@ class BiotypeAssignation:
 								rep_names = list(self.peptides_intersected_ere[peptide][key_aux])
 								
 								if len(rep_names) > 1:
-									print (rep_names)
+									print (key_aux, rep_names)
 									for repName in rep_names:
 										repClass = self.biotypes_names.index(self.ere_info[repName][0])
 										repFamily = self.ere_info[repName][1]
@@ -217,6 +215,7 @@ class BiotypeAssignation:
 				type_ = 'Junctions'
 		return type_
 
+
 	def get_global_annotation(self):
 
 		self.bam_files_columns = self.bam_files_list_rna
@@ -253,6 +252,7 @@ class BiotypeAssignation:
 		
 		self.get_genomic_and_transcription_based_biotype()
 	
+
 	def get_genomic_and_transcription_based_biotype(self):
 
 		groupby_columns = ['Peptide Type',	'Peptide',	'Alignment', 'Strand']
@@ -545,7 +545,7 @@ class BiotypeAssignation:
 
 			return row_input
 
-		for bam_file in self.bam_files_columns: #['Total reads count RNA', 'Total reads count Ribo']:
+		for bam_file in ['Total reads count RNA', 'Total reads count Ribo']: #in self.bam_files_columns:
 			df_biotype_by_peptide_by_sample[bam_file] = ''
 
 			result = df_position_biotypes_info_counts.multiply(self.counts[bam_file], axis="index")

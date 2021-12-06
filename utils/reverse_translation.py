@@ -5,7 +5,7 @@ import billiard as mp
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
-NUM_WORKERS =  mp.cpu_count()
+NUM_WORKERS =  int(mp.cpu_count()/2)+2
 
 CODON_TABLE = {
 	'A': ('GCT', 'GCC', 'GCA', 'GCG'),
@@ -118,6 +118,7 @@ class ReverseTranslation:
 		else:
 			sequences = [codon for codon in CODON_TABLE[peptide[0]]]
 			count_to_return = 0
+			count_to_return_aux = 0
 			
 			for index, amino_acid in enumerate(peptide[1:]):
 				to_extend = sequences
@@ -126,13 +127,19 @@ class ReverseTranslation:
 					for index_seq,sequence in enumerate(to_extend):
 						sequence += codon
 						sequences.append(sequence)
+
 						if index == len(peptide[1:])-1 :
 							count_to_return += 1
+							count_to_return_aux += 1
 							to_print+= '>'+peptide+'\n'+sequence+'\n'
 
-			q.put(to_print)
-			to_print = ''
+							if count_to_return_aux == 10000000:
+								count_to_return_aux = 0
+								sequences = []
 
+		q.put(to_print)
+		to_print = ''
+		sequences = []
 		return count_to_return, peptide
 
 	def translate_reserve_peptide_2(self, peptides):
@@ -142,24 +149,30 @@ class ReverseTranslation:
 				seq = entry.rstrip()
 				sequences = [codon for codon in CODON_TABLE[seq[0]]]
 				count_to_return = 0
-				
+				to_print = ''
+
 				for index, amino_acid in enumerate(seq[1:]):
 					to_extend = sequences
 					sequences = []
+
 					for codon in CODON_TABLE[amino_acid]:
 						for sequence in to_extend:
 							sequence += codon
 							sequences.append(sequence)
+
 							if index == len(seq[1:])-1 :
 								count_to_return += 1
-							if count_to_return == 1000000:
-								for peptide in sequences :
-									oC.write('>' + seq + '\n' + peptide + '\n')
-								sequences = []
-								count_to_return = 0
+								to_print+= '>'+seq+'\n'+sequence+'\n'
+								
+								if count_to_return == 1000000:
+									oC.write(to_print)
+									count_to_return = 0
+									to_print = ''
+									sequences = []
 
-				for peptide in sequences :
-					oC.write('>' + seq + '\n' + peptide + '\n')
+				if len(to_print) > 0:
+					oC.write(to_print)
+					to_print = ''
 
 
 	def listener(self, q):

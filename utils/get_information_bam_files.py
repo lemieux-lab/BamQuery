@@ -142,7 +142,7 @@ class GetInformationBamFiles:
 
 							bam_files_to_get_primary_read_count.append(bam_file_path)
 							mod = True
-							
+						
 						if strandedness:
 							if sequencing == '' and library == '':
 								library, sequencing = self.get_type_library(bam_file_path)

@@ -1,21 +1,27 @@
 import os, time, pickle, multiprocessing, _thread, csv, math, subprocess
 import pandas as pd
 
-path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
-
-annotation_transcripts = path_to_lib + 'gencode.v26.primary_assembly.annotation.gtf'
-annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 
 class IntersectAnnotations:
 
-	def __init__(self, perfect_alignments, path_to_output_folder, name_exp, super_logger):
+	def __init__(self, perfect_alignments, path_to_output_folder, name_exp, super_logger, genome_version):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.perfect_alignments = perfect_alignments
 		self.path_to_output_folder = path_to_output_folder+'res/BED_files/'
 		self.name_exp = name_exp
 		self.super_logger = super_logger
+		
+		if genome_version == 'v26_88': 
+			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
+		elif genome_version == 'v33_99':
+			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v33_99/gencode.v33.primary_assembly.annotation.gtf'
+		else:
+			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v38_104/gencode.v38.primary_assembly.annotation.gtf'
+		
+		self.annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
+
 
 	def generate_BED_files(self):
 
@@ -75,7 +81,7 @@ class IntersectAnnotations:
 
 			self.super_logger.info('Using bedtools to intersect alignments to annotations.')
 
-			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed; bedtools intersect -a '+self.bed_file+' -b '+annotation_EREs+' -wao > '+self.path_to_output_folder + '/intersection_with_annotated_EREs.bed'
+			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_EREs+' -wao > '+self.path_to_output_folder + '/intersection_with_annotated_EREs.bed'
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 			out, err = p_1.communicate()
 

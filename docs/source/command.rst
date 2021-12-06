@@ -7,7 +7,7 @@ At the command line::
     BamQuery.py --help
 
 
-.. code-block:: bash
+.. code::
 
 	    usage: BamQuery.py [-h] [--mode MODE] [--strandedness] [--th_out TH_OUT]
 	                   [--light]

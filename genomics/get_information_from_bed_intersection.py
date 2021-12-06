@@ -16,7 +16,7 @@ class GetInformationBEDIntersection:
 		self.path_to_output_folder_bed_files = path_to_output_folder+'res/BED_files/'
 
 
-	def get_information_genomic_annotation(self):
+	def get_information_genomic_annotation(self, genome_version):
 
 		file_to_read = self.path_to_output_folder_bed_files+'intersection_with_annotated_transcripts.bed'
 
@@ -63,7 +63,7 @@ class GetInformationBEDIntersection:
 								dic[key] = []
 						self.peptides_intersected[key_peptide] = dic
 
-		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected)
+		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected, genome_version)
 		self.information_final_biotypes_peptides = self.biotype_genomic_annotation_search.get_biotype_from_intersected_transcripts()
 		
 		with open(self.path_to_output_folder_bed_files+'/information_final_biotypes_peptides.dic', 'wb') as handle:
@@ -74,6 +74,7 @@ class GetInformationBEDIntersection:
 
 		file_to_read = self.path_to_output_folder_bed_files+'intersection_with_annotated_EREs.bed'
 
+		print (file_to_read)
 		self.peptides_intersected_ere = {}
 		# chr13	99970439	99970465	AAAAPRPAL_chr13:99970439-99970465	+	chr13	99970407	99970449	(GGC)n	41	+	10
 		
@@ -94,40 +95,75 @@ class GetInformationBEDIntersection:
 				strand_peptide = splitLine[4]
 				strand_transcript = splitLine[10]
 				
-				if strand_peptide == strand_transcript :
-					key_position =  chr+':'+start+'-'+end+'_'+strand_peptide
-					repName = splitLine[8]
-						
-					if '|' not in key_peptide and number_overlap > ((len(peptide)*3)/2.0):
-						intersection_number = int(splitLine[11])
-						
-						try:
-							peptide_info = self.peptides_intersected_ere[peptide]
+				if number_overlap == ((len(peptide)*3) - 1):
+					if strand_peptide == strand_transcript :
+						key_position =  chr+':'+start+'-'+end+'_'+strand_peptide
+						repName = splitLine[8]
+							
+						if '|' not in key_peptide: #((len(peptide)*3)/2.0):
+							intersection_number = int(splitLine[11])
+							
 							try:
-								repName_set = peptide_info[key_peptide]
-								repName_set.add(repName)
+								peptide_info = self.peptides_intersected_ere[peptide]
+								try:
+									repName_set = peptide_info[key_peptide]
+									repName_set.add(repName)
+								except KeyError:
+									repName_set = set()
+									repName_set.add(repName)
+									peptide_info[key_peptide] = repName_set
 							except KeyError:
 								repName_set = set()
 								repName_set.add(repName)
-								peptide_info[key_peptide] = repName_set
-						except KeyError:
-							repName_set = set()
-							repName_set.add(repName)
-							self.peptides_intersected_ere[peptide] = {key_peptide : repName_set}
-					else:
-						split_key = key_peptide.split('_')[1].split('|')
+								self.peptides_intersected_ere[peptide] = {key_peptide : repName_set}
+						else:
+							split_key = key_peptide.split('_')[1].split('|')
 
-						for key in split_key:
-							if 'chr' not in key:
-								key = chr+':'+key+'_'+strand_peptide
-							if key == key_position:
-								break
-						try:
-							info_split_peptides[key_peptide][key][1] += number_overlap
-						except KeyError:
-							dic  = {}
-							dic[key] = [repName, number_overlap]
-							info_split_peptides[key_peptide] = dic
+							for key in split_key:
+								if 'chr' not in key:
+									key = chr+':'+key+'_'+strand_peptide
+								if key == key_position:
+									break
+							try:
+								info_split_peptides[key_peptide][key][1] += number_overlap
+							except KeyError:
+								dic  = {}
+								dic[key] = [repName, number_overlap]
+								info_split_peptides[key_peptide] = dic
+					else:
+						key_position =  chr+':'+start+'-'+end+'_'+strand_peptide
+						repName = splitLine[8]
+							
+						if '|' not in key_peptide: #((len(peptide)*3)/2.0):
+							intersection_number = int(splitLine[11])
+							
+							try:
+								peptide_info = self.peptides_intersected_ere[peptide]
+								try:
+									repName_set = peptide_info[key_peptide]
+									repName_set.add('antisense_'+repName)
+								except KeyError:
+									repName_set = set()
+									repName_set.add('antisense_'+repName)
+									peptide_info[key_peptide] = repName_set
+							except KeyError:
+								repName_set = set()
+								repName_set.add('antisense_'+repName)
+								self.peptides_intersected_ere[peptide] = {key_peptide : repName_set}
+						else:
+							split_key = key_peptide.split('_')[1].split('|')
+
+							for key in split_key:
+								if 'chr' not in key:
+									key = chr+':'+key+'_'+strand_peptide
+								if key == key_position:
+									break
+							try:
+								info_split_peptides[key_peptide][key][1] += number_overlap
+							except KeyError:
+								dic  = {}
+								dic[key] = ['antisense_'+repName, number_overlap]
+								info_split_peptides[key_peptide] = dic
 
 				for key_peptide, info_split_peptide in info_split_peptides.items():
 					
@@ -135,7 +171,7 @@ class GetInformationBEDIntersection:
 					total_overlap = sum([ value[1] for key, value in info_split_peptide.items()])
 					rep_names = set([ value[0] for key, value in info_split_peptide.items()])
 
-					if total_overlap > ((len(peptide)*3)/2.0):
+					if total_overlap == ((len(peptide)*3) - 1):#total_overlap > ((len(peptide)*3)/2.0):
 						try:
 							peptide_info = self.peptides_intersected_ere[peptide]
 							try:
