@@ -44,7 +44,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			alignWindowsPerReadNmax = 20000
 			alignTranscriptsPerWindowNmax = 1000
 		else:
-			maxMulti = 2000
+			maxMulti = 10000
 			alignTranscriptsPerReadNmax = maxMulti
 			seedPerWindowNmax = 500
 			seedNoneLociPerWindow = 500
