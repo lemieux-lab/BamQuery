@@ -312,7 +312,10 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 				snp_ntds_aux = [ snp_aux for snp_aux in snp_ntds if len(snp_aux) == 1]
 
 			if ntd_in_MCS in snp_ntds_aux:
-				info_snp_to_add = [snp[0], ntd_in_MCS, name_snp, pos_in_genome, dif]
+				from_ = snp[0]
+				if strand == '-':
+					from_ = reverse_translation(snp[0])
+				info_snp_to_add = [from_, ntd_in_MCS, name_snp, pos_in_genome, dif]
 				list_seq_reference_local[dif] = ntd_in_MCS
 				info_snps.append(info_snp_to_add)
 			elif not var:
@@ -385,7 +388,10 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 					codon_list[index] = ntd
 					translation_codon = translation_seq(chr, "".join(codon_list))
 					if translation_codon == aa:
-						info_snp_to_add = [snp[0], ntd, name_snp, pos_in_genome, ntd_pos]
+						from_ = snp[0]
+						if strand == '-':
+							from_ = reverse_translation(snp[0])
+						info_snp_to_add = [from_, ntd, name_snp, pos_in_genome, ntd_pos]
 						list_seq_reference_local[ntd_pos] = ntd
 						info_snps.append(info_snp_to_add)
 						into = True

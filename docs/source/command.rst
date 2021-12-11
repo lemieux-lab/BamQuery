@@ -154,3 +154,23 @@ The th_out option changes the threshold that is considered for comparing the exp
 
 In this mode, BamQuery will only display the peptide count and normalization. Therefore, no biotyping analysis will be performed for the peptides. For more information, see the :ref:`light_mode_example`.
 
+--dbSNP
+-------
+
+This option allows to choose between three versions of dbSNPs: 149 / 151 / 155. dbSNP 149 is the default. If you don't want to use any release specify 0 for this argument.
+
+--c
+---
+This option allows to choose between the most COMMON SNPs from the dbSNP release that you choose with the argument above.
+
+--plots
+-------
+This option sets BamQuery to produce pie charts in the biotype analysis step.
+
+--genome_version
+----------------
+This option allows to choose between three genome versions : v26_88 / v33_99 / v38_104. genome version v26_88 is the default. 
+
+
+
+

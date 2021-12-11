@@ -48,7 +48,7 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'LINE': flare_palette[1],
 						'LTR': flare_palette[2], 
 						'SINE': flare_palette[3],
-						'Retroposon': flare_palette[4],
+						'Antisense_EREs': flare_palette[4],
 						'Other EREs': flare_palette[5]
 						}
 

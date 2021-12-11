@@ -137,18 +137,25 @@ class BiotypeAssignation:
 							try:
 								rep_names = list(self.peptides_intersected_ere[peptide][key_aux])
 								
-								if len(rep_names) > 1:
-									print (key_aux, rep_names)
-									for repName in rep_names:
-										repClass = self.biotypes_names.index(self.ere_info[repName][0])
-										repFamily = self.ere_info[repName][1]
-										repNames.append(repName)
-										repClass_s.append(repClass)
-										repFamilies.append(repFamily)
+								#if len(rep_names) > 1:
+								#	print (key_aux, rep_names)
+									# for repName in rep_names:
+									# 	repClass = self.biotypes_names.index(self.ere_info[repName][0])
+									# 	repFamily = self.ere_info[repName][1]
+									# 	repNames.append(repName)
+									# 	repClass_s.append(repClass)
+									# 	repFamilies.append(repFamily)
 
 								repName = rep_names[0]
-								repClass = self.biotypes_names.index(self.ere_info[repName][0])
-								repFamily = self.ere_info[repName][1]
+								if 'antisense_' in repName:
+									repName_aux = repName.split('antisense_')[1]
+									repClass = self.biotypes_names.index('Antisense_'+self.biotypes_names[self.biotypes_names.index(self.ere_info[repName_aux][0])])
+									repFamily = self.ere_info[repName_aux][1]
+									repFamily = 'antisense_'+repFamily
+								else:
+									repClass = self.biotypes_names.index(self.ere_info[repName][0])
+									repFamily = self.ere_info[repName][1]
+								
 								self.biotype_type.add(repClass)
 
 							except KeyError:
@@ -231,7 +238,10 @@ class BiotypeAssignation:
 			if row['genomic_position_biotype'] != '':
 				row['genomic_position_biotype'] = self.biotypes_names[row['genomic_position_biotype']]
 			if row['ERE class'] != '':
-				row['ERE class'] = self.biotypes_names[row['ERE class']]
+				if 'antisense_' in row['ERE name']:
+					row['ERE class'] = 'antisense_'+self.biotypes_names[row['ERE class']]
+				else:
+					row['ERE class'] = self.biotypes_names[row['ERE class']]
 			return row
 
 		self.data_gen_ere = self.data_gen_ere.apply(lambda row : biotypes_translation(row), axis = 1)
@@ -353,7 +363,7 @@ class BiotypeAssignation:
 				
 				df_position_biotypes_summary_genome.at[index, str(bio)] = ratio
 				if self.biotypes_names[bio] == 'In_frame':
-					best_guess = self.biotypes_names[bio]
+					best_guess = 'In_frame'
 
 			string_biotype = string_biotype[:-2]
 			if best_guess == '':

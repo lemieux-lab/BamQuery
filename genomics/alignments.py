@@ -44,7 +44,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			alignWindowsPerReadNmax = 20000
 			alignTranscriptsPerWindowNmax = 1000
 		else:
-			maxMulti = 10000
+			maxMulti = 5000
 			alignTranscriptsPerReadNmax = maxMulti
 			seedPerWindowNmax = 500
 			seedNoneLociPerWindow = 500
@@ -65,7 +65,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 				' --limitOutSAMoneReadBytes '+str(limitOutSAMoneReadBytes) +\
 				' --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
 				' --seedNoneLociPerWindow '+ str(seedNoneLociPerWindow) +' --seedPerWindowNmax '+ str(seedPerWindowNmax)  +\
-				' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --alignIntronMax 1 --outFileNamePrefix '+path_to_output_folder_genome_alignments
+				' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --outFileNamePrefix '+path_to_output_folder_genome_alignments
 		
 		super_logger.info('Command to Align using STAR : %s ', command)
 		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)

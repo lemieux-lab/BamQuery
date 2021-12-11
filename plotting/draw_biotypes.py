@@ -5,14 +5,14 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 
 	others_non_coding = ['retained_intron', 'bidirectional_promoter_lncRNA', 'transcribed_unitary_pseudogene', 'transcribed_unprocessed_pseudogene', 'sense_overlapping','processed_pseudogene', 'unprocessed_pseudogene']
 	others_protein_coding = ['IG_V_gene', 'TEC', 'Exons']
-	others_ere = ['DNA','RC', 'RNA','Satellite','Simple_repeat','Unknown', 'Low_complexity', 'rRNA','scRNA','snRNA','srpRNA','tRNA']
+	others_ere = ['DNA','RC', 'RNA','Satellite','Simple_repeat','Unknown', 'Retroposon', 'Low_complexity', 'rRNA','scRNA','snRNA','srpRNA','tRNA']
 	
 
 	organisation_labels = {'Protein-coding Regions':['5UTR', '3UTR', 'In_frame', 'Frameshift', 'protein_coding', 'CDS', 'Junctions', 'Other coding regions'], 
 						'Non-coding RNAs':['processed_transcript', 'nonsense_mediated_decay', 'antisense', 'Non_coding Exons', 'Non_coding Junctions', 'lincRNA', 'Other non_coding regions'], 
 						'Intergenic Regions':['Intergenic'], 
 						'Intronic Regions':['Introns'],
-						'EREs':['LINE', 'LTR','Retroposon','SINE', 'Other EREs']}
+						'EREs':['LINE', 'LTR','SINE', 'Antisense_EREs', 'Other EREs']}
 
 	def plot_biotype(biotypes, name):
 		title = name
@@ -25,6 +25,10 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 		for biotype, total_biotype in biotypes.items():
 
 			in_ = False
+			if 'Antisense_' in biotype:
+				labels_in_type_peptide['EREs']['Antisense_EREs'] = total_biotype 
+				in_ = True
+
 			for type_, types in organisation_labels.items():
 				if biotype in types:
 					labels_in_type_peptide[type_][biotype] = total_biotype 
