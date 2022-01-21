@@ -306,10 +306,10 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 
 			if strand == '-':
 				for ntd in snp_ntds:
-					if len(ntd) == 1:
+					if len(ntd) == 1 and ntd != 'N':
 						snp_ntds_aux.append(reverse_translation(ntd))
 			else:
-				snp_ntds_aux = [ snp_aux for snp_aux in snp_ntds if len(snp_aux) == 1]
+				snp_ntds_aux = [ snp_aux for snp_aux in snp_ntds if len(snp_aux) == 1 and snp_aux != 'N']
 
 			if ntd_in_MCS in snp_ntds_aux:
 				from_ = snp[0]
@@ -377,10 +377,10 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 
 				if strand == '-':
 					for ntd in snp_ntds:
-						if len(ntd) == 1:
+						if len(ntd) == 1 and ntd != 'N':
 							snp_ntds_aux.append(reverse_translation(ntd))
 				else:
-					snp_ntds_aux = [ snp_aux for snp_aux in snp_ntds if len(snp_aux) == 1]
+					snp_ntds_aux = [ snp_aux for snp_aux in snp_ntds if len(snp_aux) == 1 and snp_aux != 'N']
 
 				into = False
 				
