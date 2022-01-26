@@ -75,16 +75,14 @@ class BiotypeAssignation:
 		data_gen_ere = []
 		self.biotype_type = set()
 		self.splices_annotated = set()
-		self.total_peptides = 0
 
 		spliced = 0
 		for type_peptide, peptides in peptides_by_type.items():
 
 			for peptide in peptides:
 
-				self.total_peptides += 1
-				if True:#'AAVLEYLTAE' == peptide :#'AEKLGFAGL' == peptide:
-
+				# EAAPDTVLR
+				if True :#peptide == 'EAAPDTVLR'  : #== peptide :#'AEKLGFAGL' == peptide:
 					try:
 						info_alignments_peptide = info_peptide_alignments[peptide]
 
@@ -415,15 +413,22 @@ class BiotypeAssignation:
 				string_biotype += biotype_name+': '+str(percentage)+'% - '
 				if biotype_name == 'In_frame':
 					best_guess = biotype_name
+
 				if self.plots:
-					try:
-						peptides_types = biotypes_by_peptide_type_genomic_ere_annot[peptide_type]
+					if ',' in peptide_type:
+						types = peptide_type.split(',')
+					else:
+						types = peptide_type.split(';')
+
+					for type_ in types:
 						try:
-							peptides_types[biotype_name] += ratio
+							peptides_types = biotypes_by_peptide_type_genomic_ere_annot[type_]
+							try:
+								peptides_types[biotype_name] += ratio
+							except KeyError:
+								peptides_types[biotype_name] = ratio
 						except KeyError:
-							peptides_types[biotype_name] = ratio
-					except KeyError:
-						biotypes_by_peptide_type_genomic_ere_annot[peptide_type] = {biotype_name:ratio}
+							biotypes_by_peptide_type_genomic_ere_annot[type_] = {biotype_name:ratio}
 
 					try:
 						biotypes_all_peptides_genomic_ere_annot[biotype_name] += ratio
@@ -486,8 +491,12 @@ class BiotypeAssignation:
 
 			peptide = row_input['Peptide']
 			
-			total_count = int(self.total_count_by_peptide.loc[(self.total_count_by_peptide['Peptide'] == peptide)][bam_file])
-			
+			try:
+				total_count = int(self.total_count_by_peptide.loc[(self.total_count_by_peptide['Peptide'] == peptide)][bam_file])
+			except TypeError:
+				print (peptide, bam_file)
+				exit()
+
 			if total_count != 0:
 				row_input[4:] = (row_input[4:]/total_count)
 			else:
@@ -515,21 +524,28 @@ class BiotypeAssignation:
 					best_guess = biotype_name
 
 				if self.plots:
+					if ',' in peptide_type:
+						types = peptide_type.split(',')
+					else:
+						types = peptide_type.split(';')
+						
+
 					if bam_file == 'Total reads count RNA':
-						try:
-							all_samples = biotypes_by_peptide_type_group_samples['All_samples']
+						for type_ in types:
 							try:
-								peptides_types = all_samples[peptide_type]
+								all_samples = biotypes_by_peptide_type_group_samples['All_samples']
 								try:
-									peptides_types[biotype_name] += ratio
+									peptides_types = all_samples[type_]
+									try:
+										peptides_types[biotype_name] += ratio
+									except KeyError:
+										peptides_types[biotype_name] = ratio
 								except KeyError:
-									peptides_types[biotype_name] = ratio
+									all_samples[type_] = {biotype_name : ratio}
 							except KeyError:
-								all_samples[peptide_type] = {biotype_name : ratio}
-						except KeyError:
-							dic_aux = {}
-							dic_aux[peptide_type] = {biotype_name : ratio}
-							biotypes_by_peptide_type_group_samples['All_samples'] = dic_aux
+								dic_aux = {}
+								dic_aux[type_] = {biotype_name : ratio}
+								biotypes_by_peptide_type_group_samples['All_samples'] = dic_aux
 						
 						try:
 							biotypes_all_peptides_type_group_samples_all[biotype_name] += ratio

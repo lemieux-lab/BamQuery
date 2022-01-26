@@ -28,6 +28,7 @@ class ReadInputFile:
 		self.region_quantification_mode = {}
 		self.all_mode_peptide = {}
 		self.peptides_by_type = {}
+		self.peptides_by_type_user = {}
 		peptide_cs = set()
 		
 		peptides_list = self.path_to_input_folder+'peptides.tsv'
@@ -110,6 +111,10 @@ class ReadInputFile:
 						self.peptides_by_type[type_].append(peptide)
 					except KeyError:
 						self.peptides_by_type[type_] = [peptide]
+				try:
+					self.peptides_by_type_user[peptide_type].append(peptide)
+				except KeyError:
+					self.peptides_by_type_user[peptide_type] = [peptide]
 
 		self.super_logger.info('Peptides to evaluate in Peptide Mode : %d', len(self.peptide_mode))
 		self.super_logger.info('Peptides to evaluate in Coding Sequence (CS) Mode : %d', len(self.CS_mode))

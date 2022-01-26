@@ -408,7 +408,7 @@ class BamQuery:
 				order_sample_bam_files_ribo[group] = [name_sample]
 		
 		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev, self.plots, self.super_logger, self.genome_version)
-		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type)
+		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type_user)
 		get_biotype.get_global_annotation()
 		
 		self.super_logger.info('========== Annotations : Done! ============ ')
