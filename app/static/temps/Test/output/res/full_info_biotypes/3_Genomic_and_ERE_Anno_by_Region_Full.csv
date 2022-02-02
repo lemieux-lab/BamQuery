@@ -1,0 +1,26 @@
+Peptide Type,Peptide,Alignment,Strand,Annotation Frequencies,Best Guess,star_062015,star_102015,star_S5,star_S9,star_S10,star_S11,star_S16_mTECs,star_S15_mTECs,star_ERR2882510,star_ERR2882513,star_ERR2882514,Total reads count RNA,Total reads count Ribo
+5'UTR,RLVTEPSGPK,chr15:77632327-77632356,-,Introns: 90.91% - 5UTR: 9.09% ,Introns,0,0,0,0,0,0,0,1,0,0,0,1,0
+ERE,AAFDRAVHF,chr6:10434321-10434347,-,Non_coding Exons: 80.0% - Introns: 20.0% ,Non_coding Exons,0,0,0,0,0,0,0,0,0,0,0,0,0
+ERE,KISLYLPAL,chr8:144861684-144861710,-,Intergenic: 100.0% ,Intergenic,0,0,0,0,0,0,0,2,0,0,0,2,0
+HLAligandAtlas,AAVLEYLTAE,chr11:119095209-119095238,-,In_frame: 100.0% ,In_frame,216,36,244,451,283,552,312,411,0,0,0,2505,0
+HLAligandAtlas,AAVLEYLTAE,chr12:14774627-14774656,+,In_frame: 100.0% ,In_frame,111,182,144,226,164,220,405,368,9,5,9,1843,0
+HLAligandAtlas,AAVLEYLTAE,chr1:149842513-149842542,-,In_frame: 100.0% ,In_frame,416,597,548,688,226,701,631,721,0,0,0,4528,0
+HLAligandAtlas,AAVLEYLTAE,chr1:149851270-149851299,+,In_frame: 100.0% ,In_frame,103,176,202,298,42,252,125,110,28,66,75,1477,0
+HLAligandAtlas,AAVLEYLTAE,chr1:149887131-149887160,+,In_frame: 100.0% ,In_frame,30,0,33,32,19,39,5,33,49,81,78,399,0
+HLAligandAtlas,AAVLEYLTAE,chr1:149887731-149887760,-,In_frame: 100.0% ,In_frame,0,0,0,4,0,3,0,0,0,0,0,7,0
+HLAligandAtlas,AAVLEYLTAE,chr1:228457632-228457661,-,In_frame: 100.0% ,In_frame,16,0,12,5,0,4,6,16,0,0,0,59,0
+HLAligandAtlas,AAVLEYLTAE,chr5:135370138-135370142|135388922-135388946,-,Non_coding Exons: 53.33% - In_frame: 33.33% - Junctions: 6.67% - Non_coding Junctions: 6.67% ,In_frame,275,276,184,211,245,163,430,766,0,0,0,2550,0
+HLAligandAtlas,AAVLEYLTAE,chr6:25726342-25726371,-,In_frame: 100.0% ,In_frame,0,0,0,0,0,0,0,0,0,0,0,0,0
+HLAligandAtlas,AAVLEYLTAE,chr6:26033383-26033412,-,In_frame: 100.0% ,In_frame,13,0,8,10,5,14,1,2,0,0,0,53,0
+HLAligandAtlas,AAVLEYLTAE,chr6:26124389-26124418,+,In_frame: 100.0% ,In_frame,61,60,123,145,43,203,238,231,108,93,157,1462,0
+HLAligandAtlas,AAVLEYLTAE,chr6:26199058-26199087,-,In_frame: 100.0% ,In_frame,31,246,27,64,13,59,27,65,0,0,0,532,0
+HLAligandAtlas,AAVLEYLTAE,chr6:26217131-26217160,+,In_frame: 100.0% ,In_frame,34,0,105,123,51,68,68,31,231,196,267,1174,0
+HLAligandAtlas,AAVLEYLTAE,chr6:27133228-27133257,+,In_frame: 100.0% ,In_frame,15,0,13,2,0,5,12,8,37,88,70,250,0
+HLAligandAtlas,AAVLEYLTAE,chr6:27147285-27147314,+,In_frame: 100.0% ,In_frame,0,0,8,14,2,5,6,9,32,60,66,202,0
+HLAligandAtlas,AAVLEYLTAE,chr6:27808366-27808395,+,In_frame: 100.0% ,In_frame,19,0,0,6,0,0,4,4,2,3,9,47,0
+HLAligandAtlas,AAVLEYLTAE,chr6:27814555-27814584,-,In_frame: 100.0% ,In_frame,0,0,0,14,0,0,6,0,0,0,0,20,0
+HLAligandAtlas,AAVLEYLTAE,chr6:27838154-27838183,-,In_frame: 100.0% ,In_frame,0,0,0,4,10,5,2,11,0,0,0,32,0
+HLAligandAtlas,AAVLEYLTAE,chr6:27865511-27865540,+,Introns: 50.0% - In_frame: 50.0% ,In_frame,0,0,0,5,4,5,1,0,19,38,36,108,0
+HLAligandAtlas,AAVLEYLTAE,chr6:27892964-27892993,-,In_frame: 50.0% - Non_coding Exons: 50.0% ,In_frame,15,0,14,19,7,10,9,7,0,0,0,81,0
+HLAligandAtlas,AEKLGFAGL,chr5:10261614-10261640,+,In_frame: 83.33% - Non_coding Exons: 16.67% ,In_frame,266,75,259,407,321,516,673,1019,378,189,285,4388,0
+Intronic,VPAALRSL,chr7:106886341-106886364,+,Introns: 100.0% ,Introns,0,0,0,0,0,0,0,0,0,0,0,0,0

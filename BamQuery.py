@@ -98,8 +98,8 @@ class BamQuery:
 
 			df_counts_rna_light = pd.read_csv(self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv', header=0, index_col=None)
 			
-			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptides'].isin(self.set_peptides) == True]
-			df_counts_rna = df_counts_rna.set_index('Peptides')
+			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptide'].isin(self.set_peptides) == True]
+			df_counts_rna = df_counts_rna.set_index('Peptide')
 			df_counts_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv', index=True, header=True)
 
 			self.super_logger.info('Information rna counts for peptides of interest collected!')
