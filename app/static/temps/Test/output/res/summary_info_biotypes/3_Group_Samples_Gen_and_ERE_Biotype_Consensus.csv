@@ -1,7 +1,0 @@
-Peptide Type,Peptide,mTEC,Total reads count RNA,Best Guess RNA,Total reads count Ribo,Best Guess Ribo
-5'UTR,RLVTEPSGPK,Introns: 67.58% - 5UTR: 32.42% ,Introns: 67.58% - 5UTR: 32.42% ,Introns,,
-ERE,AAFDRAVHF,,,,,
-ERE,KISLYLPAL,Intergenic: 100.0% ,Intergenic: 100.0% ,Intergenic,,
-HLAligandAtlas,AAVLEYLTAE,In_frame: 92.04% - Non_coding Exons: 5.04% - Junctions: 1.39% - Non_coding Junctions: 1.35% - Introns: 0.17% ,In_frame: 92.04% - Non_coding Exons: 5.04% - Junctions: 1.39% - Non_coding Junctions: 1.35% - Introns: 0.17% ,In_frame,,
-HLAligandAtlas,AEKLGFAGL,In_frame: 59.45% - Non_coding Exons: 40.55% ,In_frame: 59.45% - Non_coding Exons: 40.55% ,In_frame,,
-Intronic,VPAALRSL,,,,,
