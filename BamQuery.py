@@ -557,7 +557,7 @@ def main(argv):
 
 	super_logger.info('=============== BamQuery id : %s ===============', name_exp)
 	super_logger.info('=============== Parameters ===============')
-	super_logger.info(' - Mode : %s , Strandedness :  %s, Light:  %s ', mode, strandedness, str(light) )
+	super_logger.info(' - Mode : %s, Strandedness :  %s, Light:  %s ', mode, strandedness, str(light) )
 	super_logger.info(' - Single-Cell experiment (sc) :  %s', str(sc))
 	super_logger.info(' - dbSNP :  %s, COMMON SNPs : %s, Genome Version : %s ', str(dbSNP), str(c), genome_version)
 	super_logger.info(' - Plots : %s', str(plots))

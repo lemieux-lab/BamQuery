@@ -185,7 +185,7 @@ class GetInformationBamFiles:
 				with open(path_to_all_counts_file, 'wb') as handle:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-				os.remove(path_to_lock_file)
+			os.remove(path_to_lock_file)
 				
 			for bam_file in files_with_not_permission:
 				if bam_file in initial_list_paths:
