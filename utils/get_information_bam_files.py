@@ -65,6 +65,17 @@ class GetInformationBamFiles:
 			path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 			exist = os.path.exists(path_to_all_counts_file)
 			
+			path_to_lock_file = path_to_lib+"lock_dic"
+			exists = os.path.exists(path_to_lock_file)
+
+			while exists:
+				exists = os.path.exists(path_to_lock_file)
+
+			if not exists:
+				file_to_open = open(path_to_lock_file, 'w')
+				file_to_open.write('')
+				file_to_open.close()
+
 			if exist :
 				try:
 					with open(path_to_all_counts_file, 'rb') as fp:
@@ -174,6 +185,8 @@ class GetInformationBamFiles:
 				with open(path_to_all_counts_file, 'wb') as handle:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+				os.remove(path_to_lock_file)
+				
 			for bam_file in files_with_not_permission:
 				if bam_file in initial_list_paths:
 					self.bam_files_logger.info('Skipping BAM file : %s. This Bam file has access denied or the path does not exist..', bam_file) 

@@ -44,6 +44,17 @@ class GetPrimaryReadCountBamFiles:
 		
 		results = pool.map(self.get_all_counts_bam_file, bam_files_list)
 
+		path_to_lock_file = path_to_lib+"lock_dic"
+		exists = os.path.exists(path_to_lock_file)
+
+		while exists:
+			exists = os.path.exists(path_to_lock_file)
+		
+		if not exists:
+			file_to_open = open(path_to_lock_file, 'w')
+			file_to_open.write('')
+			file_to_open.close()
+
 		try:
 			with open(path_to_all_counts_file, 'rb') as fp:
 				dictionary_total_reads_bam_files = pickle.load(fp)
@@ -61,6 +72,8 @@ class GetPrimaryReadCountBamFiles:
 			pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 		logging.info('Primary read counts for %s have been saved in the Bam_files_info.dic.', str(bam_files_list))
+
+		os.remove(path_to_lock_file)
 		
 def main(argv):
 

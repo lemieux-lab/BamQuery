@@ -35,8 +35,13 @@ class BiotypeGenomicSearch:
 
 		self.information_biotypes_peptides = {}
 
-		with open(self.annotations_file, 'rb') as fp:
-			info_transcripts_dic = pickle.load(fp)
+		try:
+			with open(self.annotations_file, 'rb') as fp:
+				info_transcripts_dic = pickle.load(fp)
+		except ValueError:
+			import pickle5
+			with open(self.annotations_file, 'rb') as fp:
+				info_transcripts_dic = pickle5.load(fp)
 
 		# Get the information of the transcript from dictionary information
 		#{'AAAAPRPAL_chr13:99970439-99970465': {'chr13:99970439-99970465': ['ENST00000267294.4']}}
