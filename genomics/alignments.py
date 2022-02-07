@@ -57,7 +57,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		# https://github.com/mhammell-laboratory/TEtranscripts/issues/69
 		# https://github.com/alexdobin/STAR/issues/506
 
-		command = 'module add star/2.7.1a; STAR --runThreadN 16'+\
+		command = 'module add star/2.7.1a; ulimit -s 8192; STAR --runThreadN 16'+\
 				' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
 				' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20 '+\
 				' --outFilterMismatchNmax 4 --winAnchorMultimapNmax ' +str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
