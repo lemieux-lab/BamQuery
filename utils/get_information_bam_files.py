@@ -2,6 +2,7 @@ import os, threading, time, subprocess, concurrent.futures, getpass, pickle, sys
 from os import listdir
 from os.path import isfile, join
 from pathos.multiprocessing import ProcessPool
+import pandas as pd
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -129,8 +130,6 @@ class GetInformationBamFiles:
 							sequencing = info_bam_file[5]
 							library = info_bam_file[6]
 							user = info_bam_file[7]
-							if count == 0:
-								bam_files_to_get_primary_read_count.append(bam_file_path)
 							if tissue == '' or tissue_type == '' or shortlist == '':
 								to_add = [''] * 4
 								to_add[0] = name_bam_file
@@ -151,7 +150,6 @@ class GetInformationBamFiles:
 							to_add[0] = name_bam_file
 							data.append(to_add)
 
-							bam_files_to_get_primary_read_count.append(bam_file_path)
 							mod = True
 						
 						if strandedness:
@@ -167,7 +165,7 @@ class GetInformationBamFiles:
 						if library == '' and sequencing == '':
 							self.bam_files_logger.info('Sample bam file for %s %s is not properly indexed, skipping...', name, name_bam_file) 
 						else:
-							bam_files_list[name_bam_file] = [bam_file_path, sequencing, library, name]
+							bam_files_list[name_bam_file] = [bam_file_path, sequencing, library, name, count]
 
 						if path != bam_file_path:
 							self.bam_files_logger.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. \
@@ -201,21 +199,74 @@ class GetInformationBamFiles:
 				with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'rb') as fp:
 					bam_files_list = pickle5.load(fp)
 
+			path_to_lock_file = path_to_lib+"lock_dic"
+			exists = os.path.exists(path_to_lock_file)
 
-		self.bam_files_logger.info('Total Bam Files to Query : %d.', len(bam_files_list))
+			while exists:
+				exists = os.path.exists(path_to_lock_file)
 
-		if len(bam_files_to_get_primary_read_count) > 0 and not self.sc:
-				
-			path_to_save_bam_files_to_search = self.path_to_output_aux_folder+"bam_files_to_get_primary_read_count.dic"
+			if not exists:
+				file_to_open = open(path_to_lock_file, 'w')
+				file_to_open.write('')
+				file_to_open.close()
 			
-			with open(path_to_save_bam_files_to_search, 'wb') as handle:
-				pickle.dump(bam_files_to_get_primary_read_count, handle, protocol=pickle.HIGHEST_PROTOCOL)
+			# 0: path, 1: number, 2: Tissue, 3: Tissue_type, 4: Shortlist, 5: sequencing, 6: library, 7: user
+			if os.path.exists(self.path_to_output_aux_folder+"bam_files_tissues.csv"):
+				self.bam_files_logger.info('Adding tissue information to Bam Files !')
+				path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
+			
+				try:
+					with open(path_to_all_counts_file, 'rb') as fp:
+						dictionary_total_reads_bam_files = pickle.load(fp)
+				except ValueError:
+					import pickle5
+					with open(path_to_all_counts_file, 'rb') as fp:
+						dictionary_total_reads_bam_files = pickle5.load(fp)
 
-			get_read_counts_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/primary_read_count.py'
+				df = pd.read_csv(self.path_to_output_aux_folder+"bam_files_tissues.csv", header = 0)
+				
+				for index, row in df.iterrows():
+					try:
+						sample = str(row['Sample'])
+						tissue_name = str(row['Tissue'])
+						tissue_type = str(row['Tissue_type'])
+						short_list = str(row['Short_list']).lower()
+						if sample != 'nan' and tissue_name != 'nan' and tissue_type != 'nan':
+							dictionary_total_reads_bam_files[sample][2] = tissue_name
+							dictionary_total_reads_bam_files[sample][3] = tissue_type
+							dictionary_total_reads_bam_files[sample][4] = short_list
+						else:
+							os.remove(path_to_lock_file)
+							raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+					except:
+						os.remove(path_to_lock_file)
+						raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+				
+				with open(path_to_all_counts_file, 'wb') as handle:
+					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			command = 'python '+get_read_counts_path+' -i '+path_to_save_bam_files_to_search+' -o '+ path_to_output_folder
-			subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
-			self.bam_files_logger.info('Total Bam Files to get primary read counts : %d ', len(data) - 1)
+				os.remove(path_to_lock_file)
+
+			for sample, info_sample in bam_files_list.items():
+				bam_file_path = info_sample[0]
+				count = info_sample[-1]
+				if count == 0:
+					bam_files_to_get_primary_read_count.append(bam_file_path)
+
+			self.bam_files_logger.info('Total Bam Files to Query : %d.', len(bam_files_list))
+
+			if len(bam_files_to_get_primary_read_count) > 0 and not self.sc:
+				
+				path_to_save_bam_files_to_search = self.path_to_output_aux_folder+"bam_files_to_get_primary_read_count.dic"
+				
+				with open(path_to_save_bam_files_to_search, 'wb') as handle:
+					pickle.dump(bam_files_to_get_primary_read_count, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+				get_read_counts_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/primary_read_count.py'
+
+				command = 'python '+get_read_counts_path+' -i '+path_to_save_bam_files_to_search+' -o '+ path_to_output_folder
+				subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
+				self.bam_files_logger.info('Total Bam Files to get primary read counts : %d ', len(bam_files_to_get_primary_read_count))
 
 		if len(data) > 1 and not self.sc:
 			self.bam_files_logger.info('Please enter the tissue information for the new BamFiles into the %s file. ', self.path_to_output_aux_folder+'bam_files_tissues.csv')

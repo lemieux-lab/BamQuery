@@ -51,18 +51,21 @@ class GetInformationBEDIntersection:
 						pass
 
 					try:
-						self.peptides_intersected[key_peptide][key_peptide_position].append(transcript)
+						self.peptides_intersected[key_peptide][key_peptide_position].add(transcript)
 					except KeyError:
 						dic = {}
+						transctipt_set = set()
 						for key in split_key:
 							if 'chr' not in key:
 								key = chr+':'+key
 							if key == key_peptide_position:
-								dic[key] = [transcript]
+								transctipt_set.add(transcript)
+								dic[key] = transctipt_set
 							else:
-								dic[key] = []
+								dic[key] = transctipt_set
 						self.peptides_intersected[key_peptide] = dic
 
+					
 		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected, genome_version)
 		self.information_final_biotypes_peptides = self.biotype_genomic_annotation_search.get_biotype_from_intersected_transcripts()
 		
@@ -74,7 +77,6 @@ class GetInformationBEDIntersection:
 
 		file_to_read = self.path_to_output_folder_bed_files+'intersection_with_annotated_EREs.bed'
 
-		print (file_to_read)
 		self.peptides_intersected_ere = {}
 		# chr13	99970439	99970465	AAAAPRPAL_chr13:99970439-99970465	+	chr13	99970407	99970449	(GGC)n	41	+	10
 		

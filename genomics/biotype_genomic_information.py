@@ -47,24 +47,19 @@ class BiotypeGenomicSearch:
 		#{'AAAAPRPAL_chr13:99970439-99970465': {'chr13:99970439-99970465': ['ENST00000267294.4']}}
 		# NYYPYTITEY	chr17:67552321-67552345|67553610-67553614	AACTATTATCCCTACACAATTACAGAATAC	+	ENST00000581923.5
 
-		intersection = set()
-		cont = 0
-
 		transcripts_to_search = {}
 
+		
 		for key_peptide, info_keys in self.peptides_intersected.items():
 
-			for key, intersected_transcripts in info_keys.items():
-
-				for transcript in intersected_transcripts:
-					info_transcript = info_transcripts_dic[transcript]
-					intersection.add(transcript)
-					cont += 1
+			for key, transcripts_intersected in info_keys.items():
+				
+				for transcript in transcripts_intersected:
 					try:
-						transcripts_to_search[transcript][1].append(key)
-						transcripts_to_search[transcript][2].append(key_peptide)
+						transcripts_to_search[transcript][1].append(key_peptide)
 					except KeyError:
-						transcripts_to_search[transcript] = [info_transcript, [key], [key_peptide]]
+						info_transcript = info_transcripts_dic[transcript]
+						transcripts_to_search[transcript] = [info_transcript, [key_peptide]]
 		
 		pool_ = ProcessPool(nodes=NUM_WORKERS)
 		results = pool_.map(self.biotype_gene_and_transcript_level, list(transcripts_to_search.values()))
@@ -106,42 +101,49 @@ class BiotypeGenomicSearch:
 	def biotype_gene_and_transcript_level(self, info_transcript_intersected ):
 
 		info_transcript = info_transcript_intersected[0]
-		keys = info_transcript_intersected[1]
-		key_peptides = info_transcript_intersected[2]
+		key_peptides = info_transcript_intersected[1]
 
 		gene_type = info_transcript['Info'][5]
 		transcript_type = info_transcript['Info'][8]
 		transcript = info_transcript['Info'][7]
 		to_return = []
 
-		for index, key in enumerate(keys):
-			key_peptide = key_peptides[index]
+		
+		for key_peptide in key_peptides:
 			peptide = key_peptide.split('_')[0]
-			
-			chr = key.split(':')[0]
-			start = int(key.split(':')[1].split('-')[0])
-			end = int(key.split(':')[1].split('-')[1])
-			strand = info_transcript['Info'][3]
-			
-			if len(info_transcript['CDS']) == 0:
-				keys = ['Introns', 'Exons']
-			else:
-				keys = ['5UTR', '3UTR', 'Introns', 'CDS']
+			main_key = key_peptide.split(':')[1]
+			chr = main_key.split(':')[0]
+			keys = main_key.split('|')
 
-			presence = ['Intergenic','Intergenic']
-			for index, point in enumerate([start, end]):
-				for key_ in keys:
-					present_peptide = self.peptide_in_section(strand, point, info_transcript[key_])
-					if present_peptide:
-						#if transcript_type != 'protein_coding' and transcript_type != 'IG_V_gene' and transcript_type != 'TEC' :
-						if transcript_type not in ['protein_coding', 'IG_V_gene', 'TEC']:
-							if key_ == 'Exons' or key_ == '5UTR' or key_ == '3UTR':
-								key_ = 'Non_coding Exons'
+			for index, key in enumerate(keys):
+				
+				start = int(key.split('-')[0])
+				end = int(key.split('-')[1])
+				strand = info_transcript['Info'][3]
 
-						presence[index] = key_
-						break
+				
+				if len(info_transcript['CDS']) == 0:
+					keys_bio = ['Introns', 'Exons']
+				else:
+					keys_bio = ['5UTR', '3UTR', 'Introns', 'CDS']
 
-			to_return.append([key_peptide, key, transcript, gene_type, transcript_type, presence])
+				presence = ['Intergenic','Intergenic']
+
+				for index, point in enumerate([start, end]):
+					for key_ in keys_bio:
+
+						present_peptide = self.peptide_in_section(strand, point, info_transcript[key_])
+						
+						if present_peptide:
+							#if transcript_type != 'protein_coding' and transcript_type != 'IG_V_gene' and transcript_type != 'TEC' :
+							if transcript_type not in ['protein_coding', 'IG_V_gene', 'TEC']:
+								if key_ == 'Exons' or key_ == '5UTR' or key_ == '3UTR':
+									key_ = 'Non_coding Exons'
+
+							presence[index] = key_
+							break
+
+				to_return.append([key_peptide, key, transcript, gene_type, transcript_type, presence])
 
 		return to_return
 
@@ -173,6 +175,7 @@ class BiotypeGenomicSearch:
 			peptide = key_peptide.split('_')[0]
 			position = key_peptide.split('_')[1]
 
+			
 			if '|' not in position:
 				for key, transcripts_intersected in positions.items():
 
@@ -223,6 +226,7 @@ class BiotypeGenomicSearch:
 
 						transcript_level_biotype_set = set(transcript_level_biotype)
 
+						
 						if len(transcript_level_biotype_set) > 1 :
 							transcript_level_biotype = ['-'.join(transcript_level_biotype)]
 						else:
