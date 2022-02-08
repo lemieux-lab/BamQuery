@@ -69,7 +69,7 @@ class GetCounts:
 			bams = []
 
 			list_bam_files_order = []
-			for name_sample, info_bam in sorted(bam_files_list.items(), key=lambda e: e[1][-1], reverse=False):
+			for name_sample, info_bam in sorted(bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 				info_bams.append((name_sample,info_bam))
 				list_bam_files_order.append(name_sample)
 			
@@ -328,7 +328,7 @@ class GetCounts:
 			bams = []
 			
 			list_bam_files_order = []
-			for name_sample, info_bam in sorted(bam_files_list.items(), key=lambda e: e[1][-1], reverse=False):
+			for name_sample, info_bam in sorted(bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 				info_bams.append((name_sample,info_bam))
 				list_bam_files_order.append(name_sample)
 			
