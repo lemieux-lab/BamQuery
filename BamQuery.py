@@ -389,7 +389,7 @@ class BamQuery:
 		list_bam_files_order_rna = []
 		order_sample_bam_files_rna = {}
 
-		for name_sample, info_bam in sorted(self.bam_files_info.bam_files_list.items(), key=lambda e: e[1][-1], reverse=False):
+		for name_sample, info_bam in sorted(self.bam_files_info.bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 			list_bam_files_order_rna.append(name_sample)
 			group = info_bam[-1]
 			try:
@@ -400,7 +400,7 @@ class BamQuery:
 		list_bam_files_order_ribo = []
 		order_sample_bam_files_ribo = {}
 
-		for name_sample, info_bam in sorted(self.bam_files_info.bam_ribo_files_list.items(), key=lambda e: e[1][-1], reverse=False):
+		for name_sample, info_bam in sorted(self.bam_files_info.bam_ribo_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 			list_bam_files_order_ribo.append(name_sample)
 			try:
 				order_sample_bam_files_ribo[group].append(name_sample)

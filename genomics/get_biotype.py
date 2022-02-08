@@ -340,7 +340,6 @@ class BiotypeAssignation:
 			total_biotypes = list(genomic_biotypes+ere_biotypes)
 
 			if '' in total_biotypes:
-				#total_biotypes.remove('')
 				total_biotypes = list(filter(('').__ne__, total_biotypes))
 
 			total_biotypes_types = len(total_biotypes)
