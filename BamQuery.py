@@ -391,7 +391,7 @@ class BamQuery:
 
 		for name_sample, info_bam in sorted(self.bam_files_info.bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 			list_bam_files_order_rna.append(name_sample)
-			group = info_bam[-1]
+			group = info_bam[-2]
 			try:
 				order_sample_bam_files_rna[group].append(name_sample)
 			except KeyError:
@@ -402,6 +402,7 @@ class BamQuery:
 
 		for name_sample, info_bam in sorted(self.bam_files_info.bam_ribo_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 			list_bam_files_order_ribo.append(name_sample)
+			group = info_bam[-2]
 			try:
 				order_sample_bam_files_ribo[group].append(name_sample)
 			except KeyError:
