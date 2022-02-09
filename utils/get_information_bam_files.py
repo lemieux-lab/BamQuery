@@ -171,9 +171,8 @@ class GetInformationBamFiles:
 							bam_files_list[name_bam_file] = [bam_file_path, sequencing, library, name, count]
 
 						if path != bam_file_path:
-							self.bam_files_logger.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. \
-							Path in BAM_directories.tsv: %s, Path already assigned %s. Total reads : %s', bam_file_path, path, str(count))
-							dictionary_total_reads_bam_files[name_bam_file][0] = path
+							self.bam_files_logger.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. Path in BAM_directories.tsv: %s, Path already assigned %s. Total reads : %s', path, bam_file_path, str(count))
+							dictionary_total_reads_bam_files[name_bam_file][0] = bam_file_path
 							mod = True
 						else :
 							self.bam_files_logger.info('%s total reads : %s ', bam_file_path, str(count))
