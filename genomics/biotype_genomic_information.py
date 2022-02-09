@@ -32,6 +32,8 @@ class BiotypeGenomicSearch:
 
 		path = self.path_to_output_folder_alignments +'/alignments_summary_information.pkl'
 		self.alignments_summary_information = pd.read_pickle(path)
+		self.translated_prots = {}
+
 
 	def get_biotype_from_intersected_transcripts(self):
 		
@@ -261,12 +263,17 @@ class BiotypeGenomicSearch:
 		strand = info_transcript['Info'][3]
 		len_prot = info_transcript['Info'][13]
 		
-		protein = self.get_transcript_and_protein(chr, regions, strand, len_prot)
+		try:
+			protein = self.translated_prots[transcript]
+		except KeyError:
+			protein = self.get_transcript_and_protein(chr, regions, strand, len_prot)
+			self.translated_prots[transcript] = protein
+			
 		peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position)]['Peptide in Reference'].values[0] 
 		
 		if peptide in protein:
 			transcript_level = 'In_frame'
-		if peptide_in_reference != peptide :
+		elif peptide_in_reference != peptide :
 			transcript_level = 'Mutated'
 		else:
 			transcript_level = 'Frameshift'
