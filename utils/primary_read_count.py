@@ -54,6 +54,7 @@ class GetPrimaryReadCountBamFiles:
 			file_to_open = open(path_to_lock_file, 'w')
 			file_to_open.write('')
 			file_to_open.close()
+			logging.info('Lock Bam_files_info')
 
 		try:
 			with open(path_to_all_counts_file, 'rb') as fp:
@@ -74,6 +75,8 @@ class GetPrimaryReadCountBamFiles:
 		logging.info('Primary read counts for %s have been saved in the Bam_files_info.dic.', str(bam_files_list))
 
 		os.remove(path_to_lock_file)
+		logging.info('Unlock Bam_files_info')
+
 		
 def main(argv):
 

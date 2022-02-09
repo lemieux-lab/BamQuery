@@ -42,14 +42,14 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			seedPerWindowNmax = 1000
 			seedNoneLociPerWindow = 1000
 			alignWindowsPerReadNmax = 20000
-			alignTranscriptsPerWindowNmax = 1000
+			alignTranscriptsPerWindowNmax = 2000
 		else:
-			maxMulti = 5000
-			alignTranscriptsPerReadNmax = maxMulti
+			maxMulti = 10000
+			alignTranscriptsPerReadNmax = 20000
 			seedPerWindowNmax = 500
 			seedNoneLociPerWindow = 500
-			alignWindowsPerReadNmax = maxMulti
-			alignTranscriptsPerWindowNmax = 500
+			alignWindowsPerReadNmax = 15000
+			alignTranscriptsPerWindowNmax = 1000
 
 		anchor = maxMulti * 2										
 		limitOutSAMoneReadBytes = 33 * 2 * maxMulti
@@ -152,6 +152,13 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 
 			super_logger.info('Alignments Information save to : %s ', name_path)
 			
+			cols = ['MCS']+ columns[5:]
+			df = df1.drop(cols, axis=1)
+			df_to_keep = df.groupby(['Peptide', 'Strand', 'Alignment', 'Peptide in Reference']).count().reset_index()
+
+			path = path_to_output_folder_alignments+'/alignments_summary_information.pkl'
+			df_to_keep.to_pickle(path)
+			
 		else:
 			super_logger.info('Alignment information already collected in the output folder : %s --> Skipping this step!', path_to_output_folder_alignments+'/Alignments_information.dic')
 			
@@ -201,6 +208,7 @@ def filter_peptides_from_alignments_information_light(peptides, path_to_alignmen
 		pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 	return perfect_alignments, peptides_with_alignments
+
 
 def generer_alignments_information(alignments_input):
 

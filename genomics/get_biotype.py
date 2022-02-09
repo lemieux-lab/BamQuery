@@ -54,6 +54,7 @@ class BiotypeAssignation:
 		with open(path_to_lib+'coefficients.dic', 'rb') as handle:
 			coefficients = pickle.load(handle)
 
+		coefficients['Mutated'] = coefficients['Frameshift']
 		sorted_coefficients = dict( sorted(coefficients.items(), key=operator.itemgetter(1),reverse=True))
 		self.biotypes_names = list(sorted_coefficients.keys())
 		self.coefficients = list(sorted_coefficients.values())

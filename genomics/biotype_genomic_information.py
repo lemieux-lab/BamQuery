@@ -13,8 +13,10 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class BiotypeGenomicSearch:
 
-	def __init__(self, peptides_intersected, genome_version):
+	def __init__(self, peptides_intersected, genome_version, path_to_output_folder):
 		self.peptides_intersected = peptides_intersected
+		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
+
 		if genome_version == 'v26_88': 
 			self.genome_index = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa.fai'
 			self.genome = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa'
@@ -28,6 +30,8 @@ class BiotypeGenomicSearch:
 			self.genome = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
 			self.annotations_file = path_to_lib+'genome_versions/genome_v38_104/Info_Transcripts_Annotations.dic'
 
+		path = self.path_to_output_folder_alignments +'/alignments_summary_information.pkl'
+		self.alignments_summary_information = pd.read_pickle(path)
 
 	def get_biotype_from_intersected_transcripts(self):
 		
@@ -189,7 +193,7 @@ class BiotypeGenomicSearch:
 							transcript_level_biotype = ['-'.join(biotype[2])]
 						else:
 							if transcript_level_biotype[0] == 'CDS':
-								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript)
+								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript, position)
 						
 						transcript_level_biotype = transcript_level_biotype[0]
 
@@ -231,7 +235,7 @@ class BiotypeGenomicSearch:
 							transcript_level_biotype = ['-'.join(transcript_level_biotype)]
 						else:
 							if transcript_level_biotype[0] == 'CDS':
-								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript)
+								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript, position)
 
 						transcript_level_biotype = transcript_level_biotype[0]	
 						try:
@@ -248,20 +252,23 @@ class BiotypeGenomicSearch:
 
 		return information_final_biotypes_peptides
 
-	def get_in_frame_out_frame_in_protein(self, peptide, transcript, info_transcript):
+	def get_in_frame_out_frame_in_protein(self, peptide, transcript, info_transcript, position):
 
 		chr = info_transcript['Info'][0]
 		regions = info_transcript['CDS']
 		strand = info_transcript['Info'][3]
 		len_prot = info_transcript['Info'][13]
 		
-
 		protein = self.get_transcript_and_protein(chr, regions, strand, len_prot)
+		peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position)]['Peptide in Reference'].values[0] 
 		
 		if peptide in protein:
 			transcript_level = 'In_frame'
+		if peptide_in_reference != peptide :
+			transcript_level = 'Mutated'
 		else:
 			transcript_level = 'Frameshift'
+
 		return [transcript_level]
 
 

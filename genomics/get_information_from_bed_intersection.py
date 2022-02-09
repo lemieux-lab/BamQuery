@@ -13,7 +13,8 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 class GetInformationBEDIntersection:
 
 	def __init__(self, path_to_output_folder):
-		self.path_to_output_folder_bed_files = path_to_output_folder+'res/BED_files/'
+		self.path_to_output_folder = path_to_output_folder
+		self.path_to_output_folder_bed_files = self.path_to_output_folder+'res/BED_files/'
 
 
 	def get_information_genomic_annotation(self, genome_version):
@@ -66,7 +67,7 @@ class GetInformationBEDIntersection:
 						self.peptides_intersected[key_peptide] = dic
 
 					
-		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected, genome_version)
+		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected, genome_version, self.path_to_output_folder)
 		self.information_final_biotypes_peptides = self.biotype_genomic_annotation_search.get_biotype_from_intersected_transcripts()
 		
 		with open(self.path_to_output_folder_bed_files+'/information_final_biotypes_peptides.dic', 'wb') as handle:
