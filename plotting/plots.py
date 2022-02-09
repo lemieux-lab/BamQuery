@@ -16,6 +16,7 @@ blues_palette = sns.color_palette("Blues")
 navy_colors = sns.light_palette("navy", reverse=False)[1:]
 green_palette = sns.light_palette("green")[1:]
 flare_palette = sns.color_palette("flare", n_colors = 6)
+tab10_palette = sns.color_palette("tab10")
 
 assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'Protein-coding Regions': blues_palette[0],
@@ -49,7 +50,10 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'LTR': flare_palette[2], 
 						'SINE': flare_palette[3],
 						'Antisense_EREs': flare_palette[4],
-						'Other EREs': flare_palette[5]
+						'Other EREs': flare_palette[5],
+
+						'Mutated Peptides' : tab10_palette[-1],
+						'Mutated' : tab10_palette[-1]
 						}
 
 def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_out = 8.55):

@@ -76,6 +76,7 @@ class GetInformationBamFiles:
 				file_to_open = open(path_to_lock_file, 'w')
 				file_to_open.write('')
 				file_to_open.close()
+				self.bam_files_logger.info('Lock Bam_files_info')
 
 			if exist :
 				try:
@@ -107,6 +108,8 @@ class GetInformationBamFiles:
 						path = line[1]
 						initial_list_paths.append(path)
 					except IndexError:
+						os.remove(path_to_lock_file)
+						self.bam_files_logger.info('Unlock Bam_files_info')
 						raise Exception("Sorry, your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
 
 					if '.bam' in path or '.cram' in path:
@@ -184,6 +187,7 @@ class GetInformationBamFiles:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			os.remove(path_to_lock_file)
+			self.bam_files_logger.info('Unlock Bam_files_info')
 				
 			for bam_file in files_with_not_permission:
 				if bam_file in initial_list_paths:
@@ -199,19 +203,22 @@ class GetInformationBamFiles:
 				with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'rb') as fp:
 					bam_files_list = pickle5.load(fp)
 
-			path_to_lock_file = path_to_lib+"lock_dic"
-			exists = os.path.exists(path_to_lock_file)
 
-			while exists:
-				exists = os.path.exists(path_to_lock_file)
-
-			if not exists:
-				file_to_open = open(path_to_lock_file, 'w')
-				file_to_open.write('')
-				file_to_open.close()
-			
 			# 0: path, 1: number, 2: Tissue, 3: Tissue_type, 4: Shortlist, 5: sequencing, 6: library, 7: user
 			if os.path.exists(self.path_to_output_aux_folder+"bam_files_tissues.csv"):
+				
+				path_to_lock_file = path_to_lib+"lock_dic"
+				exists = os.path.exists(path_to_lock_file)
+
+				while exists:
+					exists = os.path.exists(path_to_lock_file)
+
+				if not exists:
+					file_to_open = open(path_to_lock_file, 'w')
+					file_to_open.write('')
+					file_to_open.close()
+					self.bam_files_logger.info('Lock Bam_files_info')
+
 				self.bam_files_logger.info('Adding tissue information to Bam Files !')
 				path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 			
@@ -237,15 +244,19 @@ class GetInformationBamFiles:
 							dictionary_total_reads_bam_files[sample][4] = short_list
 						else:
 							os.remove(path_to_lock_file)
+							self.bam_files_logger.info('Unlock Bam_files_info')
 							raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
 					except:
 						os.remove(path_to_lock_file)
+						self.bam_files_logger.info('Unlock Bam_files_info')
 						raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
 				
 				with open(path_to_all_counts_file, 'wb') as handle:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 				os.remove(path_to_lock_file)
+				self.bam_files_logger.info('Unlock Bam_files_info')
+
 
 			for sample, info_sample in bam_files_list.items():
 				bam_file_path = info_sample[0]
