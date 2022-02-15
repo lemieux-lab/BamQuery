@@ -152,9 +152,9 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 
 			super_logger.info('Alignments Information save to : %s ', name_path)
 			
-			cols = ['MCS']+ columns[5:]
+			cols = columns[5:]
 			df = df1.drop(cols, axis=1)
-			df_to_keep = df.groupby(['Peptide', 'Strand', 'Alignment', 'Peptide in Reference']).count().reset_index()
+			df_to_keep = df.groupby(['Peptide', 'Strand', 'Alignment', 'MCS', 'Peptide in Reference']).count().reset_index()
 
 			path = path_to_output_folder_alignments+'/alignments_summary_information.pkl'
 			df_to_keep.to_pickle(path)

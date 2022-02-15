@@ -130,7 +130,7 @@ class BiotypeAssignation:
 							repClass = ''
 							repFamily = ''
 
-							key_aux = peptide+'_'+position
+							key_aux = peptide+'_'+position+'_'+MCS
 
 							rep_names = []
 							try:

@@ -119,7 +119,9 @@ class BiotypeGenomicSearch:
 		
 		for key_peptide in key_peptides:
 			peptide = key_peptide.split('_')[0]
-			main_key = key_peptide.split(':')[1]
+			position = key_peptide.split('_')[1]
+			mcs = key_peptide.split('_')[2]
+			main_key = key_peptide.split(':')[1].split('_')[0]
 			chr = main_key.split(':')[0]
 			keys = main_key.split('|')
 
@@ -147,6 +149,10 @@ class BiotypeGenomicSearch:
 							if transcript_type not in ['protein_coding', 'IG_V_gene', 'TEC']:
 								if key_ == 'Exons' or key_ == '5UTR' or key_ == '3UTR':
 									key_ = 'Non_coding Exons'
+
+							peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position) & (self.alignments_summary_information['MCS'] == mcs)]['Peptide in Reference'].values[0] 
+							if peptide_in_reference != peptide :
+								key_ = 'Mutated'
 
 							presence[index] = key_
 							break
@@ -183,10 +189,8 @@ class BiotypeGenomicSearch:
 			peptide = key_peptide.split('_')[0]
 			position = key_peptide.split('_')[1]
 
-			
 			if '|' not in position:
 				for key, transcripts_intersected in positions.items():
-
 					for transcript, biotype in transcripts_intersected.items():
 						gene_type = biotype[0]
 						transcript_type = biotype[1]
@@ -200,7 +204,6 @@ class BiotypeGenomicSearch:
 								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript, position)
 						
 						transcript_level_biotype = transcript_level_biotype[0]
-
 						try:
 							dic =  information_final_biotypes_peptides[peptide]
 							try:
@@ -233,7 +236,6 @@ class BiotypeGenomicSearch:
 									pass
 
 						transcript_level_biotype_set = set(transcript_level_biotype)
-
 						
 						if len(transcript_level_biotype_set) > 1 :
 							transcript_level_biotype = ['-'.join(transcript_level_biotype)]
@@ -269,12 +271,8 @@ class BiotypeGenomicSearch:
 			protein = self.get_transcript_and_protein(chr, regions, strand, len_prot)
 			self.translated_prots[transcript] = protein
 			
-		peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position)]['Peptide in Reference'].values[0] 
-		
 		if peptide in protein:
 			transcript_level = 'In_frame'
-		elif peptide_in_reference != peptide :
-			transcript_level = 'Mutated'
 		else:
 			transcript_level = 'Frameshift'
 
