@@ -1,4 +1,9 @@
-import plotting.plots as plots
+try:
+	import plotting.plots as plots
+except ModuleNotFoundError:
+	import sys 
+	sys.path += sys.path + ['/u/ruizma/BAM_Query/Scripts/Python/BamQuery/plotting/']
+	import plots as plots
 import gc
 
 def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
@@ -27,8 +32,11 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 
 			in_ = False
 			if 'Antisense_' in biotype:
-				labels_in_type_peptide['EREs']['Antisense_EREs'] = total_biotype 
 				in_ = True
+				try:
+					labels_in_type_peptide['EREs']['Antisense_EREs'] += total_biotype 
+				except KeyError:
+					labels_in_type_peptide['EREs']['Antisense_EREs'] = total_biotype 
 
 			for type_, types in organisation_labels.items():
 				if biotype in types:
@@ -74,7 +82,7 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 					else:
 						print ('Problem with assignation biotype : ', biotype, name)
 						
-					
+		
 		for outer_label_type, intra_labels_type in organisation_labels.items():
 			values_in = 0
 			for intra_label in intra_labels_type:

@@ -154,9 +154,7 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 	kw = dict(arrowprops=dict(arrowstyle="-", color='black', linewidth=2),zorder=2, va="center")
 	plt.axis('equal')
 
-	#plt.savefig(path_to_output_folder+'plots/biotypes/'+name_exp+'_'+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
-	#plt.show()
-
+	
 	try:
 		for i, p in enumerate(wedges1):
 			ang = (p.theta2 - p.theta1)/2. + p.theta1 
@@ -171,11 +169,12 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 			kw["arrowprops"].update({"connectionstyle": connectionstyle})
 			
 			ax.annotate(outer_labels[i], xy=(x,y), xytext=(1.2*np.sign(x), 1.2*y), horizontalalignment=horizontalalignment, fontsize = fontsize, fontweight = 'normal', **kw)
-			plt.savefig(path_to_output_folder+name_exp+'_'+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
-			plt.show()
 	except :
 		print ('It was not possible to save the figure for ', title )
 
+	plt.savefig(path_to_output_folder+name_exp+'_'+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
+	plt.cla()
+	plt.close(fig)
 
 def plot_pie_ere(title, outer_labels, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
 	
@@ -204,7 +203,7 @@ def plot_pie_ere(title, outer_labels, outer_sizes, path_to_output_folder, name_e
 	plt.axis('equal')
 
 	plt.savefig(path_to_output_folder+name_exp+'_'+name+'.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.5)
-	plt.show()
+	
 
 
 def correlation(path_to_output_folder, name_exp, dataframe):
@@ -236,7 +235,7 @@ def correlation(path_to_output_folder, name_exp, dataframe):
 	        
 	first_legend = ax.legend(handles=new_handles, labels=new_labels, fancybox=True, fontsize = fontsize-4, frameon=True, shadow=True)
 	plt.savefig(path_to_output_folder+'plots/correlation/'+name_exp+'_correlation_ribo_rna.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.3)
-	plt.show()
+	
 
 
 

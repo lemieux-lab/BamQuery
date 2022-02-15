@@ -297,10 +297,9 @@ class BamQuery:
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder, self.super_logger)
 		self.input_file_treatment.treatment_file()
 
-		# if self.dev:
-		# 	with open(self.path_to_output_folder+'genome_alignments/peptides_by_type.dic', 'wb') as handle:
-		# 		pickle.dump(self.input_file_treatment.peptides_by_type, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
+		if self.dev:
+		 	with open(self.path_to_output_folder+'genome_alignments/peptides_by_type_user.dic', 'wb') as handle:
+		 		pickle.dump(self.input_file_treatment.peptides_by_type_user, handle, protocol=pickle.HIGHEST_PROTOCOL)
 		# 	with open(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic', 'wb') as handle:
 		# 		pickle.dump(self.input_file_treatment.all_mode_peptide, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
