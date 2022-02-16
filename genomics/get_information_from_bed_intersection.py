@@ -76,8 +76,8 @@ class GetInformationBEDIntersection:
 		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected, genome_version, self.path_to_output_folder)
 		self.information_final_biotypes_peptides = self.biotype_genomic_annotation_search.get_biotype_from_intersected_transcripts()
 		
-		#with open(self.path_to_output_folder_bed_files+'/information_final_biotypes_peptides.dic', 'wb') as handle:
-		#	pickle.dump(self.information_final_biotypes_peptides, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		with open(self.path_to_output_folder_bed_files+'/information_final_biotypes_peptides.dic', 'wb') as handle:
+			pickle.dump(self.information_final_biotypes_peptides, handle, protocol=pickle.HIGHEST_PROTOCOL)
 		
 
 	def get_information_ERE_annotation(self):
@@ -99,7 +99,7 @@ class GetInformationBEDIntersection:
 				peptide = splitLine[3].split('_')[0]
 				number_overlap = int(splitLine[11])
 				position = splitLine[3].split('_')[1]
-				
+
 				mcss = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position)]['MCS'].values
 
 				for mcs in mcss:
@@ -196,7 +196,7 @@ class GetInformationBEDIntersection:
 								self.peptides_intersected_ere[peptide] = {key_peptide : rep_names}
 
 
-		#with open(self.path_to_output_folder_bed_files+'/peptides_intersected_ere.dic', 'wb') as handle:
-		#	pickle.dump(self.peptides_intersected_ere, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		with open(self.path_to_output_folder_bed_files+'/peptides_intersected_ere.dic', 'wb') as handle:
+			pickle.dump(self.peptides_intersected_ere, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 		

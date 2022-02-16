@@ -337,15 +337,27 @@ class BamQuery:
 		if len(self.input_file_treatment.manual_mode) > 0 :
 
 			not_in = False
+			info_to_add = []
 			for peptide, info_peptide in self.input_file_treatment.manual_mode.items() :
 				coding_sequence = info_peptide[0]
 				position = info_peptide[1]
 				strand = info_peptide[2]
 				key = peptide+'_'+position+'_'+coding_sequence
-				if key not in self.perfect_alignments.keys():
+				try:
+					if key not in self.perfect_alignments.keys():
+						not_in = True
+						peptides_with_alignments.add(peptide)
+						self.perfect_alignments[key] = [strand, peptide, ['NA'], ['NA'], ['NA'], [], []]
+				except AttributeError:
+					self.perfect_alignments = {}
+					peptides_with_alignments = set()
 					not_in = True
 					peptides_with_alignments.add(peptide)
 					self.perfect_alignments[key] = [strand, peptide, ['NA'], ['NA'], ['NA'], [], []]
+				info_to_add.append([peptide, strand, position, coding_sequence, peptide])
+
+			columns = ["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference"]
+			
 			if not_in:
 				if not self.light:
 					name_path = self.path_to_output_folder+'alignments/Alignments_information.dic'
@@ -354,6 +366,16 @@ class BamQuery:
 
 				with open(name_path, 'wb') as handle:
 					pickle.dump(self.perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+			path = self.path_to_output_folder+'alignments/alignments_summary_information.pkl'
+			try:
+				alignments_summary_information = pd.read_pickle(path)
+				df_aux = pd.DataFrame(info_to_add, columns=columns)
+				alignments_summary_information.append(df_aux)
+			except FileNotFoundError:
+				alignments_summary_information = pd.DataFrame(info_to_add, columns=columns)
+				
+			alignments_summary_information.to_pickle(path)
 
 		# positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 		exists = os.path.exists(self.path_to_output_folder+'alignments/missed_peptides.info')
