@@ -12,9 +12,14 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class GetInformationBEDIntersection:
 
-	def __init__(self, path_to_output_folder):
+	def __init__(self, path_to_output_folder, mode):
 		self.path_to_output_folder = path_to_output_folder
-		self.path_to_output_folder_bed_files = self.path_to_output_folder+'res/BED_files/'
+
+		if mode == 'translation':
+			self.path_to_output_folder_bed_files = path_to_output_folder+'res_translation/BED_files/'
+		else:
+			self.path_to_output_folder_bed_files = self.path_to_output_folder+'res/BED_files/'
+
 		path = self.path_to_output_folder +'/alignments/alignments_summary_information.pkl'
 		self.alignments_summary_information = pd.read_pickle(path)
 		
@@ -199,4 +204,64 @@ class GetInformationBEDIntersection:
 		with open(self.path_to_output_folder_bed_files+'/peptides_intersected_ere.dic', 'wb') as handle:
 			pickle.dump(self.peptides_intersected_ere, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+
+	def get_ribosome_profiling_transcripts_overlap(self, files_to_intersect):
+
+		
+		self.peptides_translated = {}
+		self.transcripts_intersected = {}
+
+		for sample, info_sample in files_to_intersect.items():
+			bed_intersected = info_sample[2]
+			
+			dic = {}
+			self.peptides_translated[sample] = dic
+			# chr13	113208170	113208199	DEFGDSRRRW_chr13:113208170-113208199	-	chr13	StringTie	exon	113208024	113208650	1000	-	.	gene_id "STRG.85758"; transcript_id "STRG.85758.3"; exon_number "14"; reference_id "ENST00000375457.2"; ref_gene_id "ENSG00000126226.22"; ref_gene_name "PCID2"; cov "8.798036";	29
+			# chr13	113208170	113208199	DEFGDSRRRW_chr13:113208170-113208199	-	chr13	StringTie	transcript	113177611	113208715	1000	-	.	gene_id "STRG.85758"; transcript_id "STRG.85758.1"; reference_id "ENST00000375479.6"; ref_gene_id "ENSG00000126226.22"; ref_gene_name "PCID2"; cov "43.302032"; FPKM "15.555397"; TPM "15.598426";	29
+			with open(bed_intersected) as f:
+
+				for index, line in enumerate(f):
+					splitLine = line.strip().split('\t')
+					chr = splitLine[0]
+					start = splitLine[1]
+					end = splitLine[2]
+					peptide = splitLine[3].split('_')[0]
+					position = splitLine[3].split('_')[1]
+					strand_peptide = splitLine[4]
+					strand_transcript = splitLine[11]
+					
+
+					key_peptide_position = chr+':'+start+'-'+end
+
+					overlap = int(splitLine[-1])
+					len_pos = int(end) - int(start)
+					transcript = line.split(' transcript_id ')[1].split('\"')[1] 
+					
+					if 'transcript' in splitLine[7]:
+						tpm = float(line.split(' TPM ')[1].split('\"')[1])
+						self.transcripts_intersected[transcript+'_'+sample] = tpm
+
+					key_peptide = splitLine[3]
+					if overlap == len_pos and strand_peptide == strand_transcript and splitLine[7] == 'exon':
+						split_key = key_peptide.split('_')[1].split('|')
+						try:
+							self.peptides_translated[sample][key_peptide][key_peptide_position].add(transcript)
+						except KeyError:
+							dic = {}
+							transctipt_set = set()
+							for key in split_key:
+								if 'chr' not in key:
+									key = chr+':'+key
+								if key == key_peptide_position:
+									transctipt_set.add(transcript)
+									dic[key] = transctipt_set
+								else:
+									dic[key] = transctipt_set
+							self.peptides_translated[sample][key_peptide] = dic
+		
+		with open(self.path_to_output_folder_bed_files+'/information_from_bed_files_intersected.dic', 'wb') as handle:
+			pickle.dump(self.peptides_translated, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+		with open(self.path_to_output_folder_bed_files+'/transcripts_intersected.dic', 'wb') as handle:
+			pickle.dump(self.transcripts_intersected, handle, protocol=pickle.HIGHEST_PROTOCOL)
 		

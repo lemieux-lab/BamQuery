@@ -111,3 +111,4 @@ def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequen
 
 		# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
 	return contReads_to_return
+	

@@ -117,6 +117,46 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_o
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 
 
+def get_heat_map_coverage(df, path_to_output_folder, name_exp, name):
+
+	peptides_total = len(df.index)
+	bam_files = len(df.columns)
+
+	if peptides_total < 400 and bam_files < 200:
+		
+		width = 10
+		heigth = 10
+		fontsize = 12
+		annot = True
+
+		if peptides_total > 60 :
+			heigth = 20
+			fontsize = 8
+			annot = False
+
+		if peptides_total > 120 :
+			fontsize = 5
+			
+		if bam_files > 30 :
+			width = 20
+			fontsize = 8
+			annot = False
+
+		if bam_files > 100 :
+			width = 50
+			sns.set(font_scale=0.5)
+
+		fig, ax = plt.subplots(figsize=(width, heigth))
+		ax.grid(False)
+		
+		ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='g', annot_kws={"size": fontsize}) #cmap="YlGnBu"
+		
+		plt.yticks(rotation=0)
+		plt.tight_layout()
+		plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape') #, dpi=300)
+		plt.show()
+
+
 def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
 	
 	fig, ax = plt.subplots(figsize=(11, 7)) # dpi=300) 

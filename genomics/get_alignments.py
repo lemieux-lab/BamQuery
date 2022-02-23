@@ -434,13 +434,14 @@ def translation_seq(chr, seq):
 	return translation
 
 
-def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version):
+def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version, mode):
 
 	global path_to_db
 	global super_logger
 	global var
 	global genomePathFai
 	global genomePath
+	global mode_translation
 
 	super_logger = super_logger_aux
 	var = var_aux
@@ -454,6 +455,11 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	else:
 		genomePathFai = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa.fai'
 		genomePath = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
+
+	if mode == 'translation':
+		mode_translation = True
+	else:
+		mode_translation = False
 
 	super_logger.info('Using genome version %s. ', genomePath)
 	

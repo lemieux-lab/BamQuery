@@ -6,10 +6,16 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class IntersectAnnotations:
 
-	def __init__(self, perfect_alignments, path_to_output_folder, name_exp, super_logger, genome_version):
+	def __init__(self, perfect_alignments, path_to_output_folder, mode, name_exp, super_logger, genome_version):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.perfect_alignments = perfect_alignments
-		self.path_to_output_folder = path_to_output_folder+'res/BED_files/'
+
+		if mode == 'translation':
+			self.path_to_output_folder = path_to_output_folder+'res_translation/BED_files/'
+		else:
+			self.path_to_output_folder = path_to_output_folder+'res/BED_files/'
+		
+		self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
 		self.name_exp = name_exp
 		self.super_logger = super_logger
 		
@@ -40,7 +46,10 @@ class IntersectAnnotations:
 				peptide = split_key[0]
 				chr = split_key[1].split(':')[0]
 				places = split_key[1].split(':')[1]
-				MCS = split_key[2]
+				try:
+					MCS = split_key[2]
+				except IndexError:
+					pass
 
 				strand = info_alignment[0]
 				key_unique = peptide+'_'+split_key[1]
@@ -57,7 +66,6 @@ class IntersectAnnotations:
 					places_written.add(key_unique)
 
 			
-			self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
 			file_to_save = open(self.bed_file, 'w')
 			file_to_save.write(to_write)
 			file_to_save.close()
@@ -68,8 +76,7 @@ class IntersectAnnotations:
 
 		else:
 			self.super_logger.info('to_intersect_to_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'to_intersect_to_annotations.bed')
-			self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
-
+			
 	
 	def perform_intersection_with_annotation(self):
 
@@ -91,6 +98,23 @@ class IntersectAnnotations:
 		else:
 			self.super_logger.info('intersection_with_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'intersection_with_annotations.bed')
 	
+
+	def perform_intersection_with_assemblies(self, assemblies_to_intersect):
+
+		t_0 = time.time()
+
+		self.super_logger.info('Using bedtools to intersect alignments to assemblies.')
+
+		command = 'module add bedtools;'
+		for assembly, bed_to_intersect in assemblies_to_intersect:
+			command += 'bedtools intersect -a '+self.bed_file+' -b '+assembly+' -wao | grep -w StringTie > '+bed_to_intersect + ';'
+		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+		out, err = p_1.communicate()
+
+		t_2 = time.time()
+		total = t_2-t_0
+		self.super_logger.info('Total time run function perform_intersection_with_annotation to end : %f min', (total/60.0))
+
 
 	def get_string_for_alignment(self, place, chr, key, strand):
 		start = place.split('-')[0]

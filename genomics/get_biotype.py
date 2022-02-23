@@ -42,7 +42,7 @@ class BiotypeAssignation:
 					self.information_final_biotypes_peptides = pickle5.load(handle)
 
 		else:
-			self.get_info_bed_files = GetInformationBEDIntersection(path_to_output_folder)
+			self.get_info_bed_files = GetInformationBEDIntersection(path_to_output_folder, self.mode )
 			self.get_info_bed_files.get_information_genomic_annotation(genome_version)
 			self.get_info_bed_files.get_information_ERE_annotation()
 			self.peptides_intersected_ere = self.get_info_bed_files.peptides_intersected_ere

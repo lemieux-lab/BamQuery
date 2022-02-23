@@ -12,7 +12,7 @@ path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 NUM_WORKERS =  multiprocessing.cpu_count()
 
 
-def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version):
+def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode):
 
 	path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 	path_to_output_folder_alignments = path_to_output_folder+'alignments/'
@@ -78,29 +78,29 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 	else:
 		super_logger.info('Alignment file already exists in the output folder : %s --> Skipping this step!', path_to_output_folder_alignments+'/Aligned.out.sam')
 	
-	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version)
+	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode)
 	
 	return perfect_alignments
 
-def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version):
+def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode):
 	t_0 = time.time()
 	sam_file = path_to_output_folder_genome_alignments+'/Aligned.out.sam'
+	exists = os.path.exists(path_to_output_folder_alignments+'/Alignments_information.dic')
+	exists_light = os.path.exists(path_to_output_folder_alignments+'/Alignments_information_light.dic')
+		
 	perfect_alignments = {}
 	peptides_with_alignments = set()
 
 	exists_sam_file = os.path.exists(sam_file)
+
 	if exists_sam_file:
 
-		exists = os.path.exists(path_to_output_folder_alignments+'/Alignments_information.dic')
-		exists_light = os.path.exists(path_to_output_folder_alignments+'/Alignments_information_light.dic')
-
-		
 		if not light and exists_light and not exists:
 			perfect_alignments, peptides_with_alignments = filter_peptides_from_alignments_information_light(set_peptides, path_to_output_folder_alignments+'/Alignments_information_light.dic', path_to_output_folder_alignments)
 		
 		if not exists_light and not exists:
 
-			res_star = get_alig.get_alignments(sam_file, dbSNP, common, super_logger, var, genome_version)
+			res_star = get_alig.get_alignments(sam_file, dbSNP, common, super_logger, var, genome_version, mode)
 			
 			t_2 = time.time()
 			total = t_2-t_0
@@ -143,9 +143,9 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 			write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, df1, df2, df3)
 			
 			if not light:
-				name_path = path_to_output_folder_alignments+'/Alignments_information.dic'
+				name_path = path_to_output_folder_alignments+'Alignments_information.dic'
 			else:
-				name_path = path_to_output_folder_alignments+'/Alignments_information_light.dic'
+				name_path = path_to_output_folder_alignments+'Alignments_information_light.dic'
 
 			with open(name_path, 'wb') as handle:
 				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -163,9 +163,10 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 			super_logger.info('Alignment information already collected in the output folder : %s --> Skipping this step!', path_to_output_folder_alignments+'/Alignments_information.dic')
 			
 			if not light:
-				name_path = path_to_output_folder_alignments+'/Alignments_information.dic'
+				name_path = path_to_output_folder_alignments+'Alignments_information.dic'
 			else:
-				name_path = path_to_output_folder_alignments+'/Alignments_information_light.dic'
+				name_path = path_to_output_folder_alignments+'Alignments_information_light.dic'
+
 
 			with open(name_path, 'rb') as fp:
 				try:
@@ -219,8 +220,11 @@ def generer_alignments_information(alignments_input):
 	
 	for peptide_info, info_alignment in alignments.items():
 		alignment = peptide_info.split('_')[1]
-		MCS = peptide_info.split('_')[2]
 		peptide = peptide_info.split('_')[0]
+		try:
+			MCS = peptide_info.split('_')[2]
+		except IndexError:
+			MCS = ''
 		
 		strand = info_alignment[0]
 		peptide_with_snps_local_reference = info_alignment[1]

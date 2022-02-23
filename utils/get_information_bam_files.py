@@ -15,16 +15,20 @@ NUM_WORKERS =  int(multiprocessing.cpu_count()/2)
 
 class GetInformationBamFiles:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light, bam_files_logger, sc):
-		
-		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
-		path_to_all_counts_file = path_to_lib+"allcounts.dic"
-		exist = os.path.exists(path_to_all_counts_file)
+	def __init__(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light, bam_files_logger, sc, genome_version):
 		
 		self.bam_files_list = {}
 		self.bam_ribo_files_list = {}
 		self.bam_files_logger = bam_files_logger
 		self.sc = sc
+		
+		if genome_version == 'v26_88': 
+			self.genome_version_gtf= path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
+		elif genome_version == 'v33_99':
+			self.genome_version_gtf= path_to_lib+'genome_versions/genome_v33_99/gencode.v33.primary_assembly.annotation.gtf'
+		else:
+			self.genome_version_gtf = path_to_lib+'genome_versions/genome_v38_104/gencode.v38.primary_assembly.annotation.gtf'
+		
 
 		if light:
 			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
@@ -33,21 +37,96 @@ class GetInformationBamFiles:
 			self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
 			self.path_to_output_aux_folder = path_to_output_folder+'res/AUX_files/'
 		
-		
-		try:
-			bam_files = path_to_input_folder+'BAM_directories.tsv'
-			self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
-		
-		except FileNotFoundError:
-			self.bam_files_logger.info('The bam directories : %s doesn\'t exist ', path_to_input_folder+'BAM_directories.tsv')
-
 		if mode == 'translation':
+			self.path_to_output_temps_folder = path_to_output_folder+'res_translation/temps_files/'
+			self.path_to_output_bed_files_folder = path_to_output_folder+'res_translation/BED_files/'
+
 			try:
 				bam_files = path_to_input_folder+'BAM_Ribo_directories.tsv'
-				self.bam_ribo_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
+				self.bam_ribo_files_list = self.get_info_ribo_bamfiles(bam_files)
 
 			except FileNotFoundError:
 				self.bam_files_logger.info('If running translation mode you must include a list of Ribo Bam Files. The bam directories : %s doesn\'t exist ', path_to_input_folder+'BAM_Ribo_directories.tsv')
+		else:
+			try:
+				bam_files = path_to_input_folder+'BAM_directories.tsv'
+				self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
+			
+			except FileNotFoundError:
+				self.bam_files_logger.info('The bam directories : %s doesn\'t exist ', path_to_input_folder+'BAM_directories.tsv')
+
+			
+	def get_info_ribo_bamfiles(self, bam_files):
+		
+		ribo_bam_files_info_query = self.path_to_output_temps_folder+"ribo_bam_files_info_query.dic"
+		exists = os.path.exists(ribo_bam_files_info_query)
+		
+		if not exists:
+			bam_files_list = {}
+			command = 'module load stringtie/1.3.6; ulimit -s 8192;'
+
+			with open(bam_files) as f:
+
+				for index, line in enumerate(f):
+					line = line.strip().split('\t')
+					name = line[0]
+
+					try:
+						path = line[1]
+					except IndexError:
+						raise Exception("Sorry, your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
+
+					if '.bam' in path or '.cram' in path:
+						bam_files_found = [path]
+					else:
+						bam_files_found = self.search_bam_files(path)
+					
+					assemblage = 0
+					for bam_file_path in bam_files_found:
+
+						name_bam_file = "_".join(bam_file_path.split('/')[:-1][-2:])
+						output_assembled_gtf = self.path_to_output_temps_folder+name_bam_file+'.gtf'
+						output_assembled_bed = self.path_to_output_bed_files_folder+name_bam_file+'.bed'
+						bam_files_list[name_bam_file] = [bam_file_path, output_assembled_gtf, output_assembled_bed]
+
+						exists_gtf = os.path.exists(output_assembled_gtf)
+						
+						if not exists_gtf:
+							assemblage += 1 
+							command += 'stringtie '+bam_file_path+' -G '+self.genome_version_gtf+' -o '+output_assembled_gtf+' -c 1 -p 32 --fr -m 30 -g 28 ;'
+			
+			with open(ribo_bam_files_info_query, 'wb') as handle:
+				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+			if assemblage > 0:
+				subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True).wait()
+				self.bam_files_logger.info('Total Bam Files to get transcriptome assembly : %d ', assemblage)
+
+		else:
+			
+			try:
+				with open(ribo_bam_files_info_query, 'rb') as fp:
+					bam_files_list = pickle.load(fp)
+			except ValueError:
+				import pickle5
+				with open(ribo_bam_files_info_query, 'rb') as fp:
+					bam_files_list = pickle5.load(fp)
+
+			assemblage = 0
+			command = 'module load stringtie/1.3.6; ulimit -s 8192;'
+			for name_bam_file, bam_file_info in bam_files_list.items():
+				output_assembled_gtf = bam_file_info[1]
+				bam_file_path = bam_file_info[0]
+				exists = os.path.exists(output_assembled_gtf)
+				if not exists:
+					command += 'stringtie '+bam_file_path+' -G '+self.genome_version_gtf+' -o '+output_assembled_gtf+' -c 1 -p 32 --fr -m 30 -g 28;'
+					assemblage += 1 
+
+			if assemblage > 0:
+				subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True).wait()
+				self.bam_files_logger.info('Total Bam Files to get transcriptome assembly : %d ', assemblage)
+
+		return bam_files_list
 
 
 	def get_info_bamfiles(self, bam_files, strandedness, path_to_output_folder):

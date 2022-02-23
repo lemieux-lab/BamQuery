@@ -33,12 +33,20 @@ class GetCountsSC:
 	def get_counts(self, perfect_alignments, bam_files_list):
 
 		df_counts = pd.DataFrame()
-		df_counts_filtered = pd.DataFrame()
-
-		exist_rna = os.path.exists(self.path_to_output_folder+self.name_exp+'_rna_count.csv')
 		
-		last_treated_bam_file = os.path.exists(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl')
+		rna_sc_count_path = self.path_to_output_temps_folder+self.name_exp+'_rna_sc_count.csv'
+		rna_sc_count_all_alignments_path = self.path_to_output_temps_folder+self.name_exp+'_rna_sc_count_All_alignments.csv'
+		
+		exists_rna_sc = os.path.exists(rna_sc_count_path)
+		
+		if self.light:
+			alignment_information_sc_path = self.path_to_output_folder_alignments+'Alignments_information_light_sc.dic'
+		else:
+			alignment_information_sc_path = self.path_to_output_folder_alignments+'Alignments_information_sc.dic'
+		
+		exists_alignment_information_sc = os.path.exists(alignment_information_sc_path)
 
+		last_treated_bam_file = os.path.exists(self.path_to_output_folder_alignments+'info_treated_bam_files.pkl')
 		if last_treated_bam_file:
 
 			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'rb') as fp:
@@ -54,16 +62,16 @@ class GetCountsSC:
 		else:
 			last_treated_bam_file = -1
 		
-		
-		if self.light:
-			alignment_information = self.path_to_output_folder_alignments+'Alignments_information_light.dic'
-		else:
-			alignment_information = self.path_to_output_folder_alignments+'Alignments_information.dic'
-			
-		
-		if not exist_rna:
+
+		if not exists_rna_sc:
 			t_0 = time.time()
 			
+			if not exists_alignment_information_sc :
+				alignment_information_sc = copy.deepcopy(perfect_alignments)
+			else:
+				with open(alignment_information_sc_path, 'rb') as fp:
+			 		alignment_information_sc = pickle.load(fp)
+
 			info_bams = []
 			bams = []
 			
@@ -80,7 +88,7 @@ class GetCountsSC:
 
 			total_samples = len(list_bam_files_order)
 
-			keys = perfect_alignments.keys()
+			keys = alignment_information_sc.keys()
 			self.super_logger.info('Total MCS mapped : %s ', str(len(keys)))
 
 			modif_dic = {}
@@ -90,7 +98,7 @@ class GetCountsSC:
 				position = split_key[1]
 				seq = split_key[2]
 
-				strand = perfect_alignments[key][0]
+				strand = alignment_information_sc[key][0]
 				new_key = peptide+'_'+position+'_'+strand
 				
 				try:
@@ -155,10 +163,10 @@ class GetCountsSC:
 									
 								count = sum(count_info.values())
 								new_key = peptide+'_'+alignment+'_'+sequence
-								if len(perfect_alignments[new_key][-2]) == 0:
-									perfect_alignments[new_key][-2] = [0]*total_samples
+								if len(alignment_information_sc[new_key][-2]) == 0:
+									alignment_information_sc[new_key][-2] = [0]*total_samples
 									
-								perfect_alignments[new_key][-2][index_sample] = count
+								alignment_information_sc[new_key][-2][index_sample] = count
 
 
 					t1_bam_file = time.time()
@@ -172,11 +180,11 @@ class GetCountsSC:
 					if (idx % 100 == 0) and (idx != 0):
 						self.super_logger.info('Saving information for Bam Files processed')
 
-						with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
+						with open(self.path_to_output_folder_alignments+'info_treated_bam_files.pkl', 'wb') as f:  
 							pickle.dump(idx, f)
 
-						with open(alignment_information, 'wb') as handle:
-							pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+						with open(alignment_information_sc_path, 'wb') as handle:
+							pickle.dump(alignment_information_sc, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 						with open(self.path_to_output_folder_alignments+'peptides_info.pkl', 'wb') as handle:
 							pickle.dump(peptides_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -190,8 +198,8 @@ class GetCountsSC:
 			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
 				pickle.dump(idx, f)
 			
-			with open(alignment_information, 'wb') as handle:
-				pickle.dump(perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+			with open(alignment_information_sc_path, 'wb') as handle:
+				pickle.dump(alignment_information_sc, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			peptides_order = []
 			
@@ -236,25 +244,25 @@ class GetCountsSC:
 			df_counts.drop('order', 1, inplace = True)
 			df_counts.set_index('Peptide',inplace=True)
 			
-			name_path = self.path_to_output_folder+self.name_exp+'_rna_count_All_alignments.csv'
-			df_alignments.to_csv(name_path, index=False, header=True)
-
-			df_counts.to_csv(self.path_to_output_folder+self.name_exp+'_rna_count.csv', index=True, header=True)
-			self.super_logger.info('Counts Information saved to : %s ', self.path_to_output_folder+self.name_exp+'_rna_count.csv')
+			df_counts.to_csv(rna_sc_count_path, index=True, header=True)
+			df_alignments.to_csv(rna_count_all_alignments_path, index=False, header=True)
+			
+			self.super_logger.info('Counts SC Information saved to : %s ', rna_sc_count_path)
 
 			t_2 = time.time()
 			total = t_2-t_0
 			self.super_logger.info('Total time run function get_counts to end : %f min', (total/60.0))
+
 		else:
-			self.super_logger.info('Count information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder+self.name_exp+'_rna_count.csv')
-			df_counts = pd.read_csv(self.path_to_output_folder+self.name_exp+'_rna_count.csv', index_col=0)
+			self.super_logger.info('Count information already collected in the output folder : %s --> Skipping this step!', rna_sc_count_path)
+			df_counts = pd.read_csv(rna_sc_count_path, index_col=0)
 			
-			with open(alignment_information, 'rb') as fp:
-				perfect_alignments = pickle.load(fp)
+			with open(alignment_information_sc_path, 'rb') as fp:
+				alignment_information_sc = pickle.load(fp)
 
-			df_alignments = pd.read_csv(self.path_to_output_folder+self.name_exp+'_rna_count_All_alignments.csv', index_col=0)
+			df_alignments = pd.read_csv(rna_count_all_alignments_path, index_col=0)
 
-		return df_counts, perfect_alignments, df_alignments
+		return df_counts, alignment_information_sc, df_alignments
 
 
 	def get_counts_sample(self, bam, peptide_alignment, sequences):
