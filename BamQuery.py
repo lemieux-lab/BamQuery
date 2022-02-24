@@ -210,7 +210,7 @@ class BamQuery:
 		if not exists:
 			
 			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type, self.super_logger)
-			res = get_counts.get_coverage(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list, self.genome_version)
+			res = get_counts.get_coverage(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list, self.genome_version, self.input_file_treatment.all_mode_peptide)
 			df_counts = res[0]
 			self.perfect_alignments = res[1]
 			df_all_alignments = res[2] 

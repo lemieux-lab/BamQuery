@@ -149,7 +149,8 @@ def get_heat_map_coverage(df, path_to_output_folder, name_exp, name):
 		fig, ax = plt.subplots(figsize=(width, heigth))
 		ax.grid(False)
 		
-		ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='g', annot_kws={"size": fontsize}) #cmap="YlGnBu"
+		#ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='g', annot_kws={"size": fontsize}) #cmap="YlGnBu"
+		ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white') #cmap="YlGnBu"
 		
 		plt.yticks(rotation=0)
 		plt.tight_layout()

@@ -96,7 +96,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 	if exists_sam_file:
 
 		if not light and exists_light and not exists:
-			perfect_alignments, peptides_with_alignments = filter_peptides_from_alignments_information_light(set_peptides, path_to_output_folder_alignments+'/Alignments_information_light.dic', path_to_output_folder_alignments)
+			perfect_alignments, peptides_with_alignments = filter_peptides_from_alignments_information_light(set_peptides, path_to_output_folder_alignments+'/Alignments_information_light_rna.dic', path_to_output_folder_alignments)
 		
 		if not exists_light and not exists:
 

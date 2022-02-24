@@ -39,7 +39,7 @@ class GetCounts:
 		self.super_logger = super_logger
 		
 
-	def get_coverage(self, perfect_alignments, bam_files_list, genome_version):
+	def get_coverage(self, perfect_alignments, bam_files_list, genome_version, list_peptides):
 
 		times = []
 		order = []
@@ -72,8 +72,7 @@ class GetCounts:
 			t_0 = time.time()
 			
 			if not exists_alignment_information_ribo :
-				alignment_information_ribo = self.transform_initial_alignment_information(perfect_alignments, alignment_information_ribo_path)
-
+				alignment_information_ribo = self.transform_initial_alignment_information(perfect_alignments, alignment_information_ribo_path, list_peptides)
 			else:
 				with open(alignment_information_ribo_path, 'rb') as fp:
 			 		alignment_information_ribo = pickle.load(fp)
@@ -262,12 +261,14 @@ class GetCounts:
 		return df_counts, alignment_information_ribo, df_alignments
 
 	
-	def transform_initial_alignment_information(self, perfect_alignments, path_alignment_information_ribo):
+	def transform_initial_alignment_information(self, perfect_alignments, path_alignment_information_ribo, list_peptides):
 
 		alignment_information_ribo = {}
 		for peptide_key, information_peptide in perfect_alignments.items():
-			new_key =  '_'.join(peptide_key.split('_')[:-1])
-			alignment_information_ribo[new_key] = [information_peptide[0]]
+			peptide = peptide_key.split('_')[0]
+			if peptide in list_peptides:
+				new_key =  '_'.join(peptide_key.split('_')[:-1])
+				alignment_information_ribo[new_key] = [information_peptide[0]]
 
 		with open(path_alignment_information_ribo, 'wb') as handle:
 			pickle.dump(alignment_information_ribo, handle, protocol=pickle.HIGHEST_PROTOCOL)

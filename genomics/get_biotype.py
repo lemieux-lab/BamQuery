@@ -86,7 +86,6 @@ class BiotypeAssignation:
 				if True :#peptide == 'EAAPDTVLR'  : #== peptide :#'AEKLGFAGL' == peptide:
 					try:
 						info_alignments_peptide = info_peptide_alignments[peptide]
-
 						alignments = info_alignments_peptide[0]
 						total_count_rna = info_alignments_peptide[1]
 						total_count_ribo = info_alignments_peptide[2]
@@ -207,7 +206,6 @@ class BiotypeAssignation:
 		columns_gen_ere.extend(self.bam_files_list_rna)
 		columns_gen_ere.extend(self.bam_files_list_ribo)
 		columns_gen_ere.extend(['Total reads count RNA', 'Total reads count Ribo'])
-
 		self.data_gen_ere = pd.DataFrame(data_gen_ere, columns = columns_gen_ere)
 		
 		data_gen_ere = []
