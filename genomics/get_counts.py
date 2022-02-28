@@ -279,11 +279,11 @@ class GetCounts:
 	def get_tpm_for_overlap_peptide(self, key, values, sample):
 
 		def get_tpm(transcript):
-			return self.transcripts_intersected[transcript+'_'+sample]
+			return self.transcripts_intersected[transcript+'_'+sample]+1
 
 		values = list(values.values())
 		transcripts_intersected = values[0].intersection(*values)
-		tpm_mean = math.log10(np.mean(list(map(get_tpm, transcripts_intersected))))
+		tpm_mean = np.mean(np.log10(list(map(get_tpm, transcripts_intersected))))
 		return key, tpm_mean
 
 
