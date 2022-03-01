@@ -31,7 +31,6 @@ def get_counts_sample(bam, peptide_alignment, sequences):
 		except TypeError:
 			count = -1
 		to_return.append([count, sequence])
-	 
 	return to_return
 
 

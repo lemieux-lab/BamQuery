@@ -7,6 +7,7 @@ import numpy as np
 import random
 import scipy.stats
 from matplotlib import cm
+import plotnine as p9
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -85,43 +86,49 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_o
 			width = 50
 			sns.set(font_scale=0.5)
 
-		fig, ax = plt.subplots(figsize=(width, heigth))
-		ax.grid(False)
+		data = []
+		df.reset_index()
+		columns_names_bam_files = list(df.columns)
+		for row in df.itertuples():
+			peptide_type = row.Index[0]
+			peptide = row.Index[1]
+			aux = [peptide_type, peptide]
+			for i, column in enumerate(columns_names_bam_files):
+				aux.append(row[i+1])
+				aux.append(column)
+				data.append(aux)
+				aux = [peptide_type, peptide]
+		
+		
+		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample'])	
+		path = path_to_output_folder+'plots/heat_maps/total_transcription_expression_heatmap/'
+		path = path+name_exp+name+'.csv'
+		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/total_expression.R'
 		
 		if norm:
-			ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='.1f', annot_kws={"size": fontsize})
+			label = 'Log10\(RPHM\+1\)'
 		else:
-			ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='g', annot_kws={"size": fontsize}) #cmap="YlGnBu"
-		
-		if len(ax_lines) > 0:
-			lines = []
-			last = 0
-			for i, line in enumerate(ax_lines):
-				if i == 0:
-					lines.append(line)
-					last = line
-				else:
-					last = last + line
-					lines.append(last)
-			ax.hlines(lines, *ax.get_xlim(), color='red')
-		
-		plt.yticks(rotation=0)
-		plt.tight_layout()
-		plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape') #, dpi=300)
-		plt.show()
+			label = 'Log10\(Reads_count+1\)'
+			df_tpm['value'] = df_tpm['value'].apply( lambda x: np.log10(x+1))
+			
+		df_tpm.to_csv(path, index=False)
+
+		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+'plots/heat_maps/total_transcription_expression_heatmap '+name_exp+name+' '+label
+		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 
 	if norm and peptides_total < 400:
 		exp = name[1:]+'/'
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/average_tissues_mode.R'
-		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'res/AUX_files/processed/'+exp+' '+path_to_output_folder+'plots/heat_maps/ '+str(th_out)+' '+name_exp+name
-		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
+		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'plots/heat_maps/average_transcription_expression_heatmap/norm_info.csv ' +path_to_output_folder+'plots/heat_maps/average_transcription_expression_heatmap/ '+str(th_out)+' '+name_exp+name
+		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True).wait()
+
 
 
 def get_heat_map_coverage(df, path_to_output_folder, name_exp, name):
 
 	peptides_total = len(df.index)
 	bam_files = len(df.columns)
-
+	
 	if peptides_total < 400 and bam_files < 200:
 		
 		width = 10
@@ -146,16 +153,28 @@ def get_heat_map_coverage(df, path_to_output_folder, name_exp, name):
 			width = 50
 			sns.set(font_scale=0.5)
 
-		fig, ax = plt.subplots(figsize=(width, heigth))
-		ax.grid(False)
+		data = []
+		df.reset_index()
+		columns_names_bam_files = list(df.columns)
 		
-		#ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white', xticklabels = 1, yticklabels = 1, annot=annot, fmt='g', annot_kws={"size": fontsize}) #cmap="YlGnBu"
-		ax = sns.heatmap(df, cmap="Blues", linewidths=1, linecolor='white') #cmap="YlGnBu"
+		for row in df.itertuples():
+			peptide_type = row.Index[0]
+			peptide = row.Index[1]
+			aux = [peptide_type, peptide]
+			for i, column in enumerate(columns_names_bam_files):
+				aux.append(row[i+1])
+				aux.append(column)
+				data.append(aux)
+				aux = [peptide_type, peptide]
 		
-		plt.yticks(rotation=0)
-		plt.tight_layout()
-		plt.savefig(path_to_output_folder+'plots/heat_maps/'+name_exp+name+'.pdf', format='pdf', bbox_inches='tight', pad_inches=0, orientation='landscape') #, dpi=300)
-		plt.show()
+		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample'])	
+
+		path = path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/'+name_exp+name+'.csv'
+		df_tpm.to_csv(path, index=False)
+
+		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/total_expression.R'
+		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap '+name_exp+name+" Log10\(TPM\+1\)"
+		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True).wait()
 
 
 def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
@@ -273,7 +292,7 @@ def correlation(path_to_output_folder, name_exp, dataframe):
 	for i,h in enumerate(handles):
 		new_handles.append(h)
 		new_labels.append(labels[i])
-	        
+			
 	first_legend = ax.legend(handles=new_handles, labels=new_labels, fancybox=True, fontsize = fontsize-4, frameon=True, shadow=True)
 	plt.savefig(path_to_output_folder+'plots/correlation/'+name_exp+'_correlation_ribo_rna.pdf', orientation='landscape', format='pdf', bbox_inches='tight', pad_inches=0.3)
 	

@@ -50,7 +50,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, light):
 	bam_files_logger = setup_logger('Bam_Files_Logger', nameLog, 'a')
 	
 	if mode == 'translation':
-		paths = [path_to_output_folder+'res_translation/temps_files/', path_to_output_folder+'plots/heat_maps/', path_to_output_folder+'res_translation/BED_files/']
+		paths = [path_to_output_folder+'res_translation/temps_files/', path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/', path_to_output_folder+'res_translation/BED_files/']
 		
 		for path in paths:
 			try:
@@ -61,14 +61,14 @@ def directories_creation(path_to_input_folder, name_exp, mode, light):
 	elif not light :
 
 		paths = [path_to_output_folder+'res/BED_files/', 
-		path_to_output_folder+'plots/heat_maps/', 
-		path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides', 
+		path_to_output_folder+'plots/heat_maps/total_transcription_expression_heatmap/', 
+		path_to_output_folder+'plots/heat_maps/average_transcription_expression_heatmap/', 
+		path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/', 
 		path_to_output_folder+'plots/biotypes/biotype_by_sample_group/by_peptide_type/',
 		path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/all_peptides/',
 		path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/by_peptide_type/',
-		path_to_output_folder+'res/AUX_files/processed/rna_norm',
-		path_to_output_folder+'res/full_info_biotypes/',
-		path_to_output_folder+'res/summary_info_biotypes/',
+		path_to_output_folder+'res/biotype_classification/full_info_biotypes/',
+		path_to_output_folder+'res/biotype_classification/summary_info_biotypes/',
 		path_to_output_folder+'res/temps_files/']
 
 		for path in paths:
@@ -78,7 +78,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, light):
 				pass
 
 	else:
-		paths = [path_to_output_folder+'res_light/temps_files/', path_to_output_folder+'res_light/AUX_files/processed/rna_norm/']
+		paths = [path_to_output_folder+'res_light/temps_files/']
 		
 		for path in paths:
 			try:

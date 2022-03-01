@@ -10,24 +10,11 @@ name = args[4]
 library(ggplot2)
 library(data.table)
 
-pl_out = 'r_plot'
 
-output_plot = sprintf('%s%s', output, pl_out)
-
-if(!file.exists(output_plot)) {lapply(output_plot, dir.create)}
-
-# # Do the actual heat map
-lf_process = list.files(path = norm_results, pattern = '*_processed.txt', full.names = TRUE)
-
-procFiles = lapply(lf_process, function(x) {
-  tmp = fread(x)
-  return(tmp)
-})
-
-procMerged <- Reduce(function(...) rbind(...), procFiles)
+norm_info = fread(norm_results)
 
 # Peptide Peptide_type  Tissue  Tissue_type Short_list  median  mean
-proS = split(procMerged, list(procMerged$Peptide, procMerged$Peptide_type), drop = TRUE)
+proS = split(norm_info, list(norm_info$Peptide, norm_info$Peptide_Type), drop = TRUE)
 
 proSplus = lapply(proS, function(x){
 
@@ -80,12 +67,10 @@ proSplus = lapply(proS, function(x){
 proSplusMerged = Reduce(function(...) rbind(...), proSplus)
 
 
-# Tile - all tissues
+# All tissues
 filename = sprintf('%s_%s', name, 'all_tissues.pdf') 
 
-
 label = sprintf('%s%s%s', 'mean > log10(', th_out, '+ 1)' ) 
-
 
 g = ggplot(proSplusMerged, aes(x = Tissue, y = reorder(Peptide, + nbTissue), fill = mean,
                                color = as.factor(mean > log10(th_out + 1))) )
@@ -96,7 +81,7 @@ g = g + scale_color_manual(values=c("grey", "black"))
 g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white')
 #g = g + scale_fill_gradient(limits = c(0,3), low = 'snow1', high = 'steelblue', na.value = 'white')
 #g = g + scale_fill_gradient(limits = c(0,2.5), colors=c('snow1', 'steelblue'))
-g = g + facet_grid(Peptide_type ~ Tissue_type, scales = 'free', space = 'free')
+g = g + facet_grid(Peptide_Type ~ Tissue_type, scales = 'free', space = 'free')
 g = g + theme_bw() + xlab('') + ylab('')
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
@@ -109,10 +94,10 @@ if (total_peptides > 50){
 if (total_peptides > 70){
   g = g + theme(axis.text.y = element_text(size = 3))
 }
-ggsave(sprintf('%s/%s', output_plot, filename), width = 11, height = 11, useDingbats = FALSE)
+ggsave(sprintf('%s/%s', output, filename), width = 11, height = 11, useDingbats = FALSE)
 
 
-# Tile - selected tissues
+# Selected tissues
 
 filename = sprintf('%s_%s', name, 'selected_tissues.pdf') 
 
@@ -124,7 +109,7 @@ g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
 g = g + scale_color_manual(values=c("grey", "black"))
 g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white')
 #g = g + scale_fill_gradient(limits = c(0,3), low = 'snow1', high = 'steelblue', na.value = 'white')
-g = g + facet_grid(Peptide_type ~ Tissue_type, scales = 'free', space = 'free')
+g = g + facet_grid(Peptide_Type ~ Tissue_type, scales = 'free', space = 'free')
 g = g + theme_bw() + xlab('') + ylab('')
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
@@ -134,23 +119,5 @@ if (total_peptides > 50){
 if (total_peptides > 70){
   g = g + theme(axis.text.y = element_text(size = 3))
 }
-ggsave(sprintf('%s/%s', output_plot, filename), width = 11, height = 11, useDingbats = FALSE)
+ggsave(sprintf('%s/%s', output, filename), width = 11, height = 11, useDingbats = FALSE)
 
-
-m = unique(subset(proSplusMerged, select = c(Peptide_type, Peptide, nbTissue,
-                                             superMeanTissue,
-                                             nbTissueShort, superMeanTissueShort,
-                                             nbTissue1short, nbTissue5short, nbTissue10short,
-                                             nbTissue15short, nbTissue20short, nbTissue25short,
-                                             nbTissueMed, nbTissueMedShort,
-                                             superMedTissue, superMedTissueShort,
-                                             nbTissue1Medshort, nbTissue5Medshort,
-                                             nbTissue10Medshort,
-                                             nbTissue15Medshort, nbTissue20Medshort,
-                                             nbTissue25Medshort)))
-
-# #write.table(m, sprintf('%s/%s/%s_processed.txt', getwd(), p_out, 'recapPepNbtissue'),
-#            sep = '\t',
-#           quote = FALSE, row.names = FALSE)
-
-rm(list = ls())

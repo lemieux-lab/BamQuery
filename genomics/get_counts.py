@@ -39,7 +39,7 @@ class GetCounts:
 		self.super_logger = super_logger
 		
 
-	def get_coverage(self, perfect_alignments, bam_files_list, genome_version, list_peptides):
+	def get_coverage(self, perfect_alignments, bam_files_list, genome_version):
 
 		times = []
 		order = []
@@ -68,11 +68,11 @@ class GetCounts:
 			to_write = {} 
 
 
-		if not exists_ribo_coverage_info :
+		if  not exists_ribo_coverage_info :
 			t_0 = time.time()
 			
 			if not exists_alignment_information_ribo :
-				alignment_information_ribo = self.transform_initial_alignment_information(perfect_alignments, alignment_information_ribo_path, list_peptides)
+				alignment_information_ribo = self.transform_initial_alignment_information(perfect_alignments, alignment_information_ribo_path)
 			else:
 				with open(alignment_information_ribo_path, 'rb') as fp:
 			 		alignment_information_ribo = pickle.load(fp)
@@ -200,42 +200,24 @@ class GetCounts:
 			with open(alignment_information_ribo_path, 'wb') as handle:
 				pickle.dump(alignment_information_ribo, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			header = ['Peptide', 'Position', 'Strand']
+			header = ['Peptide Type','Peptide', 'Position', 'Strand']
 			header.extend(list_bam_files_order)
-			to_write_list = [header]
+			to_write_list = []
 			
 			for peptide, info_peptide in to_write.items():
 				to_add = []
+				peptide_type = self.peptides_by_type[peptide]
 				for alignment, info_counts in info_peptide.items():
 					position = alignment.split('_')[1]
-					to_add =  [peptide, position]
+					to_add =  [peptide_type, peptide, position]
 					to_add.extend(info_counts)
 					to_write_list.append(to_add)
 
-			df_alignments = pd.DataFrame(to_write_list[1:], columns=to_write_list[0])
-
-			order_pep = []
-			peptides_order = []
-			
-			for peptide_type, peptides in self.peptides_by_type.items():
-				for peptide in peptides:
-					peptides_order.append(peptide)
-					if peptide_type not in order_pep:
-						order_pep.append(peptide_type)
-						order.append(1)
-					else:
-						ind = order_pep.index(peptide_type)
-						order[ind] += 1
-			
-			df_counts = df_alignments.groupby(['Peptide']).mean().reset_index()
-
-			sorterIndex = dict(zip(peptides_order, range(len(peptides_order))))
-			df_counts['order'] = df_counts['Peptide'].map(sorterIndex)
-			df_counts.sort_values(['order'], ascending = [True], inplace = True)
-			df_counts.drop('order', 1, inplace = True)
-			df_counts.set_index('Peptide',inplace=True)
-
-			df_counts.to_csv(ribo_coverage_info, index=True, header=True)
+			df_alignments = pd.DataFrame(to_write_list, columns=header)
+			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).mean().reset_index()
+			df_counts.sort_values(by=['Peptide Type'])
+			df_counts.set_index(['Peptide Type', 'Peptide'], inplace=True)
+			df_counts.to_csv(ribo_coverage_info,  header=True)
 			df_alignments.to_csv(ribo_coverage_info_all_aligments_path, index=False, header=True)
 
 			self.super_logger.info('Coverage Information saved to : %s ', ribo_coverage_info)
@@ -246,27 +228,23 @@ class GetCounts:
 
 		else:
 			self.super_logger.info('TPM information already collected in the output folder : %s --> Skipping this step!', ribo_coverage_info)
-			df_counts = pd.read_csv(ribo_coverage_info, index_col=0)
+			df_counts = pd.read_csv(ribo_coverage_info, index_col=[0,1])
 			
 			with open(alignment_information_ribo_path, 'rb') as fp:
 				alignment_information_ribo = pickle.load(fp)
 
-			df_alignments = pd.read_csv(ribo_coverage_info_all_aligments_path, index_col=0)
+			df_alignments = pd.read_csv(ribo_coverage_info_all_aligments_path, index_col=[0,1])
 
-		try:
-			os.remove(self.path_to_output_folder_alignments+'to_write.pkl')
-		except FileNotFoundError:
-			pass
 		
 		return df_counts, alignment_information_ribo, df_alignments
 
 	
-	def transform_initial_alignment_information(self, perfect_alignments, path_alignment_information_ribo, list_peptides):
+	def transform_initial_alignment_information(self, perfect_alignments, path_alignment_information_ribo):
 
 		alignment_information_ribo = {}
 		for peptide_key, information_peptide in perfect_alignments.items():
 			peptide = peptide_key.split('_')[0]
-			if peptide in list_peptides:
+			if peptide in self.peptides_by_type :
 				new_key =  '_'.join(peptide_key.split('_')[:-1])
 				alignment_information_ribo[new_key] = [information_peptide[0]]
 
@@ -422,10 +400,10 @@ class GetCounts:
 
 				
 								key = peptide+'_'+alignment+'_'+sequence
-								if len(alignment_information_rna[key][-2]) == 0:
-									alignment_information_rna[key][-2] = [0]*total_samples
+								if len(alignment_information_rna[key][-1]) == 0:
+									alignment_information_rna[key][-1] = [0]*total_samples
 
-								alignment_information_rna[key][-2][index-1] = count
+								alignment_information_rna[key][-1][index-1] = count
 
 
 					t1_bam_file = time.time()
@@ -464,45 +442,26 @@ class GetCounts:
 			with open(alignment_information_rna_path, 'wb') as handle:
 				pickle.dump(alignment_information_rna, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			header = ['Peptide', 'Position', 'MCS', 'Strand']
+			header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']
 			header.extend(list_bam_files_order)
-			to_write_list = [header]
+			to_write_list = []
 			
 			for peptide, info_peptide in to_write.items():
 				to_add = []
+				peptide_type = self.peptides_by_type[peptide]
 				for alignment, info_counts in info_peptide.items():
 					position = alignment.split('_')[0]
 					MCS = alignment.split('_')[1]
-					to_add =  [peptide, position, MCS]
+					to_add =  [peptide_type, peptide, position, MCS]
 					to_add.extend(info_counts)
 					to_write_list.append(to_add)
 
-			df_alignments = pd.DataFrame(to_write_list[1:], columns=to_write_list[0])
-
-			order_pep = []
-			peptides_order = []
+			df_alignments = pd.DataFrame(to_write_list, columns=header)
+			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum().reset_index()
+			df_counts.sort_values(by=['Peptide Type'])
+			df_counts.set_index(['Peptide Type', 'Peptide'], inplace=True)
+			df_counts.to_csv(rna_count_path, header=True)
 			
-			for peptide_type, peptides in self.peptides_by_type.items():
-				for peptide in peptides:
-					peptides_order.append(peptide)
-					if peptide_type not in order_pep:
-						order_pep.append(peptide_type)
-						order.append(1)
-					else:
-						ind = order_pep.index(peptide_type)
-						order[ind] += 1
-			
-			# https://stackoverflow.com/questions/23482668/sorting-by-a-custom-list-in-pandas
-
-			df_counts = df_alignments.groupby(['Peptide']).sum().reset_index()
-
-			sorterIndex = dict(zip(peptides_order, range(len(peptides_order))))
-			df_counts['order'] = df_counts['Peptide'].map(sorterIndex)
-			df_counts.sort_values(['order'], ascending = [True], inplace = True)
-			df_counts.drop('order', 1, inplace = True)
-			df_counts.set_index('Peptide',inplace=True)
-
-			df_counts.to_csv(rna_count_path, index=True, header=True)
 			df_alignments.to_csv(rna_count_all_alignments_path, index=False, header=True)
 
 			self.super_logger.info('Counts Information saved to : %s ', rna_count_path)
@@ -513,12 +472,12 @@ class GetCounts:
 
 		else:
 			self.super_logger.info('Count information already collected in the output folder : %s --> Skipping this step!', rna_count_path)
-			df_counts = pd.read_csv(rna_count_path, index_col=0)
-			
+			df_counts = pd.read_csv(rna_count_path, index_col=[0,1])
+			print (df_counts)
 			with open(alignment_information_rna_path, 'rb') as fp:
 				alignment_information_rna = pickle.load(fp)
 
-			df_alignments = pd.read_csv(rna_count_all_alignments_path, index_col=0)
+			df_alignments = pd.read_csv(rna_count_all_alignments_path, index_col=[0,1])
 
 		try:
 			os.remove(self.path_to_output_folder_alignments+'to_write.pkl')

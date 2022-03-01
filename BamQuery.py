@@ -126,7 +126,7 @@ class BamQuery:
 
 		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
 			
-			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type, self.super_logger)
+			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light,  self.input_file_treatment.all_mode_peptide, self.super_logger)
 			
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
 			df_counts_rna = res[0]
@@ -147,9 +147,9 @@ class BamQuery:
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
-			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
-			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
-			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
+			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
+			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
+			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
 			
 			writer.save()
 			self.super_logger.info('========== Get Norm RNA : Done! ============ ')
@@ -186,9 +186,9 @@ class BamQuery:
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
-			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq')
-			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide')
-			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide')
+			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
+			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
+			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
 			writer.save()
 			
 			plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, [], self.th_out)
@@ -199,6 +199,19 @@ class BamQuery:
 		else:
 			self.super_logger.info('Information count and normalisation already collected !')
 			print ('Information count and normalisation already collected !')
+			
+			if self.light:
+				name_path = self.path_to_output_folder +'/alignments/Alignments_information_light_rna.dic'
+			else:
+				name_path = self.path_to_output_folder +'/alignments/Alignments_information_rna.dic'
+			
+			with open(name_path, 'rb') as fp:
+				try:
+					self.perfect_alignments = pickle.load(fp)
+				except ValueError:
+					import pickle5
+					self.perfect_alignments = pickle5.load(fp)
+
 		
 	
 	def run_bam_query_translation_mode(self, bam_files_logger):
@@ -208,9 +221,8 @@ class BamQuery:
 		exists = os.path.exists(name_path) 
 
 		if not exists:
-			
-			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type, self.super_logger)
-			res = get_counts.get_coverage(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list, self.genome_version, self.input_file_treatment.all_mode_peptide)
+			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
+			res = get_counts.get_coverage(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list, self.genome_version)
 			df_counts = res[0]
 			self.perfect_alignments = res[1]
 			df_all_alignments = res[2] 
@@ -219,8 +231,8 @@ class BamQuery:
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
-			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads')
-			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide')
+			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
+			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=False)
 			writer.save()
 			
 
@@ -236,6 +248,7 @@ class BamQuery:
 		if self.dev:
 		 	with open(self.path_to_output_folder+'genome_alignments/peptides_by_type_user.dic', 'wb') as handle:
 		 		pickle.dump(self.input_file_treatment.peptides_by_type_user, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 		# 	with open(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic', 'wb') as handle:
 		# 		pickle.dump(self.input_file_treatment.all_mode_peptide, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -347,26 +360,15 @@ class BamQuery:
 		list_bam_files_order_rna = []
 		order_sample_bam_files_rna = {}
 
-		for name_sample, info_bam in sorted(self.bam_files_info.bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
+		for name_sample, info_bam in sorted(self.bam_files_info.bam_files_list.items(), key=lambda e: e[1][-1], reverse=False):
 			list_bam_files_order_rna.append(name_sample)
-			group = info_bam[-2]
+			group = info_bam[3]
 			try:
 				order_sample_bam_files_rna[group].append(name_sample)
 			except KeyError:
 				order_sample_bam_files_rna[group] = [name_sample]
 
-		list_bam_files_order_ribo = []
-		order_sample_bam_files_ribo = {}
-
-		for name_sample, info_bam in sorted(self.bam_files_info.bam_ribo_files_list.items(), key=lambda e: e[1][-2], reverse=False):
-			list_bam_files_order_ribo.append(name_sample)
-			group = info_bam[-2]
-			try:
-				order_sample_bam_files_ribo[group].append(name_sample)
-			except KeyError:
-				order_sample_bam_files_ribo[group] = [name_sample]
-		
-		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, list_bam_files_order_ribo, order_sample_bam_files_rna, order_sample_bam_files_ribo, self.dev, self.plots, self.super_logger, self.genome_version)
+		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, order_sample_bam_files_rna, self.dev, self.plots, self.super_logger, self.genome_version)
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type_user)
 		get_biotype.get_global_annotation()
 		
@@ -381,19 +383,17 @@ class BamQuery:
 			peptide = peptide_alignment.split('_')[0]
 			alignment = peptide_alignment.split('_')[1]
 			MCS = peptide_alignment.split('_')[2]
-			count_rna = self.perfect_alignments[peptide_alignment][-2]
-			count_ribo = self.perfect_alignments[peptide_alignment][-1]
+			count_rna = self.perfect_alignments[peptide_alignment][-1]
 			strand = self.perfect_alignments[peptide_alignment][0]
 			
 			try:
 				info_peptide = info_peptide_alignments[peptide]
-				info_peptide[0][peptide_alignment] = [strand, count_rna, count_ribo]
+				info_peptide[0][peptide_alignment] = [strand, count_rna]
 				info_peptide[1] += sum(count_rna) 
-				info_peptide[2] += sum(count_ribo)
 			except KeyError:
 				dic = {}
-				dic[peptide_alignment] = [strand, count_rna, count_ribo]
-				info_peptide_alignments[peptide] = [dic, sum(count_rna), sum(count_ribo)]
+				dic[peptide_alignment] = [strand, count_rna]
+				info_peptide_alignments[peptide] = [dic, sum(count_rna)]
 
 		return info_peptide_alignments
 
@@ -531,13 +531,11 @@ def main(argv):
 			try:
 				shutil.rmtree(path_to_output_folder+'genome_alignments')
 				shutil.rmtree(path_to_output_folder+'res/BED_files')
-				shutil.rmtree(path_to_output_folder+'res/AUX_files')
 				shutil.rmtree(path_to_output_folder+'res/temps_files')
 			except FileNotFoundError:
 				pass
 		else:
 			try:
-				shutil.rmtree(path_to_output_folder+'res_light/AUX_files')
 				shutil.rmtree(path_to_output_folder+'res_light/temps_files')
 				shutil.rmtree(path_to_output_folder+'res_light/BED_files')
 			except FileNotFoundError:

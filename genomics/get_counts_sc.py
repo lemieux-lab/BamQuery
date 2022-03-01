@@ -163,10 +163,10 @@ class GetCountsSC:
 									
 								count = sum(count_info.values())
 								new_key = peptide+'_'+alignment+'_'+sequence
-								if len(alignment_information_sc[new_key][-2]) == 0:
-									alignment_information_sc[new_key][-2] = [0]*total_samples
+								if len(alignment_information_sc[new_key][-1]) == 0:
+									alignment_information_sc[new_key][-1] = [0]*total_samples
 									
-								alignment_information_sc[new_key][-2][index_sample] = count
+								alignment_information_sc[new_key][-1][index_sample] = count
 
 
 					t1_bam_file = time.time()

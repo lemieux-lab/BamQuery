@@ -225,7 +225,7 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 				info_snps = MCS_perfect_alignments_local[1][2]
 				differences_ntds = MCS_perfect_alignments_local[1][3]
 
-				positions_mcs_peptides_perfect_alignment[key_local] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [], []]
+				positions_mcs_peptides_perfect_alignment[key_local] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
 				
 			if len(MCS_variant_alignments_local) > 0:
 				MCS_in_var =  MCS_variant_alignments_local[0]
@@ -236,7 +236,7 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 				info_snps = MCS_variant_alignments_local[1][2]
 				differences_ntds = MCS_variant_alignments_local[1][3]
 
-				positions_mcs_peptides_variants_alignment[key_local] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [], []]
+				positions_mcs_peptides_variants_alignment[key_local] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
 
 		 
 		MCS_perfect_alignments_align, MCS_variant_alignments_align = get_sequences_at_position(peptide, seq_reference_align, MCS, rang, strand, chromosome, chr)
@@ -252,7 +252,7 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 			info_snps = MCS_perfect_alignments_align[1][2]
 			differences_ntds = MCS_perfect_alignments_align[1][3]
 
-			positions_mcs_peptides_perfect_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [], []]
+			positions_mcs_peptides_perfect_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
 		
 
 		if len(MCS_variant_alignments_align) > 0:
@@ -264,7 +264,7 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 			info_snps = MCS_variant_alignments_align[1][2]
 			differences_ntds = MCS_variant_alignments_align[1][3]
 
-			positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
+			positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
 
 	chromosome = {}
 	return positions_mcs_peptides_perfect_alignment, positions_mcs_peptides_variants_alignment, peptides_in

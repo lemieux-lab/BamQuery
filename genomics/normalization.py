@@ -16,15 +16,11 @@ class Normalization:
 		if self.light:
 			self.path_to_output_folder = path_to_output_folder+'res_light/'
 			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
-			self.path_to_output_aux_folder = path_to_output_folder+'res_light/AUX_files/'
-			self.path_to_output_aux_processed_folder = path_to_output_folder+'res_light/AUX_files/processed/'
 		else:
 			self.path_to_output_folder = path_to_output_folder+'res/'
 			self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
-			self.path_to_output_aux_folder = path_to_output_folder+'res/AUX_files/'
-			self.path_to_output_aux_processed_folder = path_to_output_folder+'res/AUX_files/processed/'
+			self.path_to_output_total_transcription_expression_heatmap_folder = path_to_output_folder+'plots/heat_maps/average_transcription_expression_heatmap/'
 			
-
 		self.name_exp = name_exp
 		self.path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 		self.peptides_types = peptides_types
@@ -41,8 +37,6 @@ class Normalization:
 			t_0 = time.time()
 			count_reads = {}
 
-			indexes_column_names = ['Peptides']
-			indexes_column_names.extend(list(df_counts.columns))
 			norm_matrix = []
 
 			incomplete = True
@@ -62,6 +56,7 @@ class Normalization:
 				counts_bam_files = []
 				
 				all_counts_included = True
+
 				for name_bam_file in bam_files_list:
 
 					try:
@@ -111,55 +106,59 @@ class Normalization:
 				writer.writerows(data)
 
 			info_tissue_peptide = {}
-			
 			def_norm = copy.deepcopy(df_counts)
-
+			
 			def normalize(row):
-				new_row = ((row / counts_bam_files)*100000000.0)+1
-				return new_row
+				row = ((row / counts_bam_files)*100000000.0)+1
+				return row
 
 			def_norm = def_norm.apply(lambda row : normalize(row), axis = 1)
 			def_norm_log = def_norm.apply(np.log10, axis = 1)
 			
-			for index, row in def_norm_log.iterrows():
-				peptide = row.name
-				for bam_file_name, norm in row.items():
-					tissue_name = dictionary_total_reads_bam_files[bam_file_name][2]
-					tissue_type = dictionary_total_reads_bam_files[bam_file_name][3]
-					short_list = dictionary_total_reads_bam_files[bam_file_name][4]
+			if not self.light:
+				data = []
+				for index, row in def_norm_log.iterrows():
+					peptide_type = row.name[0]
+					peptide = row.name[1]
+					
+					for bam_file_name, norm in row.items():
+						tissue_name = dictionary_total_reads_bam_files[bam_file_name][2]
+						tissue_type = dictionary_total_reads_bam_files[bam_file_name][3]
+						short_list = dictionary_total_reads_bam_files[bam_file_name][4]
 
-					if tissue_name == '':
-						print (bam_file_name, 'There is a problem to define the tissue for this bamfile when analyzing this peptide : ', peptide)
-					key = (tissue_name, tissue_type, short_list)
-					try:
-						info_tissue = info_tissue_peptide[key]
+						if tissue_name == '':
+							print (bam_file_name, 'There is a problem to define the tissue for this bamfile when analyzing this peptide : ', peptide)
+						
+						key = (tissue_name, tissue_type, short_list)
 						try:
-							info_tissue[peptide][0].append(norm)
+							info_tissue = info_tissue_peptide[key]
+							try:
+								info_tissue[peptide].append(norm)
+							except KeyError:
+								info_tissue[peptide] = [norm]
 						except KeyError:
-							info_tissue[peptide] = [[norm]]
-					except KeyError:
-						info_tissue_peptide[key] = {peptide: [[norm]]}
+							info_tissue_peptide[key] = {peptide: [norm]}
 
-			exp = type_save[1:].split('.csv')[0]+'/'
+				for key_info_tissue, peptides in info_tissue_peptide.items():
+					
+					tissue_name = key_info_tissue[0]
+					tissue_type = key_info_tissue[1]
+					short_list = key_info_tissue[2]
 
-			for key_info_tissue, peptides in info_tissue_peptide.items():
-				
-				to_write = 'Peptide\tPeptide_type\tTissue\tTissue_type\tShort_list\tmedian\tmean\n'
-				tissue_name = key_info_tissue[0]
-				tissue_type = key_info_tissue[1]
-				short_list = key_info_tissue[2]
+					for peptide, info in peptides.items():
+						mean = np.mean(info)
+						median = np.median(info)
+						peptide_type = self.peptides_types[peptide]
+						aux = [peptide, peptide_type, tissue_name, tissue_type, short_list, median, mean]
+						data.append(aux)
 
-				for peptide, info in peptides.items():
-					mean = np.mean(info[0])
-					median = np.median(info[0])
-					peptide_type = self.peptides_types[peptide]
-					to_write += peptide+'\t'+peptide_type+'\t'+tissue_name+'\t'+tissue_type+'\t'+short_list+'\t'+str(median)+'\t'+str(mean)+'\n'
+				df_norm = pd.DataFrame(data, columns=['Peptide','Peptide_Type', 'Tissue', 'Tissue_type', 'Short_list','median','mean'])
+				df_norm.to_csv(self.path_to_output_total_transcription_expression_heatmap_folder+'norm_info.csv', index=False)
 
-				with open(self.path_to_output_aux_processed_folder+exp+tissue_name+"_processed.txt", 'w') as f:
-					f.write(to_write)
-					f.close()
-			_thread.start_new_thread(self.save_info_counts, (def_norm_log, type_save))
 			
+			def_norm_log.to_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index=False, header=True)
+			self.super_logger.info('Normalization Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
+
 			t_2 = time.time()
 			total = t_2-t_0
 			self.super_logger.info('Total time run function get_normalization to end : %f min', (total/60.0))
@@ -169,10 +168,7 @@ class Normalization:
 		
 		return def_norm_log
 
-	def save_info_counts(self, df, type_save):
-		df.to_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index=True, header=True)
-		self.super_logger.info('Normalization Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
-
+		
 # 				t1 				ts2 			ts3 			ts4
 # rphm			x				x				x				x
 # log(rphm)		log(x+1,10)		log(x+1,10)		log(x+1,10)		log(x+1,10)
