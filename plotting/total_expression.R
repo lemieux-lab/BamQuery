@@ -13,8 +13,12 @@ tpm = fread(norm_results)
 
 proS = split(tpm, list(tpm$Peptide, tpm$Peptide_Type), drop = TRUE)
 
+
 proSplus = Reduce(function(...) rbind(...), proS)
-g = ggplot(proSplus, aes(x = Sample, y = Peptide, fill = value))
+
+label_2 = sprintf('%s%s', label, ' > 0' ) 
+g = ggplot(proSplus, aes(x = Sample, y = Peptide, fill = value, color = as.factor(value > 0)))
+g = g + labs(col = label_2) 
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
 g = g + scale_color_manual(values=c("grey", "black"))
 g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white')
