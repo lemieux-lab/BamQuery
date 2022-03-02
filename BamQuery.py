@@ -148,8 +148,8 @@ class BamQuery:
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
 			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
-			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
-			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
+			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=True)
+			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=True)
 			
 			writer.save()
 			self.super_logger.info('========== Get Norm RNA : Done! ============ ')
@@ -187,8 +187,8 @@ class BamQuery:
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
 			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
-			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
-			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
+			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=True)
+			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=True)
 			writer.save()
 			
 			plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, [], self.th_out)
@@ -232,7 +232,7 @@ class BamQuery:
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
 			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
-			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=False)
+			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=True)
 			writer.save()
 			
 
