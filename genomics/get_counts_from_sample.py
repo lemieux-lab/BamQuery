@@ -140,7 +140,7 @@ def get_depth_with_view_2(region_to_query, bam_file, library, sens, strand, sequ
 
 	if library == 'unstranded' or sens == 'unstranded':
 		try:
-			count_1 = pysam.view("-F0X104", bam_file, region_to_query).split('\n')
+			count_1 = pysam.view("-F0X100", bam_file, region_to_query).split('\n')
 		except pysam.utils.SamtoolsError: 
 			return -1
 
@@ -167,12 +167,12 @@ def get_depth_with_view_2(region_to_query, bam_file, library, sens, strand, sequ
 
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
 			try:
-				count_1 = pysam.view("-F0X114", bam_file, region_to_query).split('\n')
+				count_1 = pysam.view("-F0X110", bam_file, region_to_query).split('\n')
 			except pysam.utils.SamtoolsError: 
 				return -1
 		elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
 			try:
-				count_1 = pysam.view("-F0X104", "-f0X10", bam_file, region_to_query).split('\n')
+				count_1 = pysam.view("-F0X100", "-f0X10", bam_file, region_to_query).split('\n')
 			except pysam.utils.SamtoolsError: 
 				return -1
 
@@ -194,15 +194,15 @@ def get_depth_with_view_2(region_to_query, bam_file, library, sens, strand, sequ
 	elif library == 'pair-end':
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
 			try:
-				count_1 = pysam.view("-F0X104", "-f0X60", bam_file, region_to_query).split('\n')
-				count_2 = pysam.view("-F0X104", "-f0X90", bam_file, region_to_query).split('\n')
+				count_1 = pysam.view("-F0X100", "-f0X60", bam_file, region_to_query).split('\n')
+				count_2 = pysam.view("-F0X100", "-f0X90", bam_file, region_to_query).split('\n')
 			except pysam.utils.SamtoolsError: 
 				return -1
 
 		elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
 			try:
-				count_1 = pysam.view("-F0X104", "-f0X50", bam_file, region_to_query).split('\n')
-				count_2 = pysam.view("-F0X104", "-f0XA0", bam_file, region_to_query).split('\n')
+				count_1 = pysam.view("-F0X100", "-f0X50", bam_file, region_to_query).split('\n')
+				count_2 = pysam.view("-F0X100", "-f0XA0", bam_file, region_to_query).split('\n')
 			except pysam.utils.SamtoolsError: 
 				return -1
 
@@ -252,7 +252,7 @@ def get_depth_with_view_1(region_to_query, bam_file, library, sens, strand, sequ
 	
 	if library == 'unstranded' or sens == 'unstranded':
 		try:
-			count_1 = pysam.view("-F0X104", bam_file, region_to_query)
+			count_1 = pysam.view("-F0X100", bam_file, region_to_query)
 		except pysam.utils.SamtoolsError: 
 			return -1
 
@@ -275,12 +275,12 @@ def get_depth_with_view_1(region_to_query, bam_file, library, sens, strand, sequ
 
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
 			try:
-				count_1 = pysam.view("-F0X114", bam_file, region_to_query)
+				count_1 = pysam.view("-F0X110", bam_file, region_to_query)
 			except pysam.utils.SamtoolsError: 
 				return -1
 		elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
 			try:
-				count_1 = pysam.view("-F0X104", "-f0X10", bam_file, region_to_query)
+				count_1 = pysam.view("-F0X100", "-f0X10", bam_file, region_to_query)
 			except pysam.utils.SamtoolsError: 
 				return -1
 
@@ -294,15 +294,15 @@ def get_depth_with_view_1(region_to_query, bam_file, library, sens, strand, sequ
 	elif library == 'pair-end':
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
 			try:
-				count_1 = pysam.view("-F0X104", "-f0X60", bam_file, region_to_query)
-				count_2 = pysam.view("-F0X104", "-f0X90", bam_file, region_to_query)
+				count_1 = pysam.view("-F0X100", "-f0X60", bam_file, region_to_query)
+				count_2 = pysam.view("-F0X100", "-f0X90", bam_file, region_to_query)
 			except pysam.utils.SamtoolsError: 
 				return -1
 
 		elif ((strand == '-' and sens == 'forward') or(strand == '+' and sens == 'reverse')):
 			try:
-				count_1 = pysam.view("-F0X104", "-f0X50", bam_file, region_to_query)
-				count_2 = pysam.view("-F0X104", "-f0XA0", bam_file, region_to_query)
+				count_1 = pysam.view("-F0X100", "-f0X50", bam_file, region_to_query)
+				count_2 = pysam.view("-F0X100", "-f0XA0", bam_file, region_to_query)
 			except pysam.utils.SamtoolsError: 
 				return -1
 

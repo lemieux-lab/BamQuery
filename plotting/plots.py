@@ -168,11 +168,11 @@ def get_heat_map_coverage(df, path_to_output_folder, name_exp, name):
 		
 		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample'])	
 
-		path = path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/'+name_exp+name+'.csv'
+		path = path_to_output_folder+name_exp+name+'.csv'
 		df_tpm.to_csv(path, index=False)
 
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/total_expression.R'
-		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap '+name_exp+name+" Log10\(TPM\+1\)"
+		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+' '+name_exp+name+" Log10\(TPM\+1\)"
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True).wait()
 
 

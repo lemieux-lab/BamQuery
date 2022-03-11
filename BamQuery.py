@@ -73,7 +73,6 @@ class BamQuery:
 		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
 			
 			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type, self.super_logger)
-			
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list, self.overlap)
 			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
@@ -128,12 +127,10 @@ class BamQuery:
 		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
 			
 			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light,  self.input_file_treatment.all_mode_peptide, self.super_logger)
-			
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list, self.overlap)
 			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
-			order = res[2] 
-			df_all_alignments_rna = res[3] 
+			df_all_alignments_rna = res[2] 
 
 			if not self.light: 
 				plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', self.name_exp, '_rna_counts', False, self.th_out)
@@ -214,29 +211,6 @@ class BamQuery:
 					self.perfect_alignments = pickle5.load(fp)
 
 		
-	
-	def run_bam_query_translation_mode_(self, bam_files_logger):
-		self.common_to_modes(bam_files_logger)
-
-		name_path = self.path_to_output_folder+'/res_translation/'+self.name_exp+'_ribo_coverage_info.xlsx'
-		exists = os.path.exists(name_path) 
-
-		if not exists:
-			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
-			res = get_counts.get_coverage(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list, self.genome_version)
-			df_counts = res[0]
-			self.perfect_alignments = res[1]
-			df_all_alignments = res[2] 
-
-			plots.get_heat_map_coverage(df_counts, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/', self.name_exp, '_TPM_transcripts_coverage')
-
-			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
-			writer.book.use_zip64()
-			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
-			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=True)
-			writer.save()
-
-
 	def run_bam_query_translation_mode(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
 
@@ -248,8 +222,7 @@ class BamQuery:
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list, True)
 			df_counts_ribo = res[0]
 			self.perfect_alignments = res[1]
-			order = res[2] 
-			df_all_alignments_ribo = res[3] 
+			df_all_alignments_ribo = res[2] 
 
 			if not self.light: 
 				plots.get_heat_map(df_counts_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/', self.name_exp, '_ribo_counts', False, self.th_out)
@@ -285,7 +258,7 @@ class BamQuery:
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
-			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
+			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=True)
 			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=True)
 			writer.save()
 			
@@ -414,7 +387,6 @@ class BamQuery:
 		get_biotype.get_global_annotation()
 		
 		self.super_logger.info('========== Annotations : Done! ============ ')
-
 
 	def get_info_peptide_alignments(self):
 
