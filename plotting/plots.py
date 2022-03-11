@@ -57,7 +57,7 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'Mutated' : tab10_palette[-1]
 						}
 
-def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_out = 8.55):
+def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55):
 
 	peptides_total = len(df.index)
 	bam_files = len(df.columns)
@@ -101,8 +101,7 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_o
 		
 		
 		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample'])	
-		path = path_to_output_folder+'plots/heat_maps/total_transcription_expression_heatmap/'
-		path = path+name_exp+name+'.csv'
+		path = path_to_output_folder+name_exp+name+'.csv'
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/total_expression.R'
 		
 		if norm:
@@ -113,13 +112,13 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, ax_lines, th_o
 			
 		df_tpm.to_csv(path, index=False)
 
-		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+'plots/heat_maps/total_transcription_expression_heatmap '+name_exp+name+' '+label
+		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+' '+name_exp+name+' '+label
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 
 	if norm and peptides_total < 400:
 		exp = name[1:]+'/'
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/average_tissues_mode.R'
-		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'plots/heat_maps/average_transcription_expression_heatmap/norm_info.csv ' +path_to_output_folder+'plots/heat_maps/average_transcription_expression_heatmap/ '+str(th_out)+' '+name_exp+name
+		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'/norm_info.csv ' +path_to_output_folder+' '+str(th_out)+' '+name_exp+name
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True).wait()
 
 

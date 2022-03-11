@@ -26,7 +26,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -43,6 +43,7 @@ class BamQuery:
 		self.var = var
 		self.maxmm = maxmm
 		self.genome_version = genome_version
+		self.overlap =  overlap
 
 		if self.mode == 'normal':
 			if self.sc :
@@ -73,7 +74,7 @@ class BamQuery:
 			
 			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type, self.super_logger)
 			
-			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
+			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list, self.overlap)
 			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
 			df_all_alignments_rna = res[2] 
@@ -128,14 +129,14 @@ class BamQuery:
 			
 			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light,  self.input_file_treatment.all_mode_peptide, self.super_logger)
 			
-			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
+			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list, self.overlap)
 			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
 			order = res[2] 
 			df_all_alignments_rna = res[3] 
 
 			if not self.light: 
-				plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, order, self.th_out)
+				plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', self.name_exp, '_rna_counts', False, self.th_out)
 
 			self.super_logger.info('========== Get Count RNA : Done! ============ ')
 
@@ -143,7 +144,7 @@ class BamQuery:
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			
 			if not self.light: 
-				plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, order, self.th_out)
+				plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', self.name_exp, '_rna_norm', True, self.th_out)
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
@@ -191,8 +192,8 @@ class BamQuery:
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=True)
 			writer.save()
 			
-			plots.get_heat_map(df_counts_rna, self.path_to_output_folder, self.name_exp, '_rna_counts', False, [], self.th_out)
-			plots.get_heat_map(def_norm_rna, self.path_to_output_folder, self.name_exp, '_rna_norm', True, [], self.th_out)
+			plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', self.name_exp, '_rna_counts', False, self.th_out)
+			plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', self.name_exp, '_rna_norm', True, self.th_out)
 
 			self.super_logger.info('Information for peptides of interest collected!')
 
@@ -214,7 +215,7 @@ class BamQuery:
 
 		
 	
-	def run_bam_query_translation_mode(self, bam_files_logger):
+	def run_bam_query_translation_mode_(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
 
 		name_path = self.path_to_output_folder+'/res_translation/'+self.name_exp+'_ribo_coverage_info.xlsx'
@@ -227,13 +228,48 @@ class BamQuery:
 			self.perfect_alignments = res[1]
 			df_all_alignments = res[2] 
 
-			plots.get_heat_map_coverage(df_counts, self.path_to_output_folder, self.name_exp, '_TPM_transcripts_coverage')
+			plots.get_heat_map_coverage(df_counts, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/', self.name_exp, '_TPM_transcripts_coverage')
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
 			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
 			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=True)
 			writer.save()
+
+
+	def run_bam_query_translation_mode(self, bam_files_logger):
+		self.common_to_modes(bam_files_logger)
+
+		name_path = self.path_to_output_folder+'/res_translation/'+self.name_exp+'_ribo_count_info.xlsx'
+		exists = os.path.exists(name_path) 
+
+		if not exists:
+			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
+			res = get_counts.get_counts_ribo(self.perfect_alignments, self.bam_files_info.bam_files_list)
+			df_counts_ribo = res[0]
+			self.perfect_alignments = res[1]
+			order = res[2] 
+			df_all_alignments_ribo = res[3] 
+
+			if not self.light: 
+				plots.get_heat_map(df_counts_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/', self.name_exp, '_ribo_counts', False, self.th_out)
+
+			self.super_logger.info('========== Get Count Ribo : Done! ============ ')
+
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger)
+			def_norm_ribo = normalization.get_normalization(df_counts_ribo, '_ribo_norm.csv')
+			
+			if not self.light: 
+				plots.get_heat_map(def_norm_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', self.name_exp, '_ribo_norm', True, self.th_out)
+
+			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
+			writer.book.use_zip64()
+			df_all_alignments_ribo.to_excel(writer, sheet_name='Alignments Read count Ribo-seq',index=False)
+			df_counts_ribo.to_excel(writer, sheet_name='Read count Ribo-seq by peptide',index=True)
+			def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide',index=True)
+			
+			writer.save()
+			self.super_logger.info('========== Get Norm Ribo : Done! ============ ')
 			
 
 	def common_to_modes(self, bam_files_logger):
@@ -249,19 +285,6 @@ class BamQuery:
 		 	with open(self.path_to_output_folder+'genome_alignments/peptides_by_type_user.dic', 'wb') as handle:
 		 		pickle.dump(self.input_file_treatment.peptides_by_type_user, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-		# 	with open(self.path_to_output_folder+'genome_alignments/all_mode_peptide.dic', 'wb') as handle:
-		# 		pickle.dump(self.input_file_treatment.all_mode_peptide, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-		# 	with open(self.path_to_output_folder+'genome_alignments/CS_mode.dic', 'wb') as handle:
-		# 		pickle.dump(self.input_file_treatment.CS_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-		# 	with open(self.path_to_output_folder+'genome_alignments/peptides_mode.dic', 'wb') as handle:
-		# 		pickle.dump(self.input_file_treatment.peptide_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-		# 	with open(self.path_to_output_folder+'genome_alignments/manual_mode.dic', 'wb') as handle:
-		# 		pickle.dump(self.input_file_treatment.manual_mode, handle, protocol=pickle.HIGHEST_PROTOCOL)
-		
-		
 		self.super_logger.info('========== Treatment File : Done! ============ ')
 		print ('Treatment File : Done!')
 		
@@ -478,6 +501,8 @@ def main(argv):
 						help='Keep Variants Alignments')
 	parser.add_argument('--maxmm', action='store_true',
 						help='Keep High Amount Alignments')
+	parser.add_argument('--overlap', action='store_true',
+						help='Count overlapping reads')
 	parser.add_argument('--genome_version', type=str, default = 'v26_88',
 						help='Genome version supported : v26_88 / v33_99 / v38_104')
 
@@ -497,6 +522,7 @@ def main(argv):
 	var = args.var
 	maxmm = args.maxmm
 	genome_version = args.genome_version
+	overlap = args.overlap
 
 	if sc :
 		mode = 'normal'
@@ -521,8 +547,9 @@ def main(argv):
 	super_logger.info(' - dbSNP :  %s, COMMON SNPs : %s, Genome Version : %s ', str(dbSNP), str(c), genome_version)
 	super_logger.info(' - Plots : %s', str(plots))
 	super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
+	super_logger.info(' - Counting overlapping reads : %s', str(overlap))
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap)
 	
 
 	if not dev:

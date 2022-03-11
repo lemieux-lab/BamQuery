@@ -12,6 +12,7 @@ class Normalization:
 	def __init__(self, path_to_output_folder, name_exp, peptides_types, mode, light, super_logger):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.light = light
+		self.mode = mode
 		
 		if self.light:
 			self.path_to_output_folder = path_to_output_folder+'res_light/'
@@ -19,12 +20,15 @@ class Normalization:
 		else:
 			self.path_to_output_folder = path_to_output_folder+'res/'
 			self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
-			self.path_to_output_total_transcription_expression_heatmap_folder = path_to_output_folder+'plots/heat_maps/average_transcription_expression_heatmap/'
-			
+			self.path_to_output_total_transcription_expression_heatmap_folder = path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/'
+		if self.mode == 'translation':
+			self.path_to_output_folder = path_to_output_folder+'res_translation/'
+			self.path_to_output_temps_folder = path_to_output_folder+'res_translation/temps_files/'
+			self.path_to_output_total_transcription_expression_heatmap_folder = path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/'
+		
 		self.name_exp = name_exp
 		self.path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 		self.peptides_types = peptides_types
-		self.mode = mode
 		self.super_logger = super_logger
 
 

@@ -40,10 +40,12 @@ class GetInformationBamFiles:
 		if mode == 'translation':
 			self.path_to_output_temps_folder = path_to_output_folder+'res_translation/temps_files/'
 			self.path_to_output_bed_files_folder = path_to_output_folder+'res_translation/BED_files/'
+			self.path_to_output_aux_folder = path_to_output_folder+'res_translation/AUX_files/'
 
 			try:
 				bam_files = path_to_input_folder+'BAM_Ribo_directories.tsv'
-				self.bam_ribo_files_list = self.get_info_ribo_bamfiles(bam_files)
+				#self.bam_ribo_files_list = self.get_info_ribo_bamfiles(bam_files)
+				self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
 
 			except FileNotFoundError:
 				self.bam_files_logger.info('If running translation mode you must include a list of Ribo Bam Files. The bam directories : %s doesn\'t exist ', path_to_input_folder+'BAM_Ribo_directories.tsv')
@@ -241,8 +243,8 @@ class GetInformationBamFiles:
 								dictionary_total_reads_bam_files[name_bam_file][6] = library
 								mod = True	
 						else:
-							library = 'unstranded' 
-							sequencing = 'unstranded' 
+							library = '' 
+							sequencing = '' 
 
 						if library == '' and sequencing == '':
 							self.bam_files_logger.info('Sample bam file for %s %s is not properly indexed, skipping...', name, name_bam_file) 
@@ -281,7 +283,6 @@ class GetInformationBamFiles:
 				with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'rb') as fp:
 					bam_files_list = pickle5.load(fp)
 
-
 			# 0: path, 1: number, 2: Tissue, 3: Tissue_type, 4: Shortlist, 5: sequencing, 6: library, 7: user
 			if os.path.exists(self.path_to_output_aux_folder+"bam_files_tissues.csv"):
 				
@@ -309,7 +310,7 @@ class GetInformationBamFiles:
 						dictionary_total_reads_bam_files = pickle5.load(fp)
 
 				df = pd.read_csv(self.path_to_output_aux_folder+"bam_files_tissues.csv", header = 0)
-				
+
 				for index, row in df.iterrows():
 					try:
 						sample = str(row['Sample'])
