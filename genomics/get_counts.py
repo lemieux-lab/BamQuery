@@ -256,19 +256,19 @@ class GetCounts:
 		return df_counts, alignment_information_ribo, df_alignments
 
 	
-	def transform_initial_alignment_information(self, perfect_alignments, path_alignment_information_ribo):
+	def transform_initial_alignment_information(self, perfect_alignments, path_alignment_information):
 
-		alignment_information_ribo = {}
+		alignment_information = {}
 		for peptide_key, information_peptide in perfect_alignments.items():
 			peptide = peptide_key.split('_')[0]
 			if peptide in self.peptides_by_type :
 				new_key =  '_'.join(peptide_key.split('_')[:-1])
-				alignment_information_ribo[new_key] = [information_peptide[0]]
+				alignment_information[new_key] = [information_peptide[0]]
 
-		with open(path_alignment_information_ribo, 'wb') as handle:
-			pickle.dump(alignment_information_ribo, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		with open(path_alignment_information, 'wb') as handle:
+			pickle.dump(alignment_information, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-		return alignment_information_ribo
+		return alignment_information
 
 
 	def get_tpm_for_overlap_peptide(self, key, values, sample):
@@ -310,7 +310,7 @@ class GetCounts:
 			t_0 = time.time()
 			
 			if not exists_alignment_information :
-				alignment_information = copy.deepcopy(perfect_alignments)
+				alignment_information = self.transform_initial_alignment_information(perfect_alignments, self.alignment_information_path)
 			else:
 				with open(self.alignment_information_path, 'rb') as fp:
 			 		alignment_information = pickle.load(fp)
