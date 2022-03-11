@@ -44,9 +44,9 @@ class GetInformationBamFiles:
 
 			try:
 				bam_files = path_to_input_folder+'BAM_Ribo_directories.tsv'
-				#self.bam_ribo_files_list = self.get_info_ribo_bamfiles(bam_files)
 				self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
-
+				self.bam_ribo_files_list = self.get_info_ribo_bamfiles(bam_files)
+				
 			except FileNotFoundError:
 				self.bam_files_logger.info('If running translation mode you must include a list of Ribo Bam Files. The bam directories : %s doesn\'t exist ', path_to_input_folder+'BAM_Ribo_directories.tsv')
 		else:
@@ -237,14 +237,14 @@ class GetInformationBamFiles:
 							mod = True
 						
 						if strandedness:
-							if sequencing == '' and library == '':
+							if (sequencing == '' and library == '') or (sequencing == 'unstranded' and library == 'unstranded'):
 								library, sequencing = self.get_type_library(bam_file_path)
 								dictionary_total_reads_bam_files[name_bam_file][5] = sequencing
 								dictionary_total_reads_bam_files[name_bam_file][6] = library
 								mod = True	
 						else:
-							library = '' 
-							sequencing = '' 
+							library = 'unstranded' 
+							sequencing = 'unstranded' 
 
 						if library == '' and sequencing == '':
 							self.bam_files_logger.info('Sample bam file for %s %s is not properly indexed, skipping...', name, name_bam_file) 
