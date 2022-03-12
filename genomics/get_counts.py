@@ -233,8 +233,7 @@ class GetCounts:
 			df_alignments = pd.DataFrame(to_write_list, columns=header)
 			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).mean().reset_index()
 			df_counts.sort_values(by=['Peptide Type'])
-			df_counts.set_index(['Peptide Type', 'Peptide'], inplace=True)
-			df_counts.to_csv(ribo_coverage_info,  header=True)
+			df_counts.to_csv(ribo_coverage_info,  header=True, index=False)
 			df_alignments.to_csv(ribo_coverage_info_all_aligments_path, index=False, header=True)
 
 			self.super_logger.info('Coverage Information saved to : %s ', ribo_coverage_info)
@@ -245,12 +244,12 @@ class GetCounts:
 
 		else:
 			self.super_logger.info('TPM information already collected in the output folder : %s --> Skipping this step!', ribo_coverage_info)
-			df_counts = pd.read_csv(ribo_coverage_info, index_col=[0,1])
+			df_counts = pd.read_csv(ribo_coverage_info)
 			
 			with open(alignment_information_ribo_path, 'rb') as fp:
 				alignment_information_ribo = pickle.load(fp)
 
-			df_alignments = pd.read_csv(ribo_coverage_info_all_aligments_path, index_col=[0,1])
+			df_alignments = pd.read_csv(ribo_coverage_info_all_aligments_path)
 
 		
 		return df_counts, alignment_information_ribo, df_alignments
@@ -479,8 +478,7 @@ class GetCounts:
 			df_alignments = pd.DataFrame(to_write_list, columns=header)
 			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum().reset_index()
 			df_counts.sort_values(by=['Peptide Type'])
-			df_counts.set_index(['Peptide Type', 'Peptide'], inplace=True)
-			df_counts.to_csv(self.count_path, header=True)
+			df_counts.to_csv(self.count_path, header=True, index=False)
 			
 			df_alignments.to_csv(self.count_all_alignments_path, index=False, header=True)
 
@@ -491,13 +489,13 @@ class GetCounts:
 			self.super_logger.info('Total time run function get_counts to end : %f min', (total/60.0))
 
 		else:
-			self.super_logger.info('Count information already collected in the output folder : %s --> Skipping this step!', rna_count_path)
-			df_counts = pd.read_csv(self.count_path, index_col=[0,1])
+			self.super_logger.info('Count information already collected in the output folder : %s --> Skipping this step!', self.count_path)
+			df_counts = pd.read_csv(self.count_path)
 
 			with open(self.alignment_information_path, 'rb') as fp:
 				alignment_information = pickle.load(fp)
 
-			df_alignments = pd.read_csv(self.count_all_alignments_path, index_col=[0,1])
+			df_alignments = pd.read_csv(self.count_all_alignments_path)
 
 		try:
 			os.remove(self.to_write)
@@ -505,3 +503,4 @@ class GetCounts:
 			pass
 		
 		return df_counts, alignment_information, df_alignments
+

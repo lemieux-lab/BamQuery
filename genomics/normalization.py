@@ -56,7 +56,7 @@ class Normalization:
 						dictionary_total_reads_bam_files = pickle5.load(fp)
 				
 				tissues_for_samples = {}
-				bam_files_list = list(df_counts.columns)
+				bam_files_list = list(df_counts.columns[2:])
 				counts_bam_files = []
 				
 				all_counts_included = True
@@ -110,6 +110,7 @@ class Normalization:
 				writer.writerows(data)
 
 			info_tissue_peptide = {}
+			df_counts.set_index(['Peptide Type','Peptide'], inplace=True)
 			def_norm = copy.deepcopy(df_counts)
 			
 			def normalize(row):
@@ -159,6 +160,7 @@ class Normalization:
 				df_norm = pd.DataFrame(data, columns=['Peptide','Peptide_Type', 'Tissue', 'Tissue_type', 'Short_list','median','mean'])
 				df_norm.to_csv(self.path_to_output_total_transcription_expression_heatmap_folder+'norm_info.csv', index=False)
 
+			def_norm_log.reset_index(inplace=True)
 			
 			def_norm_log.to_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index=False, header=True)
 			self.super_logger.info('Normalization Information saved to : %s ', self.path_to_output_temps_folder+self.name_exp+type_save)
@@ -168,7 +170,7 @@ class Normalization:
 			self.super_logger.info('Total time run function get_normalization to end : %f min', (total/60.0))
 		else:
 			self.super_logger.info('Normalization information already collected in the output folder : %s --> Skipping this step!', self.path_to_output_temps_folder+self.name_exp+type_save)
-			def_norm_log = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+type_save, index_col=0)
+			def_norm_log = pd.read_csv(self.path_to_output_temps_folder+self.name_exp+type_save)
 		
 		return def_norm_log
 

@@ -88,13 +88,14 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55)
 
 		data = []
 		df.reset_index()
-		columns_names_bam_files = list(df.columns)
-		for row in df.itertuples():
-			peptide_type = row.Index[0]
-			peptide = row.Index[1]
+		columns_names_bam_files = list(df.columns)[2:]
+		
+		for index, row in df.iterrows():
+			peptide_type = row['Peptide Type']
+			peptide = row['Peptide']
 			aux = [peptide_type, peptide]
 			for i, column in enumerate(columns_names_bam_files):
-				aux.append(row[i+1])
+				aux.append(row[column])
 				aux.append(column)
 				data.append(aux)
 				aux = [peptide_type, peptide]
