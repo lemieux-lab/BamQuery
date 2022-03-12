@@ -90,8 +90,7 @@ class BamQuery:
 			df_counts_all_alignments = pd.read_csv(self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count_All_alignments.csv', header=0, index_col=None)
 			
 			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides) == True]
-			df_all_alignments_rna = df_all_alignments_rna.set_index('Peptide')
-			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count_All_alignments.csv', index=True, header=True)
+			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count_All_alignments.csv', index=False, header=True)
 
 			self.super_logger.info('Information All alignments for peptides of interest collected!')
 
@@ -164,7 +163,6 @@ class BamQuery:
 			df_counts_all_alignments = pd.read_excel(name_path_light, sheet_name='Alignments Read count RNA-seq', header=0, index_col=False, engine='openpyxl')
 
 			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides) == True]
-			df_all_alignments_rna = df_all_alignments_rna.set_index('Peptide')
 			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count_All_alignments.csv', index=False, header=True)
 
 			self.super_logger.info('Information All alignments for peptides of interest collected!')
