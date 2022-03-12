@@ -130,16 +130,6 @@ class BiotypeAssignation:
 							rep_names = []
 							try:
 								rep_names = list(self.peptides_intersected_ere[peptide][key_aux])
-								
-								#if len(rep_names) > 1:
-								#	print (key_aux, rep_names)
-									# for repName in rep_names:
-									# 	repClass = self.biotypes_names.index(self.ere_info[repName][0])
-									# 	repFamily = self.ere_info[repName][1]
-									# 	repNames.append(repName)
-									# 	repClass_s.append(repClass)
-									# 	repFamilies.append(repFamily)
-
 								repName = rep_names[0]
 								if 'antisense_' in repName:
 									repName_aux = repName.split('antisense_')[1]
@@ -222,7 +212,9 @@ class BiotypeAssignation:
 		groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
 		self.df_total_by_position_gen_ere = self.data_gen_ere.groupby(groupby_columns)[self.bam_files_columns].sum().reset_index()
 		self.df_total_by_position_gen_ere = pd.DataFrame(self.df_total_by_position_gen_ere, columns = groupby_columns+self.bam_files_columns)
-		
+		if self.dev:
+			self.df_total_by_position_gen_ere.to_pickle(self.path_to_output_folder+'/res/biotype_classification/full_info_biotypes/df_total_by_position_gen_ere.pkl')
+
 		def biotypes_translation(row):
 			if row['genomic_position_biotype'] != '':
 				row['genomic_position_biotype'] = self.biotypes_names[row['genomic_position_biotype']]

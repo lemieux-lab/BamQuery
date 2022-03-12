@@ -505,8 +505,3 @@ class GetCounts:
 			pass
 		
 		return df_counts, alignment_information, df_alignments
-
-
-
-
-	

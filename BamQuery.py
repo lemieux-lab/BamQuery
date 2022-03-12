@@ -172,7 +172,7 @@ class BamQuery:
 			df_counts_rna_light = pd.read_excel(name_path_light, sheet_name='Read count RNA-seq by peptide', header=0, index_col=None, engine='openpyxl')
 
 			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptide'].isin(self.set_peptides) == True]
-			df_counts_rna = df_counts_rna.set_index('Peptide')
+			df_counts_rna = df_counts_rna.set_index(['Peptide Type', 'Peptide'], inplace=True)
 			df_counts_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count.csv', index=True, header=True)
 
 			self.super_logger.info('Information rna counts for peptides of interest collected!')
