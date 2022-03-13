@@ -89,16 +89,15 @@ class BamQuery:
 
 			df_counts_all_alignments = pd.read_csv(self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count_All_alignments.csv', header=0, index_col=None)
 			
-			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides) == True]
+			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides)]
 			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count_All_alignments.csv', index=False, header=True)
 
 			self.super_logger.info('Information All alignments for peptides of interest collected!')
 
 			df_counts_rna_light = pd.read_csv(self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv', header=0, index_col=None)
 			
-			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptide'].isin(self.set_peptides) == True]
-			df_counts_rna = df_counts_rna.set_index('Peptide')
-			df_counts_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv', index=True, header=True)
+			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptide'].isin(self.set_peptides)]
+			df_counts_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv', index=False, header=True)
 
 			self.super_logger.info('Information rna counts for peptides of interest collected!')
 
@@ -159,17 +158,15 @@ class BamQuery:
 
 			name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
 
-			#df_counts_all_alignments = pd.read_csv(self.path_to_output_folder+'/res_light/temps_files/'+self.name_exp+'_rna_count_All_alignments.csv', header=0, index_col=None)
 			df_counts_all_alignments = pd.read_excel(name_path_light, sheet_name='Alignments Read count RNA-seq', header=0, index_col=False, engine='openpyxl')
 
-			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides) == True]
+			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides)]
 			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count_All_alignments.csv', index=False, header=True)
 
 			self.super_logger.info('Information All alignments for peptides of interest collected!')
 
-			#df_counts_rna_light = pd.read_csv(self.path_to_output_folder+'/res_light/temps_files/'+self.name_exp+'_rna_count.csv', header=0, index_col=None)
 			df_counts_rna_light = pd.read_excel(name_path_light, sheet_name='Read count RNA-seq by peptide', header=0, index_col=False, engine='openpyxl')
-			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptide'].isin(self.set_peptides) == True]
+			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptide'].isin(self.set_peptides)]
 			
 			df_counts_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count.csv', index=False, header=True)
 
@@ -237,8 +234,8 @@ class BamQuery:
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
 			df_all_alignments_ribo.to_excel(writer, sheet_name='Alignments Read count Ribo-seq',index=False)
-			df_counts_ribo.to_excel(writer, sheet_name='Read count Ribo-seq by peptide',index=True)
-			def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide',index=True)
+			df_counts_ribo.to_excel(writer, sheet_name='Read count Ribo-seq by peptide',index=False)
+			def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide',index=False)
 			
 			writer.save()
 			self.super_logger.info('========== Get Norm Ribo : Done! ============ ')
@@ -257,8 +254,8 @@ class BamQuery:
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
-			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=True)
-			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=True)
+			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
+			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=False)
 			writer.save()
 			
 

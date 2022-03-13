@@ -155,18 +155,18 @@ def get_heat_map_coverage(df, path_to_output_folder, name_exp, name):
 
 		data = []
 		df.reset_index()
-		columns_names_bam_files = list(df.columns)
+		columns_names_bam_files = list(df.columns)[2:]
 		
-		for row in df.itertuples():
-			peptide_type = row.Index[0]
-			peptide = row.Index[1]
+		for index, row in df.iterrows():
+			peptide_type = row['Peptide Type']
+			peptide = row['Peptide']
 			aux = [peptide_type, peptide]
 			for i, column in enumerate(columns_names_bam_files):
-				aux.append(row[i+1])
+				aux.append(row[column])
 				aux.append(column)
 				data.append(aux)
 				aux = [peptide_type, peptide]
-		
+
 		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample'])	
 
 		path = path_to_output_folder+name_exp+name+'.csv'
