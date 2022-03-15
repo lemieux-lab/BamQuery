@@ -57,11 +57,12 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'Mutated' : tab10_palette[-1]
 						}
 
-def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55):
+def get_heat_map(df, path_to_output_folder, path_temps_file, name_exp, name, norm, th_out = 8.55):
 
 	peptides_total = len(df.index)
 	bam_files = len(df.columns)
-
+	path_to_output_folder_aux = path_to_output_folder
+	
 	if peptides_total < 400 and bam_files < 200:
 		
 		width = 10
@@ -90,18 +91,25 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55)
 		df.reset_index()
 		columns_names_bam_files = list(df.columns)[2:]
 		
+		with open(path_temps_file+'/bam_files_info_query.dic', 'rb') as handle:
+			bam_files_info_query = pickle.load(handle)
+
 		for index, row in df.iterrows():
 			peptide_type = row['Peptide Type']
 			peptide = row['Peptide']
 			aux = [peptide_type, peptide]
-			for i, column in enumerate(columns_names_bam_files):
-				aux.append(row[column])
-				aux.append(column)
+			for i, sample in enumerate(columns_names_bam_files):
+				aux.append(row[sample])
+				aux.append(sample)
+				tissue = bam_files_info_query[sample][6]
+				aux.append(tissue)
 				data.append(aux)
 				aux = [peptide_type, peptide]
 		
+		if norm :
+			path_to_output_folder = '/'.join(path_to_output_folder.split('/')[:-2])+'/total_translation_expression_heatmap/'
 		
-		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample'])	
+		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample', 'Tissue'])	
 		path = path_to_output_folder+name_exp+name+'.csv'
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/total_expression.R'
 		
@@ -117,6 +125,7 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55)
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 
 	if norm and peptides_total < 400:
+		path_to_output_folder = path_to_output_folder_aux
 		exp = name[1:]+'/'
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/average_tissues_mode.R'
 		command = 'Rscript '+script_R_path+' '+path_to_output_folder+'/norm_info.csv ' +path_to_output_folder+' '+str(th_out)+' '+name_exp+name
@@ -124,7 +133,7 @@ def get_heat_map(df, path_to_output_folder, name_exp, name, norm, th_out = 8.55)
 
 
 
-def get_heat_map_coverage(df, path_to_output_folder, name_exp, name):
+def get_heat_map_coverage(df, path_to_output_folder, path_temps_file, name_exp, name):
 
 	peptides_total = len(df.index)
 	bam_files = len(df.columns)
@@ -157,17 +166,22 @@ def get_heat_map_coverage(df, path_to_output_folder, name_exp, name):
 		df.reset_index()
 		columns_names_bam_files = list(df.columns)[2:]
 		
+		with open(path_temps_file+'/bam_files_info_query.dic', 'rb') as handle:
+			bam_files_info_query = pickle.load(handle)
+
 		for index, row in df.iterrows():
 			peptide_type = row['Peptide Type']
 			peptide = row['Peptide']
 			aux = [peptide_type, peptide]
-			for i, column in enumerate(columns_names_bam_files):
-				aux.append(row[column])
-				aux.append(column)
+			for i, sample in enumerate(columns_names_bam_files):
+				aux.append(row[sample])
+				aux.append(sample)
+				tissue = bam_files_info_query[sample][6]
+				aux.append(tissue)
 				data.append(aux)
 				aux = [peptide_type, peptide]
 
-		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample'])	
+		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample', 'Tissue'])	
 
 		path = path_to_output_folder+name_exp+name+'.csv'
 		df_tpm.to_csv(path, index=False)

@@ -72,8 +72,7 @@ filename = sprintf('%s_%s', name, 'all_tissues.pdf')
 
 label = sprintf('%s%s%s', 'mean > log10(', th_out, '+ 1)' ) 
 
-g = ggplot(proSplusMerged, aes(x = Tissue, y = reorder(Peptide, + nbTissue), fill = mean,
-                               color = as.factor(mean > log10(th_out + 1))) )
+g = ggplot(proSplusMerged, aes(x = Tissue, y = reorder(Peptide, + nbTissue), fill = mean, color = as.factor(mean > log10(th_out + 1))) )
 
 g = g + labs(col = label) 
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
@@ -83,6 +82,7 @@ g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white
 #g = g + scale_fill_gradient(limits = c(0,2.5), colors=c('snow1', 'steelblue'))
 g = g + facet_grid(Peptide_Type ~ Tissue_type, scales = 'free', space = 'free')
 g = g + theme_bw() + xlab('') + ylab('')
+g = g + guides(fill = guide_colourbar(title = label))
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
 total_peptides = length(unique(proSplusMerged$Peptide))

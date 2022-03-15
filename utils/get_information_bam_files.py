@@ -249,7 +249,7 @@ class GetInformationBamFiles:
 						if library == '' and sequencing == '':
 							self.bam_files_logger.info('Sample bam file for %s %s is not properly indexed, skipping...', name, name_bam_file) 
 						else:
-							bam_files_list[name_bam_file] = [bam_file_path, sequencing, library, name, count]
+							bam_files_list[name_bam_file] = [bam_file_path, sequencing, library, name, count, tissue, tissue_type]
 
 						if path != bam_file_path:
 							self.bam_files_logger.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. Path in BAM_directories.tsv: %s, Path already assigned %s. Total reads : %s', path, bam_file_path, str(count))
@@ -321,6 +321,8 @@ class GetInformationBamFiles:
 							dictionary_total_reads_bam_files[sample][2] = tissue_name
 							dictionary_total_reads_bam_files[sample][3] = tissue_type
 							dictionary_total_reads_bam_files[sample][4] = short_list
+							bam_files_list[5] = tissue_name
+							bam_files_list[6] = tissue_type
 						else:
 							os.remove(path_to_lock_file)
 							self.bam_files_logger.info('Unlock Bam_files_info')
@@ -336,6 +338,8 @@ class GetInformationBamFiles:
 				os.remove(path_to_lock_file)
 				self.bam_files_logger.info('Unlock Bam_files_info')
 
+			with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'wb') as handle:
+				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			for sample, info_sample in bam_files_list.items():
 				bam_file_path = info_sample[0]

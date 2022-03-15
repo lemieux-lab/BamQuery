@@ -52,7 +52,9 @@ def directories_creation(path_to_input_folder, name_exp, mode, light):
 	if mode == 'translation':
 		paths = [path_to_output_folder+'res_translation/temps_files/', 
 		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/',
-		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', path_to_output_folder+'res_translation/BED_files/', path_to_output_folder+'res_translation/AUX_files/']
+		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', 
+		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/coverage_translation_heatmap/', 
+		path_to_output_folder+'res_translation/BED_files/', path_to_output_folder+'res_translation/AUX_files/']
 		
 		for path in paths:
 			try:

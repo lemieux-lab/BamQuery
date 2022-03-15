@@ -117,6 +117,8 @@ class BamQuery:
 		exists_normal = os.path.exists(name_path_normal) 
 		exists_light = os.path.exists(name_path_light) 
 
+		path_temps_file = self.path_to_output_folder+'/res/temps_files'
+
 		if not self.light:
 			name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx'
 		else:
@@ -131,7 +133,7 @@ class BamQuery:
 			df_all_alignments_rna = res[2] 
 
 			if not self.light: 
-				plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', self.name_exp, '_rna_counts', False, self.th_out)
+				plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', path_temps_file, self.name_exp, '_rna_counts', False, self.th_out)
 
 			self.super_logger.info('========== Get Count RNA : Done! ============ ')
 
@@ -139,7 +141,7 @@ class BamQuery:
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			
 			if not self.light: 
-				plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', self.name_exp, '_rna_norm', True, self.th_out)
+				plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', path_temps_file, self.name_exp, '_rna_norm', True, self.th_out)
 
 			df_counts_rna.reset_index(inplace=True)
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
@@ -185,8 +187,8 @@ class BamQuery:
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
 			writer.save()
 			
-			plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', self.name_exp, '_rna_counts', False, self.th_out)
-			plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', self.name_exp, '_rna_norm', True, self.th_out)
+			plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', get_heat_map, self.name_exp, '_rna_counts', False, self.th_out)
+			plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', get_heat_map, self.name_exp, '_rna_norm', True, self.th_out)
 
 			self.super_logger.info('Information for peptides of interest collected!')
 
@@ -210,6 +212,7 @@ class BamQuery:
 	def run_bam_query_translation_mode(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
 
+		path_temps_file = self.path_to_output_folder+'/res_translation/temps_files'
 		name_path = self.path_to_output_folder+'/res_translation/'+self.name_exp+'_ribo_count_info.xlsx'
 		exists = os.path.exists(name_path) 
 
@@ -221,7 +224,7 @@ class BamQuery:
 			df_all_alignments_ribo = res[2] 
 
 			if not self.light: 
-				plots.get_heat_map(df_counts_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/', self.name_exp, '_ribo_counts', False, self.th_out)
+				plots.get_heat_map(df_counts_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/', path_temps_file, self.name_exp, '_ribo_counts', False, self.th_out)
 
 			self.super_logger.info('========== Get Count Ribo : Done! ============ ')
 
@@ -229,8 +232,9 @@ class BamQuery:
 			def_norm_ribo = normalization.get_normalization(df_counts_ribo, '_ribo_norm.csv')
 			
 			if not self.light: 
-				plots.get_heat_map(def_norm_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', self.name_exp, '_ribo_norm', True, self.th_out)
+				plots.get_heat_map(def_norm_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', path_temps_file, self.name_exp, '_ribo_norm', True, self.th_out)
 
+			df_counts_ribo.reset_index(inplace=True)
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
 			df_all_alignments_ribo.to_excel(writer, sheet_name='Alignments Read count Ribo-seq',index=False)
@@ -250,7 +254,7 @@ class BamQuery:
 			self.perfect_alignments = res[1]
 			df_all_alignments = res[2] 
 
-			plots.get_heat_map_coverage(df_counts, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/', self.name_exp, '_TPM_transcripts_coverage')
+			plots.get_heat_map_coverage(df_counts, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/coverage_translation_heatmap/', path_temps_file, self.name_exp, '_TPM_transcripts_coverage')
 
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
