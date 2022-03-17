@@ -133,7 +133,7 @@ class BamQuery:
 			df_all_alignments_rna = res[2] 
 
 			if not self.light: 
-				plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', path_temps_file, self.name_exp, '_rna_counts', False, self.th_out)
+				plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/', self.mode, path_temps_file, self.name_exp, '_rna_counts', False, self.th_out)
 
 			self.super_logger.info('========== Get Count RNA : Done! ============ ')
 
@@ -141,7 +141,7 @@ class BamQuery:
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			
 			if not self.light: 
-				plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', path_temps_file, self.name_exp, '_rna_norm', True, self.th_out)
+				plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/', self.mode, path_temps_file, self.name_exp, '_rna_norm', True, self.th_out)
 
 			df_counts_rna.reset_index(inplace=True)
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
@@ -187,8 +187,8 @@ class BamQuery:
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
 			writer.save()
 			
-			plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', get_heat_map, self.name_exp, '_rna_counts', False, self.th_out)
-			plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', get_heat_map, self.name_exp, '_rna_norm', True, self.th_out)
+			plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/', self.mode, path_temps_file, self.name_exp, '_rna_counts', False, self.th_out)
+			plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/', self.mode, path_temps_file, self.name_exp, '_rna_norm', True, self.th_out)
 
 			self.super_logger.info('Information for peptides of interest collected!')
 
@@ -224,7 +224,7 @@ class BamQuery:
 			df_all_alignments_ribo = res[2] 
 
 			if not self.light: 
-				plots.get_heat_map(df_counts_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/', path_temps_file, self.name_exp, '_ribo_counts', False, self.th_out)
+				plots.get_heat_map(df_counts_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/', self.mode, path_temps_file, self.name_exp, '_ribo_counts', False, self.th_out)
 
 			self.super_logger.info('========== Get Count Ribo : Done! ============ ')
 
@@ -232,7 +232,7 @@ class BamQuery:
 			def_norm_ribo = normalization.get_normalization(df_counts_ribo, '_ribo_norm.csv')
 			
 			if not self.light: 
-				plots.get_heat_map(def_norm_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', path_temps_file, self.name_exp, '_ribo_norm', True, self.th_out)
+				plots.get_heat_map(def_norm_ribo, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/', self.mode, path_temps_file, self.name_exp, '_ribo_norm', True, self.th_out)
 
 			df_counts_ribo.reset_index(inplace=True)
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
