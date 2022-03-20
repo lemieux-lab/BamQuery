@@ -199,7 +199,10 @@ class BamQuery:
 			if self.light:
 				name_path = self.path_to_output_folder +'/alignments/Alignments_information_light_rna.dic'
 			else:
-				name_path = self.path_to_output_folder +'/alignments/Alignments_information_rna.dic'
+				try:
+					name_path = self.path_to_output_folder +'/alignments/Alignments_information_rna.dic'
+				except FileNotFoundError:
+					name_path = self.path_to_output_folder +'/alignments/Alignments_information_light_rna.dic'
 			
 			with open(name_path, 'rb') as fp:
 				try:

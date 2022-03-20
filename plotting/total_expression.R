@@ -18,6 +18,7 @@ proSplus = Reduce(function(...) rbind(...), proS)
 
 
 label_2 = sprintf('%s%s', label, ' > 0' ) 
+
 g = ggplot(proSplus, aes(x = Sample,  y = Peptide, fill = value, color = as.factor(value > 0)))
 g = g + labs(col = label_2) 
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
@@ -32,7 +33,7 @@ if (grepl('TPM', label_2)) {
 
 g = g + facet_grid(Peptide_Type ~ Tissue, scales = 'free', space = 'free')
 g = g + theme_bw() + xlab('') + ylab('')
-g = g + guides(fill = guide_colourbar(title = label_2))
+g = g + guides(fill = guide_colourbar(title = label))
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
 total_peptides = length(unique(proSplus$Peptide))
