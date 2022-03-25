@@ -38,7 +38,7 @@ class BiotypeAssignation:
 
 		for name_sample, info_bam in sorted(bam_files_info.items(), key=lambda e: e[1][-2], reverse=False):
 			list_bam_files_order_rna.append(name_sample)
-			group = info_bam[-2]
+			group = info_bam[3]
 			try:
 				order_sample_bam_files_rna[group].append(name_sample)
 			except KeyError:
@@ -462,7 +462,6 @@ class BiotypeAssignation:
 			
 			return row_input
 
-
 		def get_biotype_without_transcription_summary(row_input):
 			sum_alignments = sum(row_input[2:-1])
 			row_input[2:-1] = (row_input[2:-1]/sum_alignments)
@@ -497,12 +496,13 @@ class BiotypeAssignation:
 		df_biotype_by_peptide_by_sample = copy.deepcopy(self.df_peptide) 
 		columns_biotypes = df_position_biotypes_info_counts.columns
 
+
 		def get_biotype_with_transcription_by_sample(row_input):
 
 			peptide = row_input['Peptide']
-			
+			peptide_type = row_input['Peptide Type']
 			try:
-				total_count = int(self.total_count_by_peptide.loc[(self.total_count_by_peptide['Peptide'] == peptide)][bam_file])
+				total_count = int(self.total_count_by_peptide.loc[(self.total_count_by_peptide['Peptide'] == peptide) & (self.total_count_by_peptide['Peptide Type'] == peptide_type)][bam_file])
 			except TypeError:
 				print (peptide, bam_file)
 				exit()
@@ -641,17 +641,16 @@ class BiotypeAssignation:
 			peptide = row['Peptide']
 
 			col_names = list(row[2:].keys())
-
 			for group in col_names:
 				total_group = 0
 				if group != 'All':
 					samples = self.order_sample_bam_files_rna[group]
 					for sample in samples:
-						total_group += int(self.total_count_by_peptide.loc[(self.total_count_by_peptide['Peptide'] == peptide)][sample])
+						total_group += int(self.total_count_by_peptide.loc[(self.total_count_by_peptide['Peptide'] == peptide) & (self.total_count_by_peptide['Peptide Type'] == peptide_type)][sample])
 						
 				row[group] = total_group
 
-			row['All'] = int(self.total_count_by_peptide.loc[(self.total_count_by_peptide['Peptide'] == peptide)]['Total reads count RNA'])
+			row['All'] = int(self.total_count_by_peptide.loc[(self.total_count_by_peptide['Peptide'] == peptide) & (self.total_count_by_peptide['Peptide Type'] == peptide_type)]['Total reads count RNA'])
 			return row
 
 		total_count_by_peptide_by_group = total_count_by_peptide_by_group.apply(lambda row : get_total_reads_by_group(row), axis = 1)
@@ -659,7 +658,8 @@ class BiotypeAssignation:
 		def get_biotype_with_transcription_by_sample(row_input):
 
 			peptide = row_input['Peptide']
-			count_peptide_group = int(total_count_by_peptide_by_group.loc[(total_count_by_peptide_by_group['Peptide'] == peptide)][group])
+			peptide_type = row_input['Peptide Type']
+			count_peptide_group = int(total_count_by_peptide_by_group.loc[(total_count_by_peptide_by_group['Peptide'] == peptide) & (total_count_by_peptide_by_group['Peptide Type'] == peptide_type)][group])
 			
 			if count_peptide_group != 0:
 				row_input[4:] = (row_input[4:]/count_peptide_group)	
