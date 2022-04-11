@@ -45,7 +45,7 @@ class GetInformationBamFiles:
 			try:
 				bam_files = path_to_input_folder+'BAM_Ribo_directories.tsv'
 				self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
-				self.bam_ribo_files_list = self.get_info_ribo_bamfiles(bam_files)
+				#self.bam_ribo_files_list = self.get_info_ribo_bamfiles(bam_files)
 				
 			except FileNotFoundError:
 				self.bam_files_logger.info('If running translation mode you must include a list of Ribo Bam Files. The bam directories : %s doesn\'t exist ', path_to_input_folder+'BAM_Ribo_directories.tsv')

@@ -23,22 +23,22 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		index_genome = path_to_lib+'genome_versions/genome_v33_99/Index_BAM_Query/'
 	else:
 		index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_BAM_Query/'
-
+	
 	exist = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam')
+	exist_sam_dic = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam.dic')
 	exists_light = os.path.exists(path_to_output_folder_alignments+'/Alignments_information_light.dic')
 	exists_normal= os.path.exists(path_to_output_folder_alignments+'/Alignments_information.dic')
 	exists_fastq= os.path.exists(path_to_output_folder_genome_alignments+'/'+name_exp+'.fastq')
 
-	if not exist and not exists_light and not exists_normal and exists_fastq:
+	if not exist and not exist_sam_dic and not exists_light and not exists_normal and exists_fastq:
 		t_0 = time.time()
 		inputFilesR1_1 = path_to_output_folder_genome_alignments+name_exp+'.fastq'
 		genomeDirectory = index_genome
-		outputFilterMatchInt = 20
 		seed = 20
 
 		if maxmm:
 			maxMulti = 100000 
-			alignTranscriptsPerReadNmax = 30000
+			alignTranscriptsPerReadNmax = 100000
 			seedPerWindowNmax = 1000
 			seedNoneLociPerWindow = 1000
 			alignWindowsPerReadNmax = 20000
@@ -46,27 +46,41 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		else:
 			maxMulti = 10000
 			alignTranscriptsPerReadNmax = 20000
-			seedPerWindowNmax = 500
-			seedNoneLociPerWindow = 500
+			seedPerWindowNmax = 1000
+			seedNoneLociPerWindow = 1000
 			alignWindowsPerReadNmax = 15000
 			alignTranscriptsPerWindowNmax = 1000
 
 		anchor = maxMulti * 2										
-		limitOutSAMoneReadBytes = 33 * 2 * maxMulti
+		limitOutSAMoneReadBytes = 2 * ( 33 + 100 ) * maxMulti
 		# https://github.com/alexdobin/STAR/issues/169
 		# https://github.com/mhammell-laboratory/TEtranscripts/issues/69
 		# https://github.com/alexdobin/STAR/issues/506
+		# https://groups.google.com/g/rna-star/c/E2eevlGWFbQ?pli=1
+		# https://github.com/alexdobin/STAR/issues/243
+		# https://groups.google.com/g/rna-star/c/_HUtXoS2hOY
+
+		# command = 'module add star/2.7.1a; ulimit -s 8192; STAR --runThreadN 16'+\
+		# 		' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
+		# 		' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20 '+\
+		# 		' --outFilterMismatchNmax 4 --winAnchorMultimapNmax ' +str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
+		# 		' --outFilterMatchNmin '+str(outputFilterMatchInt)+ ' --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD '+\
+		# 		' --limitOutSAMoneReadBytes '+str(limitOutSAMoneReadBytes) +\
+		# 		' --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
+		# 		' --seedNoneLociPerWindow '+ str(seedNoneLociPerWindow) +' --seedPerWindowNmax '+ str(seedPerWindowNmax)  +\
+		# 		' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --outFileNamePrefix '+path_to_output_folder_genome_alignments
 
 		command = 'module add star/2.7.1a; ulimit -s 8192; STAR --runThreadN 16'+\
 				' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
-				' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20 '+\
+				' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20'+\
 				' --outFilterMismatchNmax 4 --winAnchorMultimapNmax ' +str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
-				' --outFilterMatchNmin '+str(outputFilterMatchInt)+ ' --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD '+\
+				' --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD --limitOutSJcollapsed 5000000'+\
 				' --limitOutSAMoneReadBytes '+str(limitOutSAMoneReadBytes) +\
-				' --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
+				' --outFilterMultimapScoreRange 4 --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
 				' --seedNoneLociPerWindow '+ str(seedNoneLociPerWindow) +' --seedPerWindowNmax '+ str(seedPerWindowNmax)  +\
 				' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --outFileNamePrefix '+path_to_output_folder_genome_alignments
 		
+
 		super_logger.info('Command to Align using STAR : %s ', command)
 		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 		out, err = p_1.communicate()
@@ -79,7 +93,6 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		super_logger.info('Alignment file already exists in the output folder : %s --> Skipping this step!', path_to_output_folder_alignments+'/Aligned.out.sam')
 	
 	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode)
-	
 	return perfect_alignments
 
 def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode):
@@ -285,10 +298,16 @@ def get_info_cosmic(snv_alignments):
 
 
 def write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, df1, df2, df3):
-	writer = pd.ExcelWriter(path_to_output_folder_alignments+name_exp+'_info_alignments.xlsx', engine='xlsxwriter')
-	df1.to_excel(writer, sheet_name='Perfect Alignments')
-	if len(df2) > 0:
-		df2.to_excel(writer, sheet_name='Variants Alignments')
-	df3.to_excel(writer, sheet_name='COSMIC Information')
-	writer.save()
+	if len(df1) < 1048576:
+		writer = pd.ExcelWriter(path_to_output_folder_alignments+name_exp+'_info_alignments.xlsx', engine='xlsxwriter')
+		writer.book.use_zip64()
+		df1.to_excel(writer, sheet_name='Perfect Alignments')
+		if len(df2) > 0:
+			df2.to_excel(writer, sheet_name='Variants Alignments')
+		df3.to_excel(writer, sheet_name='COSMIC Information')
+		writer.save()
+	else:
+		df1.to_csv(path_to_output_folder_alignments+name_exp+'_info_alignments.csv', header=0)
+		df3.to_csv(path_to_output_folder_alignments+name_exp+'_cosmic_information.csv', header=0)
+		
 

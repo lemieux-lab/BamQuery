@@ -50,8 +50,8 @@ class BamQuery:
 				self.run_bam_query_sc_mode(bam_files_logger)
 			else:
 				self.run_bam_query_normal_mode(bam_files_logger)
-			if not self.light:
-				self.get_annotations()
+				if not self.light:
+					self.get_annotations()
 		else:
 			self.run_bam_query_translation_mode(bam_files_logger)
 
@@ -60,52 +60,20 @@ class BamQuery:
 		self.common_to_modes(bam_files_logger)
 		
 		name_path_normal = self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv'
-		name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv'
 		
 		exists_normal = os.path.exists(name_path_normal) 
-		exists_light = os.path.exists(name_path_light) 
-
-		if not self.light:
-			name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv'
-		else:
-			name_path = self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv'
-
-		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
+		
+		name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv'
+		
+		if not exists_normal :
 			
-			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.peptides_by_type, self.super_logger)
-			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list, self.overlap)
+			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
+			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
 			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
 			df_all_alignments_rna = res[2] 
 
 			self.super_logger.info('========== Get Count RNA single cell : Done! ============ ')
-
-		elif (not self.light and not exists_normal and exists_light):
-			print ('Information count already collected from light mode, filtering information for the peptides of interest !')
-
-			self.super_logger.info('Information count already collected for light mode, filtering information for the peptides of interest !')
-
-			name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv'
-
-			df_counts_all_alignments = pd.read_csv(self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count_All_alignments.csv', header=0, index_col=None)
-			
-			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides)]
-			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count_All_alignments.csv', index=False, header=True)
-
-			self.super_logger.info('Information All alignments for peptides of interest collected!')
-
-			df_counts_rna_light = pd.read_csv(self.path_to_output_folder+'/res_light/'+self.name_exp+'_rna_count.csv', header=0, index_col=None)
-			
-			df_counts_rna = df_counts_rna_light[df_counts_rna_light['Peptide'].isin(self.set_peptides)]
-			df_counts_rna.to_csv(self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv', index=False, header=True)
-
-			self.super_logger.info('Information rna counts for peptides of interest collected!')
-
-			self.super_logger.info('Information for peptides of interest collected!')
-
-		else:
-			self.super_logger.info('Information count and normalisation already collected !')
-			print ('Information count and normalisation already collected !')
 
 
 	def run_bam_query_normal_mode(self, bam_files_logger):
@@ -146,7 +114,10 @@ class BamQuery:
 			df_counts_rna.reset_index(inplace=True)
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
-			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
+			if len(df_all_alignments_rna) < 1048576:
+				df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
+			else:
+				df_all_alignments_rna.to_csv(writer, index=False, header = 0)
 			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
 			
@@ -247,23 +218,23 @@ class BamQuery:
 			writer.save()
 			self.super_logger.info('========== Get Norm Ribo : Done! ============ ')
 
-		name_path = self.path_to_output_folder+'/res_translation/'+self.name_exp+'_ribo_coverage_info.xlsx'
-		exists = os.path.exists(name_path) 
+		# name_path = self.path_to_output_folder+'/res_translation/'+self.name_exp+'_ribo_coverage_info.xlsx'
+		# exists = os.path.exists(name_path) 
 
-		if not exists:
-			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
-			res = get_counts.get_coverage(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list, self.genome_version)
-			df_counts = res[0]
-			self.perfect_alignments = res[1]
-			df_all_alignments = res[2] 
+		# if not exists:
+		# 	get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
+		# 	res = get_counts.get_coverage(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list, self.genome_version)
+		# 	df_counts = res[0]
+		# 	self.perfect_alignments = res[1]
+		# 	df_all_alignments = res[2] 
 
-			plots.get_heat_map_coverage(df_counts, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/coverage_translation_heatmap/', path_temps_file, self.name_exp, '_TPM_transcripts_coverage')
+		# 	plots.get_heat_map_coverage(df_counts, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/coverage_translation_heatmap/', path_temps_file, self.name_exp, '_TPM_transcripts_coverage')
 
-			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
-			writer.book.use_zip64()
-			df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
-			df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=False)
-			writer.save()
+		# 	writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
+		# 	writer.book.use_zip64()
+		# 	df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
+		# 	df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=False)
+		# 	writer.save()
 			
 
 	def common_to_modes(self, bam_files_logger):
@@ -439,7 +410,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
 
-	path_to_output_folder, super_logger, bam_files_logger  = directories_creation(path_to_input_folder, name_exp, mode, light)
+	path_to_output_folder, super_logger, bam_files_logger  = directories_creation(path_to_input_folder, name_exp, mode, light, sc)
 
 	t0 = time.time()
 
@@ -529,7 +500,7 @@ def main(argv):
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
 
-	path_to_output_folder, super_logger, bam_files_logger = directories_creation(path_to_input_folder, name_exp, mode, light)
+	path_to_output_folder, super_logger, bam_files_logger = directories_creation(path_to_input_folder, name_exp, mode, light, sc)
 
 	t0 = time.time()
 

@@ -66,7 +66,7 @@ class BiotypeGenomicSearch:
 					except KeyError:
 						info_transcript = info_transcripts_dic[transcript]
 						tsl = info_transcript['Info'][9]
-						if tsl != '4' or tsl != '5': # Only well supported transcripts are taken into account for biotype calculation. https://m.ensembl.org/info/genome/genebuild/transcript_quality_tags.html
+						if tsl != '4' and tsl != '5' : # Only well supported transcripts are taken into account for biotype calculation. https://m.ensembl.org/info/genome/genebuild/transcript_quality_tags.html
 							transcripts_to_search[transcript] = [info_transcript, [key_peptide]]
 		
 		pool_ = ProcessPool(nodes=NUM_WORKERS)
@@ -140,19 +140,15 @@ class BiotypeGenomicSearch:
 				presence = ['Intergenic','Intergenic']
 
 				for index, point in enumerate([start, end]):
+					
 					for key_ in keys_bio:
 
 						present_peptide = self.peptide_in_section(strand, point, info_transcript[key_])
 						
 						if present_peptide:
-							#if transcript_type != 'protein_coding' and transcript_type != 'IG_V_gene' and transcript_type != 'TEC' :
-							if transcript_type not in ['protein_coding', 'IG_V_gene', 'TEC']:
+							if transcript_type not in ['protein_coding', 'IG_C_gene', 'IG_D_gene', 'IG_J_gene', 'IG_V_gene', 'TR_C_gene', 'TR_D_gene', 'TR_J_gene', 'TR_V_gene']:
 								if key_ == 'Exons' or key_ == '5UTR' or key_ == '3UTR':
 									key_ = 'Non_coding Exons'
-
-							peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position) & (self.alignments_summary_information['MCS'] == mcs)]['Peptide in Reference'].values[0] 
-							if peptide_in_reference != peptide :
-								key_ = 'Mutated'
 
 							presence[index] = key_
 							break
@@ -188,7 +184,7 @@ class BiotypeGenomicSearch:
 		for key_peptide, positions in self.information_biotypes_peptides.items():
 			peptide = key_peptide.split('_')[0]
 			position = key_peptide.split('_')[1]
-
+			mcs = key_peptide.split('_')[2]
 			if '|' not in position:
 				for key, transcripts_intersected in positions.items():
 					for transcript, biotype in transcripts_intersected.items():
@@ -202,7 +198,10 @@ class BiotypeGenomicSearch:
 						else:
 							if transcript_level_biotype[0] == 'CDS':
 								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript, position)
-						
+								peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position) & (self.alignments_summary_information['MCS'] == mcs)]['Peptide in Reference'].values[0] 
+								if peptide_in_reference != peptide and transcript_level_biotype[0] == 'Frameshift':
+									transcript_level_biotype[0] = 'CDS'
+
 						transcript_level_biotype = transcript_level_biotype[0]
 						try:
 							dic =  information_final_biotypes_peptides[peptide]
@@ -242,6 +241,9 @@ class BiotypeGenomicSearch:
 						else:
 							if transcript_level_biotype[0] == 'CDS':
 								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript, position)
+								peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position) & (self.alignments_summary_information['MCS'] == mcs)]['Peptide in Reference'].values[0] 
+								if peptide_in_reference != peptide and transcript_level_biotype[0] == 'Frameshift':
+									transcript_level_biotype[0] = 'CDS'
 
 						transcript_level_biotype = transcript_level_biotype[0]	
 						try:
@@ -257,6 +259,7 @@ class BiotypeGenomicSearch:
 							information_final_biotypes_peptides[peptide] = dic
 
 		return information_final_biotypes_peptides
+
 
 	def get_in_frame_out_frame_in_protein(self, peptide, transcript, info_transcript, position):
 

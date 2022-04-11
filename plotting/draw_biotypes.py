@@ -8,21 +8,19 @@ import gc
 
 def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 
-	others_non_coding = ['retained_intron', 'bidirectional_promoter_lncRNA', 'transcribed_unitary_pseudogene', 'transcribed_unprocessed_pseudogene', 'sense_overlapping','processed_pseudogene', 'unprocessed_pseudogene']
-	others_protein_coding = ['IG_V_gene', 'TEC', 'Exons']
+	others_protein_coding = ['Exons']
 	others_ere = ['DNA','RC', 'RNA','Satellite','Simple_repeat','Unknown', 'Retroposon', 'Low_complexity', 'rRNA','scRNA','snRNA','srpRNA','tRNA']
 	
 
-	organisation_labels = {'Protein-coding Regions':['5UTR', '3UTR', 'In_frame', 'Frameshift', 'protein_coding', 'CDS', 'Junctions', 'Other coding regions'], 
-						'Non-coding RNAs':['processed_transcript', 'nonsense_mediated_decay', 'antisense', 'Non_coding Exons', 'Non_coding Junctions', 'lincRNA', 'Other non_coding regions'], 
+	organisation_labels = {'Protein-coding Regions':['5UTR', '3UTR', 'In_frame', 'Frameshift', 'CDS', 'Junctions', 'Other coding regions'], 
+						'Non-coding RNAs':['Non_coding Exons', 'Non_coding Junctions'], 
 						'Intergenic Regions':['Intergenic'], 
 						'Intronic Regions':['Introns'],
-						'EREs':['LINE', 'LTR','SINE', 'Antisense_EREs', 'Other EREs'],
-						'Mutated Peptides':['Mutated']}
+						'EREs':['LINE', 'LTR','SINE', 'Antisense_EREs', 'Other EREs']}
 
 	def plot_biotype(biotypes, name):
 		title = name
-		labels_in_type_peptide = {'Protein-coding genes':{}, 'Non-coding genes': {}, 'Protein-coding Regions':{}, 'Non-coding RNAs': {}, 'Protein-coding transcripts':{}, 'Non-coding transcripts': {}, 'Intergenic Regions':{}, 'Intronic Regions':{}, 'EREs':{}, 'Mutated Peptides':{}}
+		labels_in_type_peptide = {'Protein-coding Regions':{}, 'Non-coding RNAs': {}, 'Intergenic Regions':{}, 'Intronic Regions':{}, 'EREs':{}}
 		outer_labels = []
 		outer_sizes = []
 		intra_labels = []
@@ -46,14 +44,7 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 
 			if not in_:
 				
-				if biotype in others_non_coding:
-					type_ = 'Non-coding Regions'
-					try:
-						labels_in_type_peptide[type_]['Other non-coding regions'] += total_biotype 
-					except KeyError:
-						labels_in_type_peptide[type_]['Other non-coding regions'] = total_biotype
-
-				elif biotype in others_protein_coding:
+				if biotype in others_protein_coding:
 					type_ = 'Protein-coding Regions'
 					try:
 						labels_in_type_peptide[type_]['Other coding regions'] += total_biotype

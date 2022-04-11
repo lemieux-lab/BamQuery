@@ -12,7 +12,8 @@ A new proteogenomic tool to explore the immunopeptidome and validate tumor-speci
 =============================================================================================
 
 .. image:: https://img.shields.io/badge/python-3.6-blue.svg 
-BamQuery is on `Github`_.
+
+BamQuery is on `Github`_
 
 .. _Github: https://github.com/lemieux-lab/BamQuery
 
@@ -52,6 +53,7 @@ BamQuery is developed by `Maria Virginia Ruiz Cuevas`_ at the *Institute for Res
    installation.rst
    command.rst
    examples.rst
+   biotype_classification.rst
 
 ==========
 

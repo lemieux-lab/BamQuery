@@ -40,12 +40,15 @@ class ReverseTranslation:
 		
 		output_message = ''
 		self.output_file = path_to_output_folder+'genome_alignments/'+name_exp+'.fastq'
-		exists = os.path.exists(self.output_file)
+		sam_dic = path_to_output_folder+'genome_alignments/Aligned.out.sam.dic'
+		
+		exists_fastq = os.path.exists(self.output_file)
+		exists_sam_dic = os.path.exists(sam_dic)
 		peptide_number = {}
 		global q 
 		
 
-		if not exists :
+		if not exists_fastq and not exists_sam_dic:
 			t_0 = time.time()
 			total_reads_to_align = 0
 			to_write_reverse_translation = ''
@@ -75,7 +78,7 @@ class ReverseTranslation:
 				if count_to_return >= 30000000:
 					peptides_to_re_do.append(peptide)
 
-			q.put('kill')
+			q.put('KILL')
 			pool.close()
 			pool.join()
 
@@ -180,7 +183,7 @@ class ReverseTranslation:
 		with open(self.output_file, 'w') as f:
 			while 1:
 				m = q.get()
-				if m == 'kill':
+				if m == 'KILL':
 					break
 				f.write(m)
 				f.flush()

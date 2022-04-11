@@ -13,33 +13,25 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 violetes = sns.cubehelix_palette(7)
-blues_palette = sns.color_palette("Blues")
+blues_palette = sns.color_palette("Blues",n_colors = 8)
 navy_colors = sns.light_palette("navy", reverse=False)[1:]
 green_palette = sns.light_palette("green")[1:]
 flare_palette = sns.color_palette("flare", n_colors = 6)
 tab10_palette = sns.color_palette("tab10")
 
-assignation_colors = {'Protein-coding genes': blues_palette[0],
-						'Protein-coding Regions': blues_palette[0],
-						'Protein-coding transcripts': blues_palette[0],
+assignation_colors = {  'Protein-coding Regions': blues_palette[0],
 						'5UTR':  blues_palette[1],
 						'3UTR':  blues_palette[2],
 						'In_frame':  blues_palette[3],
 						'Frameshift':  blues_palette[4],
-						'protein_coding':  blues_palette[0],
-						'Junctions': blues_palette[5],
-						'Other coding regions': blues_palette[5],
+						'CDS':  blues_palette[5],
+						'Junctions': blues_palette[6],
+						'Other coding regions': blues_palette[7],
 
-						'Non-coding genes': violetes[0],
 						'Non-coding RNAs': violetes[0],
-						'Non-coding transcripts': violetes[0],
 						'Non_coding Exons': violetes[1],
 						'Non_coding Junctions': violetes[2],
-						'Other non-coding regions':violetes[3],
-						'processed_transcript': violetes[4],
-						'nonsense_mediated_decay': violetes[5],
-						'antisense': violetes[6],
-
+						
 						'Intergenic Regions': green_palette[0],
 						'Intergenic': green_palette[1],
 
@@ -51,11 +43,7 @@ assignation_colors = {'Protein-coding genes': blues_palette[0],
 						'LTR': flare_palette[2], 
 						'SINE': flare_palette[3],
 						'Antisense_EREs': flare_palette[4],
-						'Other EREs': flare_palette[5],
-
-						'Mutated Peptides' : tab10_palette[-1],
-						'Mutated' : tab10_palette[-1]
-						}
+						'Other EREs': flare_palette[5] }
 
 def get_heat_map(df, path_to_output_folder, mode, path_temps_file, name_exp, name, norm, th_out = 8.55):
 

@@ -4,7 +4,7 @@ __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
-def directories_creation(path_to_input_folder, name_exp, mode, light):
+def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 
 	path_to_output_folder = '/'.join(path_to_input_folder.split('/')[:-2])+'/output/'
 	
@@ -55,6 +55,14 @@ def directories_creation(path_to_input_folder, name_exp, mode, light):
 		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', 
 		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/coverage_translation_heatmap/', 
 		path_to_output_folder+'res_translation/BED_files/', path_to_output_folder+'res_translation/AUX_files/']
+		
+		for path in paths:
+			try:
+				os.makedirs(path)
+			except OSError:
+				pass
+	elif sc:
+		paths = [path_to_output_folder+'res/temps_files/']
 		
 		for path in paths:
 			try:

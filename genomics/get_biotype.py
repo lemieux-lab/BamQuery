@@ -54,7 +54,6 @@ class BiotypeAssignation:
 		with open(path_to_lib+'coefficients.dic', 'rb') as handle:
 			coefficients = pickle.load(handle)
 
-		coefficients['Mutated'] = coefficients['Frameshift']
 		sorted_coefficients = dict( sorted(coefficients.items(), key=operator.itemgetter(1),reverse=True))
 		self.biotypes_names = list(sorted_coefficients.keys())
 		self.coefficients = list(sorted_coefficients.values())
@@ -133,7 +132,7 @@ class BiotypeAssignation:
 								repName = rep_names[0]
 								if 'antisense_' in repName:
 									repName_aux = repName.split('antisense_')[1]
-									repClass = self.biotypes_names.index('Antisense_'+self.biotypes_names[self.biotypes_names.index(self.ere_info[repName_aux][0])])
+									repClass = self.biotypes_names.index('Antisense_EREs')
 									repFamily = self.ere_info[repName_aux][1]
 									repFamily = 'antisense_'+repFamily
 								else:
@@ -194,6 +193,7 @@ class BiotypeAssignation:
 		data_gen_ere = []
 		self.super_logger.info('========== Getting information to define biotyping : Done! ============ ')
 
+
 	def mod_type(self, type_):
 		if '-' in type_:
 			if 'Non_coding' in type_ :
@@ -214,7 +214,8 @@ class BiotypeAssignation:
 		self.df_total_by_position_gen_ere = pd.DataFrame(self.df_total_by_position_gen_ere, columns = groupby_columns+self.bam_files_columns)
 		if self.dev:
 			self.df_total_by_position_gen_ere.to_pickle(self.path_to_output_folder+'/res/biotype_classification/full_info_biotypes/df_total_by_position_gen_ere.pkl')
-
+			
+			
 		def biotypes_translation(row):
 			if row['genomic_position_biotype'] != '':
 				row['genomic_position_biotype'] = self.biotypes_names[row['genomic_position_biotype']]
