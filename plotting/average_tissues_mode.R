@@ -78,10 +78,12 @@ if (mode == 'translation'){
 }else{
   g = ggplot(proSplusMerged, aes(x = Tissue, y = Peptide, fill = mean, color = as.factor(mean > log10(th_out + 1))) )
   g = g + labs(col = label) 
-  g = g + guides(fill = guide_colourbar(title = label))
+  #g = g + guides(fill = guide_colourbar(title = label))
 }
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
-g = g + scale_color_manual(values=c("grey", "black"))
+g = g + scale_color_manual(values=c("FALSE"="grey", "TRUE"="black"))
+g = g + guides(color = guide_legend(override.aes = list(fill = "white"))) 
+
 g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white')
 #g = g + scale_fill_gradient(limits = c(0,3), low = 'snow1', high = 'steelblue', na.value = 'white')
 #g = g + scale_fill_gradient(limits = c(0,2.5), colors=c('snow1', 'steelblue'))
@@ -94,7 +96,7 @@ total_peptides = length(unique(proSplusMerged$Peptide))
 if (total_peptides > 50){
   g = g + theme(axis.text.y = element_text(size = 5))
 }
-if (total_peptides > 70){
+if (total_peptides > 100){
   g = g + theme(axis.text.y = element_text(size = 3))
 }
 ggsave(sprintf('%s/%s', output, filename), width = 11, height = 11, useDingbats = FALSE)
@@ -104,6 +106,7 @@ ggsave(sprintf('%s/%s', output, filename), width = 11, height = 11, useDingbats 
 
 filename = sprintf('%s_%s', name, 'selected_tissues.pdf') 
 
+
 if (mode == 'translation'){
   g = ggplot(proSplusMerged[proSplusMerged$Short_list == 'yes', ], aes(x = Tissue, y = Peptide, fill = mean))
 }else{
@@ -111,7 +114,10 @@ if (mode == 'translation'){
   g = g + labs(col = label)
 }
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
-g = g + scale_color_manual(values=c("grey", "black"))
+
+g = g + scale_color_manual(values=c("FALSE"="grey", "TRUE"="black"))
+g = g + guides(color = guide_legend(override.aes = list(fill = "white"))) 
+
 g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white')
 #g = g + scale_fill_gradient(limits = c(0,3), low = 'snow1', high = 'steelblue', na.value = 'white')
 g = g + facet_grid(Peptide_Type ~ Tissue_type, scales = 'free', space = 'free')
@@ -121,7 +127,7 @@ g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 if (total_peptides > 50){
   g = g + theme(axis.text.y = element_text(size = 5))
 }
-if (total_peptides > 70){
+if (total_peptides > 100){
   g = g + theme(axis.text.y = element_text(size = 3))
 }
 ggsave(sprintf('%s/%s', output, filename), width = 11, height = 11, useDingbats = FALSE)

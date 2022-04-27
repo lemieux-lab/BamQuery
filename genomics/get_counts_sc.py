@@ -375,9 +375,9 @@ class GetCountsSC:
 			overlap = set(rang_).intersection(pos_set)
 
 			try:
-				cell = read.split('CR:Z:')[1].split('\t')[0]
-			except:
 				cell = read.split('CB:Z:')[1].split('-')[0]
+			except:
+				cell = read.split('CR:Z:')[1].split('\t')[0]
 
 			if len(indels) > 0:
 				for indel in indels:
