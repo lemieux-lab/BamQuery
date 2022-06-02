@@ -153,7 +153,10 @@ class BamQuery:
 			df_counts_rna.reset_index(inplace=True)
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
-			df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
+			if len(df_all_alignments_rna) < 1048576:
+				df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
+			else:
+				df_all_alignments_rna.to_csv(writer, index=False, header = 0)
 			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
 			writer.save()
@@ -447,18 +450,18 @@ def main(argv):
 						help='BamQuery search Id')
 	parser.add_argument('--mode', type=str, default = 'normal',
 						help='BamQuery search mode : normal / translation')
-	parser.add_argument('--strandedness', action='store_true',
-						help='Take into account strandedness of the samples')
+	parser.add_argument('--genome_version', type=str, default = 'v26_88',
+						help='Genome version supported : v26_88 / v33_99 / v38_104')
 	parser.add_argument('--th_out', type=float, default = 8.55,
 						help='Threshold to assess expression comparation with other tissues')
-	parser.add_argument('--light', action='store_true',
-						help='Display only the count and norm count for peptides and regions')
 	parser.add_argument('--dbSNP', type=int, default = 149,
 						help='BamQuery dbSNP : 149 / 151 / 155 / 0')
-	parser.add_argument('--dev', action='store_true')
-	parser.add_argument('--plots', action='store_true')
+	parser.add_argument('--strandedness', action='store_true',
+						help='Take into account strandedness of the samples')
+	parser.add_argument('--light', action='store_true',
+						help='Display only the count and norm count for peptides and regions')
 	parser.add_argument('--c', action='store_true',
-						help='Take into account the COMMON SNPs from the dbSNP database chosen')
+						help='Take into account the only common SNPs from the dbSNP database chosen')
 	parser.add_argument('--sc', action='store_true',
 						help='Query Single Cell Bam Files')
 	parser.add_argument('--var', action='store_true',
@@ -467,8 +470,8 @@ def main(argv):
 						help='Keep High Amount Alignments')
 	parser.add_argument('--overlap', action='store_true',
 						help='Count overlapping reads')
-	parser.add_argument('--genome_version', type=str, default = 'v26_88',
-						help='Genome version supported : v26_88 / v33_99 / v38_104')
+	parser.add_argument('--plots', action='store_true', help='Plot biotype pie-charts')
+	parser.add_argument('--dev', action='store_true', help='Save all temps files')
 
 	args = parser.parse_args()
 	

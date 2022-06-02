@@ -298,7 +298,6 @@ class BiotypeAssignation:
 		df_position_biotypes_info.insert(4, 'Annotation Frequencies', '', allow_duplicates=False)
 		df_position_biotypes_info.insert(5, 'Best Guess', '', allow_duplicates=False)
 
-		#df_position_biotypes_info_counts = copy.deepcopy(self.df_position)
 		df_position_biotypes_info_counts = pd.DataFrame(0.0, columns=range(len(self.biotypes_names)), index=range(len(self.df_position)))
 		df_position_biotypes_summary_genome = copy.deepcopy(self.df_position)
 

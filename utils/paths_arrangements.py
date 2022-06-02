@@ -53,7 +53,6 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 		paths = [path_to_output_folder+'res_translation/temps_files/', 
 		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/',
 		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', 
-		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/coverage_translation_heatmap/', 
 		path_to_output_folder+'res_translation/BED_files/', path_to_output_folder+'res_translation/AUX_files/']
 		
 		for path in paths:
@@ -81,7 +80,8 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 		path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/by_peptide_type/',
 		path_to_output_folder+'res/biotype_classification/full_info_biotypes/',
 		path_to_output_folder+'res/biotype_classification/summary_info_biotypes/',
-		path_to_output_folder+'res/temps_files/']
+		path_to_output_folder+'res/temps_files/',
+		path_to_output_folder+'res/AUX_files/']
 
 		for path in paths:
 			try:
@@ -90,7 +90,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 				pass
 
 	else:
-		paths = [path_to_output_folder+'res_light/temps_files/']
+		paths = [path_to_output_folder+'res_light/temps_files/', path_to_output_folder+'res_light/AUX_files/']
 		
 		for path in paths:
 			try:

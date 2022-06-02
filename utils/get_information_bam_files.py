@@ -343,12 +343,12 @@ class GetInformationBamFiles:
 
 			for sample, info_sample in bam_files_list.items():
 				bam_file_path = info_sample[0]
-				count = info_sample[-1]
+				count = info_sample[4]
 				if count == 0:
 					bam_files_to_get_primary_read_count.append(bam_file_path)
 
 			self.bam_files_logger.info('Total Bam Files to Query : %d.', len(bam_files_list))
-
+			
 			if len(bam_files_to_get_primary_read_count) > 0 and not self.sc:
 				
 				path_to_save_bam_files_to_search = self.path_to_output_aux_folder+"bam_files_to_get_primary_read_count.dic"
@@ -357,7 +357,6 @@ class GetInformationBamFiles:
 					pickle.dump(bam_files_to_get_primary_read_count, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 				get_read_counts_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/primary_read_count.py'
-
 				command = 'python '+get_read_counts_path+' -i '+path_to_save_bam_files_to_search+' -o '+ path_to_output_folder
 				subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 				self.bam_files_logger.info('Total Bam Files to get primary read counts : %d ', len(bam_files_to_get_primary_read_count))

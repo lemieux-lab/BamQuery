@@ -18,11 +18,11 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 	path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 
 	if genome_version == 'v26_88': 
-		index_genome = path_to_lib+'genome_versions/genome_v26_88/Index_BAM_Query/'
+		index_genome = path_to_lib+'genome_versions/genome_v26_88/Index_STAR_2.7.9a/'
 	elif genome_version == 'v33_99':
-		index_genome = path_to_lib+'genome_versions/genome_v33_99/Index_BAM_Query/'
+		index_genome = path_to_lib+'genome_versions/genome_v33_99/Index_STAR_2.7.9a/'
 	else:
-		index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_BAM_Query/'
+		index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_STAR_2.7.9a/'
 	
 	exist = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 	exist_sam_dic = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam.dic')
@@ -43,6 +43,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			seedNoneLociPerWindow = 1000
 			alignWindowsPerReadNmax = 20000
 			alignTranscriptsPerWindowNmax = 1000
+			outFilterMultimapScoreRange = 2
 		else:
 			maxMulti = 10000
 			alignTranscriptsPerReadNmax = 20000
@@ -50,8 +51,9 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			seedNoneLociPerWindow = 1000
 			alignWindowsPerReadNmax = 15000
 			alignTranscriptsPerWindowNmax = 1000
+			outFilterMultimapScoreRange = 1
 
-		anchor = maxMulti * 2										
+		anchor = maxMulti 										
 		limitOutSAMoneReadBytes = 2 * ( 33 + 100 ) * maxMulti
 		# https://github.com/alexdobin/STAR/issues/169
 		# https://github.com/mhammell-laboratory/TEtranscripts/issues/69
@@ -70,17 +72,16 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		# 		' --seedNoneLociPerWindow '+ str(seedNoneLociPerWindow) +' --seedPerWindowNmax '+ str(seedPerWindowNmax)  +\
 		# 		' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --outFileNamePrefix '+path_to_output_folder_genome_alignments
 
-		command = 'module add star/2.7.1a; ulimit -s 8192; STAR --runThreadN 16'+\
+		command = 'module add star/2.7.9a; ulimit -s 8192; STAR --runThreadN 16'+\
 				' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
-				' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20'+\
+				' --alignEndsType EndToEnd --sjdbOverhang 32 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20'+\
 				' --outFilterMismatchNmax 4 --winAnchorMultimapNmax ' +str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
 				' --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD --limitOutSJcollapsed 5000000'+\
 				' --limitOutSAMoneReadBytes '+str(limitOutSAMoneReadBytes) +\
-				' --outFilterMultimapScoreRange 4 --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
+				' --outFilterMultimapScoreRange '+str(outFilterMultimapScoreRange)+' --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
 				' --seedNoneLociPerWindow '+ str(seedNoneLociPerWindow) +' --seedPerWindowNmax '+ str(seedPerWindowNmax)  +\
 				' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --outFileNamePrefix '+path_to_output_folder_genome_alignments
 		
-
 		super_logger.info('Command to Align using STAR : %s ', command)
 		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 		out, err = p_1.communicate()

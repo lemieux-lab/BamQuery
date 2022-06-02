@@ -4,14 +4,12 @@ Cookbook
 
 .. _normal_mode_example:
 
+BamQuery always expects to find in the input folder `path_to_input_folder` the files : **BAM_directories.tsv** and **peptides.tsv**. 
+
 normal mode example
 ===================
 
-In normal mode, BamQuery expects to find in the input folder `path_to_input_folder` the files : **BAM_directories.tsv** and **peptides.tsv**. 
-
-In this mode, BamQuery will search for the peptide locations in the BAM/CRAM file(s) specified in the **BAM_directories.tsv**. 
-
-Along with the heatmaps expression of each peptide for each BAM/CRAM file/files, you will find the biotype analysis plots for all peptides in the `output/res/biotype` folder. 
+Although BamQuery has the --mode option, you can run the command line without specifying normal mode, as this is the default mode for running BamQuery.
 
 **Command line:**
 
@@ -22,6 +20,8 @@ Along with the heatmaps expression of each peptide for each BAM/CRAM file/files,
 **1. Input**
 ------------
 
+Download BAM_directories.tsv and peptides.tsv for an example of the format of these files.
+
 See:
 :download:`BAM_directories.tsv <_static/BAM_directories.tsv>`
 
@@ -31,10 +31,50 @@ See:
 **2. Output**
 -------------
 
-.. image:: _static/output.png
-   :scale: 50 %
-   :alt: output
-   :align: center
+BamQuery will create a new directory called **output** in the same directory as the input folder.
+
+This directory will contain 4 folders and the main outputs are organized as follows:
+
+.. code::
+
+	├── alignments
+	│   ├── missed_peptides.info
+	│   └── normal_mode_info_alignments.xlsx
+	├── logs
+	│   ├── BamQuery_Res_normal_mode.log
+	│   └── Information_BAM_directories.log
+	├── plots
+	│   ├── biotypes
+	│   │   ├── biotype_by_sample_group
+	│   │   │   ├── all_peptides
+	│   │   │   │   └── normal_mode_All_peptides.pdf
+	│   │   │   └── by_peptide_type
+	│   │   │       └── normal_mode_Ovarian_All_samples.pdf
+	│   │   └── genome_and_ERE_annotation
+	│   │       ├── all_peptides
+	│   │       │   └── normal_mode_All_peptides.pdf
+	│   │       └── by_peptide_type
+	│   │           └── normal_mode_Ovarian.pdf
+	│   └── heat_maps
+	│       └── transcription_evidence_heatmap
+	│           ├── average_transcription_expression_heatmap
+	│           │   └── norm_info.csv
+	│           └── total_transcription_expression_heatmap
+	└── res
+	    ├── biotype_classification
+	    │   ├── full_info_biotypes
+	    │   │   ├── 1_Genomic_and_ERE_Annotations_Full.csv
+	    │   │   ├── 2_Genomic_and_ERE_Annotations_Summary_Full.csv
+	    │   │   └── 3_Genomic_and_ERE_Anno_by_Region_Full.csv
+	    │   └── summary_info_biotypes
+	    │       ├── 1_General_Gen_and_ERE_Biotype_Consensus.csv
+	    │       ├── 2_Sample_Gen_and_ERE_Biotype_Consensus.csv
+	    │       ├── 3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv
+	    │       ├── biotypes_by_peptide_alignment_and_sample_explained_RNA.csv
+	    │       ├── biotypes_by_peptide_genome_explained.csv
+	    │       └── biotypes_by_peptide_sample_explained_RNA.csv
+	    ├── info_bam_files_tissues.csv
+	    └── normal_mode_count_norm_info.xlsx
 
 
 ---------------
@@ -47,31 +87,21 @@ See:
 
 .. code::
 
-	
-	Output
-	------|
-	      |---:> alignments
-	      -----------------|
-	      		       |---:> Alignments_information.dic
-	      		       |---:> missed_peptides.info
-	      		       |---:> normal_mode_example_info_alignments.xlsx
-	      		     
+	├── alignments
+	   ├── missed_peptides.info
+	   └── normal_mode_info_alignments.xlsx
 
-**Alignments_information.dic file**
-
-
-This file is a Python dictionary containing all the information related to the perfect alignments of the queried peptides. In this dictionary you can also find the read counts for all the peptides in each of the locations for each BAM/CRAM file.
 
 **missed_peptides.info file**
 
 
-This file will tell you the peptides for which BamQuery could not find locations in the genome. 
+This file will tell you the peptides for which BamQuery could not find locations in the genome. Therefore, quantification of the expression of these peptides is lacking.
 
 .. _normal mode example info alignments explanation xlsx file:
 
 **normal_mode_example_info_alignments.xlsx file**
 
-This file reports, for each peptide queried, all the locations in the genome that are perfect alignments for one or several Coding Sequences of a peptide. For each position, the strand, the coding sequence, the possible amino acid and nucleotide differences, and the SNVs annotated in the dbSNP database are reported. In the case of the latter, it will inform you that the coding sequence has some difference with the reference genome, but that it has been compensated by one or more annotated SNVs.
+This file reports, for each peptide queried, all locations in the genome that are perfect alignments for one or more MAP coding sequences. For each MAP: the position, the strand, the MCS, reference amino acid, nucleotide differences and the SNVs annotated in the dbSNP database are reported. In the case of the latter, it will be reported that the coding sequence has some difference with the reference genome, but that it has been compensated by one or more annotated SNVs.
 
 
 .. thumbnail:: _images/normal_mode_example_info_alignments.png
@@ -84,13 +114,9 @@ This file reports, for each peptide queried, all the locations in the genome tha
 
 .. code::
 
-	
-	Output
-	------|
-	      |---:> logs
-	      -----------|
-	      		 |---:> BamQuery_Res_normal_mode_example.log
-	      		 |---:> Get_Read_Count_BAM_directories.log
+	├── logs
+	│   ├── BamQuery_Res_normal_mode.log
+	│   └── Information_BAM_directories.log
 	      		       
 
 **BamQuery_Res_normal_mode_example.log file**
@@ -99,7 +125,8 @@ This file reports all the steps that have been performed in the BamQuery search.
 
 **Get_Read_Count_BAM_directories.log file**
 
-This file reports the BAM/CRAM files from which the primary read counts have been collected and stored in the allcounts.dic file.
+This file reports the BAM/CRAM files from which the primary read counts have been collected and stored in the Bam_files_info.dic file.
+
 
 **2.3. plots**
 --------------
@@ -108,28 +135,25 @@ The Plots folder will contain the heat map expression and biotype analysis plots
 
 .. code::
 
-	
-	Output
-	------|
-	      |---:> biotypes
-	      ---------------|
-	      		     |---:> biotype_by_sample_group
-	      		     ------------------------------|
-	      		                                   |---:> all_peptides
-	      		                                   |---:> by_peptide_type
-	      	             |---:> genome_and_ERE_annotation
-	      	             --------------------------------|
-	      		                                     |---:> all_peptides
-	      		                                     |---:> by_peptide_type
-	      |---:> heat_maps
-	      ----------------|
-	      		      |---:> normal_mode_example_rna_counts.pdf
-	      		      |---:> normal_mode_example_rna_norm.pdf
-	      		      |---:> r_plot
-	      		      -------------|
-	      		                   |---:> normal_mode_example_rna_norm_all_tissues.pdf
-	      		                   |---:> normal_mode_example_rna_norm_selected_tissues.pdf
+	├── plots
+	│   ├── biotypes
+	│   │   ├── biotype_by_sample_group
+	│   │   │   ├── all_peptides
+	│   │   │   │   └── normal_mode_All_peptides.pdf
+	│   │   │   └── by_peptide_type
+	│   │   │       └── normal_mode_Ovarian_All_samples.pdf
+	│   │   └── genome_and_ERE_annotation
+	│   │       ├── all_peptides
+	│   │       │   └── normal_mode_All_peptides.pdf
+	│   │       └── by_peptide_type
+	│   │           └── normal_mode_Ovarian.pdf
+	│   └── heat_maps
+	│       └── transcription_evidence_heatmap
+	│           ├── average_transcription_expression_heatmap
+	│           │   └── norm_info.csv
+	│           └── total_transcription_expression_heatmap
 
+	
 .. _heat maps folder:
 
 **heat_maps folder**
@@ -186,14 +210,21 @@ This folder contains pie charts organised as follows:
 
 .. code::
 
-	
-	Output
-	------|
-	      |---:> res
-	      ----------|
-	      		|---:> Annotation_Biotypes_consensus.xlsx
-	      		|---:> Annotation_Biotypes_full_info.xlsx
-	      		|---:> normal_mode_example_count_norm_info.xlsx
+	res
+	    ├── biotype_classification
+	    │   ├── full_info_biotypes
+	    │   │   ├── 1_Genomic_and_ERE_Annotations_Full.csv
+	    │   │   ├── 2_Genomic_and_ERE_Annotations_Summary_Full.csv
+	    │   │   └── 3_Genomic_and_ERE_Anno_by_Region_Full.csv
+	    │   └── summary_info_biotypes
+	    │       ├── 1_General_Gen_and_ERE_Biotype_Consensus.csv
+	    │       ├── 2_Sample_Gen_and_ERE_Biotype_Consensus.csv
+	    │       ├── 3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv
+	    │       ├── biotypes_by_peptide_alignment_and_sample_explained_RNA.csv
+	    │       ├── biotypes_by_peptide_genome_explained.csv
+	    │       └── biotypes_by_peptide_sample_explained_RNA.csv
+	    ├── info_bam_files_tissues.csv
+	    └── normal_mode_count_norm_info.xlsx
 
 .. note::
 	The biotype annotation is derived from the intersection of the peptide positions with the genomic and ERE annotations. 

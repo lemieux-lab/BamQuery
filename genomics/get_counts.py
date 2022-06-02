@@ -302,7 +302,8 @@ class GetCounts:
 		exists_count = os.path.exists(self.count_path)
 		exists_alignment_information = os.path.exists(self.alignment_information_path)
 		
-		last_treated_bam_file = os.path.exists(self.last_treated_bam_file )
+		last_treated_bam_file = os.path.exists(self.last_treated_bam_file)
+
 		if last_treated_bam_file:
 
 			with open(self.last_treated_bam_file , 'rb') as fp:
@@ -317,7 +318,7 @@ class GetCounts:
 			last_treated_bam_file = -1
 			to_write = {} 
 		
-
+		
 		if not exists_count :
 			t_0 = time.time()
 			

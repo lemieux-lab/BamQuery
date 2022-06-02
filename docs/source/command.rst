@@ -4,14 +4,16 @@ Command Line Options
 
 At the command line::
 
-    BamQuery.py --help
+    BamQuery --help
 
 
 .. code::
 
-	    usage: BamQuery.py [-h] [--mode MODE] [--strandedness] [--th_out TH_OUT]
-	                   [--light]
-	                   path_to_input_folder name_exp
+	    usage: BamQuery.py [-h] [--mode MODE] [--genome_version GENOME_VERSION]
+                   [--th_out TH_OUT] [--dbSNP DBSNP] [--strandedness]
+                   [--light] [--c] [--sc] [--var] [--maxmm] [--overlap]
+                   [--plots] [--dev]
+                   path_to_input_folder name_exp
 
 		======== BamQuery ========
 
@@ -23,11 +25,22 @@ At the command line::
 		optional arguments:
 		  -h, --help            show this help message and exit
 		  --mode MODE           BamQuery search mode : normal / translation
-		  --strandedness        Take into account strandedness of the samples
+		  --genome_version GENOME_VERSION
+		                        Genome version supported : v26_88 / v33_99 / v38_104
 		  --th_out TH_OUT       Threshold to assess expression comparation with other
 		                        tissues
+		  --dbSNP DBSNP         BamQuery dbSNP : 149 / 151 / 155 / 0
+		  --strandedness        Take into account strandedness of the samples
 		  --light               Display only the count and norm count for peptides and
 		                        regions
+		  --c                   Take into account the only common SNPs from the dbSNP
+		                        database chosen
+		  --sc                  Query Single Cell Bam Files
+		  --var                 Keep Variants Alignments
+		  --maxmm               Keep High Amount Alignments
+		  --overlap             Count overlapping reads
+		  --plots               Plot biotype pie-charts
+		  --dev                 Save all temps files
 
 ====================
 
@@ -60,65 +73,13 @@ name_exp
 
 To identify your BamQuery run, you must include a name.
 
-====================
-
-Format Input Files
-===================
-
-	Let's take a look at the format of these files.
-
-a. BAM_directories.tsv
-----------------------
-
-	This file should look like follows:
-
-	.. image:: _images/Bam_directories.png
-	   :alt: Format BAM_directories.tsv
-	   :align: left
-
-	BamQuery will search for all BAM/CRAM files in each path you include.
-
-	Note that:
-
-	1. The first column is the name of the BAM/CRAM files you want to query. The name describes the type of BAM/CRAM file(s)/file(s) found in the path.
-	2. The second column is the path to the BAM/CRAM file(s)/file(s).
-	3. The first and second columns are separated by a tab space. Please make sure that the space between the two columns is a tab space, otherwise BamQuery will throw an exception.
-	4. Do not use any headers in your tsv file.
-
-
-b. peptides.tsv
----------------
-
-	This file should look like follows:
-
-	.. image:: _images/peptides_tsv.png
-	   :alt: Format peptides.tsv
-	   :align: left
-
-
-	Please note that all the peptides can be pull into a single peptides.tsv, howver, you must follow the assigned format for each mode.
-
-	1. Peptides in peptide mode: running peptides in this mode assumes that you only know the amino acid sequence of the peptide. BamQuery will search for you all the possible coding sequences of every peptide and find all possible positions in the genome for the coding sequences.
-		a. Two columns separated by a tab space: in the first column add the amino acid sequence of the peptide, in the second column add the type of peptide to identify it. This name, for example, can refer to the condition or sample in which the peptide was identified. 
-		b. If a peptide has several peptide types, separate each peptide type with "_". For example: `lymphoma_colon`, would mean that the peptide was identified in lymphoma and colon cells. 
-		c. BamQuery will reverse translate all peptides in this mode.
-
-	2. Peptides in coding sequence mode: running peptides in this mode assumes that the amino acid and nucleotide sequence of each peptide being queried is known.
-		a. Three columns separated by a tab space: in the first column add the amino acid sequence of the peptide, in the second column add the nucleotide sequence of the peptide, and in the third column add the type of peptide to identify it. This name, for example, can refer to the condition or sample in which the peptide was identified.
-		b. If a peptide has several peptide types, separate each peptide type with "_". For example: `lymphoma_colon`, would mean that the peptide was identified in lymphoma and colon cells.
-
-	3. Peptides in manual mode: running peptides in this mode assumes that the amino acid, nucleotide coding sequence, and the location and chain of each peptide being queried are known.
-		a. Five columns separated by a tab space: in the first column add the amino acid sequence of the peptide, in the second column add the nucleotide sequence of the peptide, in the third column add the position of the peptide, in the fourth column add the string (-) backward or (+) forward for the location of the peptide in the genome, and in the last column add the type of peptide to identify it. This name, for example, can refer to the condition or sample in which the peptide was identified.
-		b. The peptide position has the following format: chrX:start-end|start-end. Note: chrX (for any chromosome), start = start position, end = end position. Only use "|" to specify if the peptide is spliced.
-		c. The strand should be specified as follows (-) backward or (+) forward.
-		d. If a peptide has multiple peptide types, separate each peptide type with "_". For example: `lymphoma_colon`, would mean that the peptide was identified in lymphoma and colon cells.
-
 
 Optional Arguments
 ==================
 
---mode
-------
+
+*--mode*
+--------
 
 BamQuery has to modes of search : normal / translation
 

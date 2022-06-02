@@ -111,7 +111,7 @@ def get_heat_map(df, path_to_output_folder, mode, path_temps_file, name_exp, nam
 			
 		df_tpm.to_csv(path, index=False)
 
-		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+' '+name_exp+name+' '+label
+		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+' '+name_exp+name+' '+label+' '+str(th_out)
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 
 	if norm and peptides_total < 400:
@@ -205,12 +205,12 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 	wedges1, texts1, autotexts1 = plt.pie(outer_sizes, colors=colors_outer_labels, 
 							startangle=180, pctdistance=0.9, shadow=False, 
 							textprops={'fontsize': fontsize, 'fontweight' : 'normal'},
-							autopct='%1.0f%%', wedgeprops={"edgecolor":"w",'linewidth': 5, 'antialiased': True})
+							autopct='%1.0f%%', wedgeprops={"edgecolor":"w",'linewidth': 1, 'antialiased': True})
 
 	wedges, texts, autotexts = plt.pie(intra_sizes, colors=colors_intra_labels, 
 							radius=0.8, startangle=180, 
 							textprops={'fontsize': fontsize, 'fontweight' : 'normal'}, 
-							shadow=True, autopct='%1.0f%%', pctdistance=0.8,
+							shadow=True, autopct='%1.1f%%', pctdistance=0.8,
 							wedgeprops={"edgecolor":"w",'linewidth': 1, 'antialiased': True})
 	
 	#plt.legend(wedges1, outer_labels, loc="best", bbox_to_anchor=(0.7,-0.05, 0.5, 0.5), fontsize = fontsize, frameon=True)

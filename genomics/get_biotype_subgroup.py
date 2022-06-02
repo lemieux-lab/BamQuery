@@ -88,7 +88,7 @@ class BiotypeAssignation:
 		with open(peptides_by_type_path, 'rb') as fp:
 			peptides_by_type = pickle.load(fp)
 
-		print ('Nb peptides to compute biotype classification : ', len(peptides_to_filter))
+		print ('Nb peptides to fitler biotype classification : ', len(peptides_to_filter))
 
 		def get_info_peptide_alignments():
 
@@ -174,7 +174,7 @@ class BiotypeAssignation:
 								repName = rep_names[0]
 								if 'antisense_' in repName:
 									repName_aux = repName.split('antisense_')[1]
-									repClass = self.biotypes_names.index('Antisense_'+self.biotypes_names[self.biotypes_names.index(self.ere_info[repName_aux][0])])
+									repClass = self.biotypes_names.index('Antisense_EREs')
 									repFamily = self.ere_info[repName_aux][1]
 									repFamily = 'antisense_'+repFamily
 								else:

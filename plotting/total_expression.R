@@ -4,6 +4,7 @@ norm_results = args[1]
 output = args[2]
 name = args[3]
 label = args[4]
+thout = as.numeric(args[5])
 ###############################################################################
 
 library(ggplot2)
@@ -16,16 +17,25 @@ proS = split(tpm, list(tpm$Peptide, tpm$Peptide_Type), drop = TRUE)
 
 proSplus = Reduce(function(...) rbind(...), proS)
 
+proSplus <- proSplus[order(Sample),]
 
-label_2 = sprintf('%s%s', label, ' > 0' ) 
+if (grepl('Reads_count', label)) {
+  g = ggplot(proSplus, aes(x = Sample,  y = Peptide, fill = value, color = as.factor(value > 0)))
+  label_2 = sprintf('%s%s', label, ' > 0' ) 
+}else if (grepl('TPM', label)) {
+  g = ggplot(proSplus, aes(x = Sample,  y = Peptide, fill = value, color = as.factor(value > 0)))
+  label_2 = sprintf('%s%s', label, ' > 0' ) 
+}else{
+  g = ggplot(proSplus, aes(x = Sample,  y = Peptide, fill = value, color = as.factor(value > log10(thout + 1))))
+  label_2 = sprintf('%s%s', label, ' > Log10(8.55)' ) 
+}
 
-g = ggplot(proSplus, aes(x = Sample,  y = Peptide, fill = value, color = as.factor(value > 0)))
 g = g + labs(col = label_2) 
 g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
-g = g + scale_color_manual(values=c("grey", "black"))
+g = g + scale_color_manual(values=c("FALSE"="grey", "TRUE"="black"))
+g = g + guides(color = guide_legend(override.aes = list(fill = "white"))) 
 
-
-if (grepl('TPM', label_2)) {
+if (grepl('TPM', label)) {
   g = g + scale_fill_gradient(low = 'snow1', high = 'lightcoral', na.value = 'white')
   }else{
     g = g + scale_fill_gradient(low = 'snow1', high = 'steelblue', na.value = 'white')
