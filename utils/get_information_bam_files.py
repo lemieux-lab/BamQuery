@@ -321,8 +321,8 @@ class GetInformationBamFiles:
 							dictionary_total_reads_bam_files[sample][2] = tissue_name
 							dictionary_total_reads_bam_files[sample][3] = tissue_type
 							dictionary_total_reads_bam_files[sample][4] = short_list
-							bam_files_list[5] = tissue_name
-							bam_files_list[6] = tissue_type
+							bam_files_list[sample].append(tissue_name)
+							bam_files_list[sample].append(tissue_type)
 						else:
 							os.remove(path_to_lock_file)
 							self.bam_files_logger.info('Unlock Bam_files_info')
