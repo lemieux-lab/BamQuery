@@ -273,7 +273,10 @@ class BamQuery:
 
 			self.super_logger.info('========== Alignment : Done! ============ ')
 			print ('Alignment : Done!')
-
+			if len(self.perfect_alignments) == 0:
+				self.super_logger.info('========== No genomic locations were found for the peptides queried. ============')
+				self.super_logger.info('========== BamQuery status: finished! ============')
+				exit()
 
 		if len(self.input_file_treatment.manual_mode) > 0 :
 

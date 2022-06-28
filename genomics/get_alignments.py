@@ -327,12 +327,12 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 			else:
 				pass
 
-	if var:
-		new_sequence = "".join(list_seq_reference_local)
-		local_translation_peptide_aux = translation_seq(chr, new_sequence)
-		differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
-	else:
-		differences_pep = []
+	#if var:
+	new_sequence = "".join(list_seq_reference_local)
+	local_translation_peptide_aux = translation_seq(chr, new_sequence)
+	differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
+	#else:
+	#	differences_pep = []
 	
 	if len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
