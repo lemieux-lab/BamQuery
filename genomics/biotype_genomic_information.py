@@ -66,8 +66,8 @@ class BiotypeGenomicSearch:
 					except KeyError:
 						info_transcript = info_transcripts_dic[transcript]
 						tsl = info_transcript['Info'][9]
-						if tsl != '4' and tsl != '5' : # Only well supported transcripts are taken into account for biotype calculation. https://m.ensembl.org/info/genome/genebuild/transcript_quality_tags.html
-							transcripts_to_search[transcript] = [info_transcript, [key_peptide]]
+						#if tsl != '4' and tsl != '5' : # Only well supported transcripts are taken into account for biotype calculation. https://m.ensembl.org/info/genome/genebuild/transcript_quality_tags.html
+						transcripts_to_search[transcript] = [info_transcript, [key_peptide]]
 		
 		pool_ = ProcessPool(nodes=NUM_WORKERS)
 		results = pool_.map(self.biotype_gene_and_transcript_level, list(transcripts_to_search.values()))

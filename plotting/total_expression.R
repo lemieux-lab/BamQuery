@@ -28,6 +28,7 @@ if (grepl('Reads_count', label)) {
 }else{
   g = ggplot(proSplus, aes(x = Sample,  y = Peptide, fill = value, color = as.factor(value > log10(thout + 1))))
   label_2 = sprintf('%s%s', label, ' > Log10(8.55)' ) 
+  #label = sprintf('%s%s%s', 'mean > log10(', th_out, '+ 1)' ) 
 }
 
 g = g + labs(col = label_2) 

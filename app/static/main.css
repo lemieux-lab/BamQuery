@@ -111,3 +111,20 @@ a.article-title:hover {
   margin:0.2em auto;
   }
 }
+
+.section #basic-2-flip-flop-synchronizer{
+     text-align:justify;
+}
+
+div.body p {
+    text-align: justify;
+    margin: 1.5em 0 1.5em 0;
+}
+
+div.body li, div.body dd {
+    text-align: justify;
+}
+
+table.docutils .justify-align {
+    text-align: justify;
+}

@@ -10,6 +10,7 @@ from readers.intersection_alignments_annotations import IntersectAnnotations
 
 from utils.get_information_bam_files import GetInformationBamFiles
 from utils.reverse_translation import ReverseTranslation
+from utils.immunogenicity import Immunogenicity
 from utils.paths_arrangements import *
 
 from genomics.alignments import *
@@ -244,6 +245,12 @@ class BamQuery:
 
 		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger, self.sc, self.genome_version)
 
+		bam_files_logger 
+		handlers = bam_files_logger.handlers[:]
+		for handler in handlers:
+			bam_files_logger.removeHandler(handler)
+			handler.close()
+
 		self.super_logger.info('Total Bam Files to Query : %d.', len(self.bam_files_info.bam_files_list))
 
 		self.input_file_treatment = ReadInputFile(self.path_to_input_folder, self.super_logger)
@@ -404,6 +411,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	sc = False
 	var = False
 	maxmm = False
+	overlap = False
 	
 	if dbSNP == 'dbSNP_149':
 		dbSNP = 149
@@ -420,26 +428,34 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap)
 	
+	predictions = Immunogenicity(path_to_output_folder, name_exp)
+	predictions.get_predictions()
+
 	t2 = time.time()
 	total = t2-t0
 	
-	# try:
-	# 	super_logger.info(' ========== Removing Temporal Files ============ ')
-	# 	shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)
-	# 	shutil.rmtree(path_to_output_folder+'genome_alignments', ignore_errors=True)
-	# 	shutil.rmtree(path_to_output_folder+'alignments', ignore_errors=True)
-	# 	shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
-	# 	shutil.rmtree(path_to_output_folder+'res/AUX_files', ignore_errors=True)
-	# 	shutil.rmtree(path_to_output_folder+'res/temps_files', ignore_errors=True)
-	# 	os.remove(path_to_output_folder+"res/info_bam_files_tissues.csv")
-
-	# except FileNotFoundError:
-	# 	pass
-
 	super_logger.info('Total time run function BamQuery to end : %f min', (total/60.0))
+	handlers = super_logger.handlers[:]
+	for handler in handlers:
+		super_logger.removeHandler(handler)
+		handler.close()
+
+	try:
+		super_logger.info(' ========== Removing Temporal Files ============ ')
+		shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)
+		shutil.rmtree(path_to_output_folder+'genome_alignments', ignore_errors=True)
+		shutil.rmtree(path_to_output_folder+'alignments', ignore_errors=True)
+		shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
+		shutil.rmtree(path_to_output_folder+'res/AUX_files', ignore_errors=True)
+		shutil.rmtree(path_to_output_folder+'res/temps_files', ignore_errors=True)
+		os.remove(path_to_output_folder+"res/info_bam_files_tissues.csv")
+
+	except FileNotFoundError:
+		pass
 	
+
 	return path_to_output_folder
 
 
@@ -542,7 +558,10 @@ def main(argv):
 	total = t2-t0
 	
 	super_logger.info('Total time run function BamQuery to end : %f min', (total/60.0))
-
+	handlers = super_logger.handlers[:]
+	for handler in handlers:
+		super_logger.removeHandler(handler)
+		handler.close()
 
 if __name__ == "__main__":
 	main(sys.argv[1:])

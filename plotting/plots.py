@@ -82,6 +82,22 @@ def get_heat_map(df, path_to_output_folder, mode, path_temps_file, name_exp, nam
 		with open(path_temps_file+'/bam_files_info_query.dic', 'rb') as handle:
 			bam_files_info_query = pickle.load(handle)
 
+		# This is to put for each peptide type all the peptides corresponding to them. It doesn't take into account that
+		# the peptide can be assoacited with other peptide type
+
+		# for index, row in df.iterrows():
+		# 	peptide_type = row['Peptide Type'].split(';')
+		# 	for type_ in peptide_type:
+		# 		peptide = row['Peptide']
+		# 		aux = [type_, peptide]
+		# 		for i, sample in enumerate(columns_names_bam_files):
+		# 			aux.append(row[sample])
+		# 			aux.append(sample)
+		# 			tissue = bam_files_info_query[sample][6]
+		# 			aux.append(tissue)
+		# 			data.append(aux)
+		# 			aux = [type_, peptide]
+
 		for index, row in df.iterrows():
 			peptide_type = row['Peptide Type']
 			peptide = row['Peptide']
@@ -99,7 +115,7 @@ def get_heat_map(df, path_to_output_folder, mode, path_temps_file, name_exp, nam
 		else:
 			path_to_output_folder = path_to_output_folder_aux+'/total_transcription_expression_heatmap/'
 
-		df_tpm = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample', 'Tissue'])	
+		df_counts = pd.DataFrame(data, columns=['Peptide_Type', 'Peptide', 'value', 'Sample', 'Tissue'])	
 		path = path_to_output_folder+name_exp+name+'.csv'
 		script_R_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/total_expression.R'
 		
@@ -107,9 +123,9 @@ def get_heat_map(df, path_to_output_folder, mode, path_temps_file, name_exp, nam
 			label = 'Log10\(RPHM\+1\)'
 		else:
 			label = 'Log10\(Reads_count+1\)'
-			df_tpm['value'] = df_tpm['value'].apply( lambda x: np.log10(x+1))
+			df_counts['value'] = df_counts['value'].apply( lambda x: np.log10(x+1))
 			
-		df_tpm.to_csv(path, index=False)
+		df_counts.to_csv(path, index=False)
 
 		command = 'Rscript '+script_R_path+' '+path+' '+path_to_output_folder+' '+name_exp+name+' '+label+' '+str(th_out)
 		subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)

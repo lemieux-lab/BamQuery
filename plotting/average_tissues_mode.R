@@ -75,6 +75,8 @@ label = sprintf('%s%s%s', 'mean > log10(', th_out, '+ 1)' )
 
 if (mode == 'translation'){
   g = ggplot(proSplusMerged, aes(x = Tissue, y = Peptide, fill = mean) )
+  #label = sprintf('%s', 'mean (log10(RPHM + 1))' ) 
+  #g = g + guides(fill = guide_colourbar(title = label))
 }else{
   g = ggplot(proSplusMerged, aes(x = Tissue, y = Peptide, fill = mean, color = as.factor(mean > log10(th_out + 1))) )
   g = g + labs(col = label) 
@@ -109,6 +111,8 @@ filename = sprintf('%s_%s', name, 'selected_tissues.pdf')
 
 if (mode == 'translation'){
   g = ggplot(proSplusMerged[proSplusMerged$Short_list == 'yes', ], aes(x = Tissue, y = Peptide, fill = mean))
+  label = sprintf('%s', 'mean (log10(RPHM + 1))' ) 
+  g = g + guides(fill = guide_colourbar(title = label))
 }else{
   g = ggplot(proSplusMerged[proSplusMerged$Short_list == 'yes', ], aes(x = Tissue, y = Peptide, fill = mean, color = as.factor(mean > log10(th_out + 1))))
   g = g + labs(col = label)

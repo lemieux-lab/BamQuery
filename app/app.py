@@ -162,7 +162,7 @@ def taskstatus(name_exp, task_id):
 @app.route("/display_heatmap/<name_exp>", methods=["GET"], endpoint='display_heatmap')
 def display_heatmap(name_exp) :
 	name_plot = name_exp+'_rna_norm_all_tissues.pdf'
-	path_heatmap = os.path.join(app.root_path, 'static/temps',name_exp,'output','plots/heat_maps/r_plot',name_plot)
+	path_heatmap = os.path.join(app.root_path, 'static/temps',name_exp,'output','plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap',name_plot)
 	return send_file(path_heatmap, attachment_filename = name_plot)
 
 @app.route("/display_biotype/<name_exp>", methods=["GET"], endpoint='display_biotype')

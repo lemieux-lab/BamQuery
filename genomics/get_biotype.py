@@ -366,6 +366,8 @@ class BiotypeAssignation:
 
 	def compute_genomic_and_ere_by_peptide(self, df_position_biotypes_summary_genome):
 
+		# Biotype based in the biotype genomic locations, no level of transcription!
+
 		if self.plots:
 			biotypes_by_peptide_type_genomic_ere_annot = {}
 			biotypes_all_peptides_genomic_ere_annot = {}

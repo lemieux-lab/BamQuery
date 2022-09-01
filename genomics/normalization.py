@@ -153,6 +153,12 @@ class Normalization:
 					for peptide, info in peptides.items():
 						mean = np.mean(info)
 						median = np.median(info)
+						# This is to get for each peptide the normalisation even though the peptide is several peptide types.
+						# Independent normalisation for the same peptide in each peptide type
+						# peptide_type = self.peptides_types[peptide].split(';')
+						# for type_ in peptide_type:
+						# 	aux = [peptide, type_, tissue_name, tissue_type, short_list, median, mean]
+						# 	data.append(aux)
 						peptide_type = self.peptides_types[peptide]
 						aux = [peptide, peptide_type, tissue_name, tissue_type, short_list, median, mean]
 						data.append(aux)
