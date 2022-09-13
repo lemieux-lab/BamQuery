@@ -161,6 +161,7 @@ class InfoTranscripts:
 	def get_info_line(self, line):
 
 		#chrX	HAVANA	transcript	155466540	155494110	.	+	.	gene_id "ENSG00000224533.4"; transcript_id "ENST00000433624.1"; gene_type "antisense"; gene_name "TMLHE-AS1"; transcript_type "antisense"; transcript_name "TMLHE-AS1-002"; level 2; transcript_support_level "1"; tag "basic"; havana_gene "OTTHUMG00000022672.1"; havana_transcript "OTTHUMT00000058815.1";	26
+		#chr1    HAVANA  CDS     73959666        73959758        .       -       2       gene_id "ENSMUSG00000055322.17"; transcript_id "ENSMUST00000191104.7"; gene_type "protein_coding"; gene_name "Tns1"; transcript_type "protein_coding"; transcript_name "Tns1-217"; exon_number 27; exon_id "ENSMUSE00000156635.4"; level 2; protein_id "ENSMUSP00000140317.2"; transcript_support_level "5"; mgi_id "MGI:104552"; tag "inferred_transcript_model"; tag "RNA_Seq_supported_partial"; tag "basic"; tag "appris_alternative_2"; tag "CCDS"; ccdsid "CCDS48288.2"; havana_gene "OTTMUSG00000047279.8"; havana_transcript "OTTMUST00000122614.3"; 
 		splitLine = line.strip().split("\t")
 		chr = splitLine[0]
 		type_ = splitLine[2]
@@ -198,9 +199,8 @@ class InfoTranscripts:
 
 
 def main(argv):
-
-	annotation = sys.argv[0]
-	path_output = sys.argv[1]
+	annotation = argv[0]
+	path_output = argv[1]
 	info_transcript = InfoTranscripts()
 	info_transcript.get_info_transcripts(annotation, path_output)
 	

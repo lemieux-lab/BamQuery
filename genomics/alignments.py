@@ -12,7 +12,7 @@ path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 NUM_WORKERS =  multiprocessing.cpu_count()
 
 
-def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode):
+def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode, mouse):
 
 	path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 	path_to_output_folder_alignments = path_to_output_folder+'alignments/'
@@ -23,6 +23,9 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		index_genome = path_to_lib+'genome_versions/genome_v33_99/Index_STAR_2.7.9a/'
 	else:
 		index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_STAR_2.7.9a/'
+
+	if mouse:
+		index_genome = path_to_lib+'genome_versions/genome_mouse_m30/Index_STAR_2.7.9a/'
 	
 	exist = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 	exist_sam_dic = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam.dic')
@@ -93,10 +96,10 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 	else:
 		super_logger.info('Alignment file already exists in the output folder : %s --> Skipping this step!', path_to_output_folder_alignments+'/Aligned.out.sam')
 	
-	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode)
+	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse)
 	return perfect_alignments
 
-def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode):
+def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse):
 	t_0 = time.time()
 	sam_file = path_to_output_folder_genome_alignments+'/Aligned.out.sam'
 	exists = os.path.exists(path_to_output_folder_alignments+'/Alignments_information.dic')
@@ -114,7 +117,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 		
 		if not exists_light and not exists:
 
-			res_star = get_alig.get_alignments(sam_file, dbSNP, common, super_logger, var, genome_version, mode)
+			res_star = get_alig.get_alignments(sam_file, dbSNP, common, super_logger, var, genome_version, mode, mouse)
 			
 			t_2 = time.time()
 			total = t_2-t_0
@@ -143,16 +146,20 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 			pool.close()
 			pool.join()
 			
-			info_cosmic = results[0][1]
-			
-			info_cosmic_to_print = get_info_cosmic(info_cosmic)
-			
-			if len(info_cosmic_to_print) == 0:
-				info_cosmic_to_print = [['NA']*len(columns_cosmic)]
+			if not mouse:
+				info_cosmic = results[0][1]
+				info_cosmic_to_print = get_info_cosmic(info_cosmic)
+				
+				if len(info_cosmic_to_print) == 0:
+					info_cosmic_to_print = [['NA']*len(columns_cosmic)]
+
+				df3 = pd.DataFrame(info_cosmic_to_print, columns = columns_cosmic)
+			else:
+				df3 = pd.DataFrame()   
 
 			df1 = pd.DataFrame(perfect_alignments_to_print, columns = columns)
 			df2 = pd.DataFrame(variants_alignments_to_print, columns = columns)
-			df3 = pd.DataFrame(info_cosmic_to_print, columns = columns_cosmic)
+			
 
 			write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, df1, df2, df3)
 			

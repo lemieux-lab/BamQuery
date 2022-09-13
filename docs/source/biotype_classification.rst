@@ -1,11 +1,12 @@
-======================
-Biotype Classification
-======================
+.. _biotypes:
 
-.. _biotype:
+=========
+Biotypes
+=========
 
 
-Biotype classification based on `Ensembl`_ and `Repeat_Masker`_ annotations.
+
+BamQuery biotype classification is based on `Ensembl`_ and `Repeat_Masker`_ annotations.
 
 
 .. _Ensembl: https://m.ensembl.org/info/genome/genebuild/biotypes.html

@@ -7,54 +7,103 @@ Methods
 BamQuery Steps
 ==============
 
-BamQuery follows four important steps for each peptide queried. 
+BamQuery works on Bam files in five steps. 
 
-.. image:: _static/Approach.png
+.. image:: _images/Approach.png
    :alt: Approach
    :align: center
 
 
-1. Collect the locations of the MAP Coding Sequences (MCS) in the genome. 
-------------------------------------------------------------------------
+1. Reverse translation of MHC-I-associated peptides (MAPs). 
+-----------------------------------------------------------
 
-The sequences from the manual mode peptide reverse translation will be compiled into a **<query_name>.fastq** file along with any MCS in MAP coding sequence mode. These sequences will then be mapped to the reference genome version (GENCODE version 26, 33 or 38 ) selected by the user using the STAR aligner.
-**MCS genomic locations** are collected from the perfect alignments in the output STAR file Aligned.out.sam. 
-A perfect alignment is then defined as one in which the MCS exactly matches the sequence at the alignment according to the reference genome. A perfect alignment is also one in which the MCS does not exactly match the reference, but any mismatches are supported by SNPs included in the user-selected dbSNP (149,151,155 dbSNP releases). 
+Each MAP in `Peptide mode`_ peptide mode is reverse-translated. MAP coding sequences (MCS) are compiled into a **<query_name>.fastq** file along with any MCS from MAPs in the `MAP coding sequence mode`_ .
+
+.. _collect locations:
+
+2. Collect the locations of the MAP Coding Sequences (MCS) in the genome. 
+--------------------------------------------------------------------------
+
+The MCSs in the **<query_name>.fastq** file are mapped through the STAR aligner to the reference genome version (GENCODE version 26, 33 or 38 ) selected by the user.
+
+**The genomic locations of the MCS** are collected from the perfect alignments in the output STAR file Aligned.out.sam. 
+A perfect alignment is defined as one in which the MCS exactly matches the reference genome sequence. A perfect alignment is also one in which the MCS does not exactly match the reference, but any mismatch is supported by SNPs included in the user-selected dbSNP (149,151,155 dbSNP releases). 
 
 
-2. Retrieve the total count of RNA-seq reads for the MAP. 
----------------------------------------------------------
+3. Count RNA-seq reads that exactly bear the MCS. 
+--------------------------------------------------
 
 Each BAM/CRAM file will be queried at all genomic locations collected for a MAP. 
-Primary RNA-seq reads at each location will be queried using the python **pysam** library. Each read will then be scrutinized to count only those reads that carry the MCS reported at the location.
-Finally, BamQuery will report the total count of the primary RNA-seq reads on each BAM/CRAM file that exactly match the MCSs of a peptide. 
+The primary RNA-seq reads at each location will be queried using the python **pysam** library. Each read will be examined to count only those reads that carry the MCS reported at the location.
+Finally, BamQuery will report the total count of RNA-seq primary reads in each BAM/CRAM file that exactly match the MCS of a peptide. 
 
 
 .. warning::
-	Total RNA-seq reads count changes according to the strandedness parameter.
+	Total RNA-seq reads count changes according to the :ref:`strandedness` parameter.
 
-3. Normalization. 
+4. Normalization. 
 -----------------
 
-The :math:`tr_{MAP}` count is transformed into a number of reads detected per :math:`10^{8}` reads sequenced (𝑟𝑝ℎ𝑚) following the formula : :eq:`rphm`. :math:`R_{t}` represents the total number of reads sequenced in a given RNA-Seq dataset. These final values are log-transformed :math:`log_{10} (𝑟𝑝ℎ𝑚 + 1)`.
+The :math:`tr_{MAP}` count is transformed into a number of reads detected per :math:`10^{8}` reads sequenced (𝑟𝑝ℎ𝑚) following the formula : :eq:`rphm`. :math:`R_{t}` represents the total number of reads sequenced in a given RNA-Seq dataset. These final values are log-transformed :math:`log_{10} (𝑟𝑝ℎ𝑚 + 1)` to allow comparison and averaging between samples, thus removing the bias of large values.
 
 
 .. math::
 	𝑟𝑝ℎ𝑚 = \frac{tr_{MAP} } {R_{t} } * 10^{8} 
 	:label: rphm
 
-4. Biotype classification. 
+
+.. _biotype:
+
+5. Biotype classification. 
 --------------------------
 
-Each MAP is classified according to all its MCS genomic locations and their transcription level. Biotype screening is performed using GENCODE annotations according to the reference genome selected by the user and the RepeatMasker annotations to account for human ERE sequences. All MCS genomic locations are included in a BED file for intersect with annotations using BEDtools 73.  To account for locations overlapping several transcripts, reads were scales based on 
+Each MAP is classified according to all its MCS genomic locations and their transcription level. 
+Biotype screening is performed using GENCODE annotations according to the reference genome selected by the user and the RepeatMasker annotations to account for human ERE sequences. 
+All MCS genomic locations are included in a BED file for intersect with annotations using BEDtools.
+To account for locations overlapping with several transcripts, reads were scaled according to the read distribution coefficient for each biotype from estimation of those parameters with the expectation maximization (EM) statistical model. |br|
+For more information, see :ref:`biotypes`.
 
+
+As a result, BamQuery attributes a comprehensive RNA expression to any MAP of interest in any user-selected RNA-seq dataset. 
+
+
+---------------
+
+
+Input Modes
+===================
+
+BamQuery is designed to analyze MAPs ranging in length from 8 to 11 amino acids (aa). 
+As peptide input, BamQuery supports three different formats that can be pulled into a single input file (See `peptides tsv`_). 
+
+.. _Peptide mode:
+
+**A) Peptide mode:** only the amino acid sequence of the MAP is provided, hence BamQuery performs a comprehensive search for its RNA-seq expression. 
+
+.. _MAP coding sequence mode:
+
+**B) MAP coding sequence mode:** the amino acid sequence of the MAP is provided, hence BamQuery performs the search for the expression of the given MCS. 
+
+**C) Manual mode:** the amino acid sequence of the MAP is provided followed by a MCS, the corresponding location in the genome of the given MCS, the strand (+ forward or - reverse), whereby BamQuery performs the expression search at the given location for the given MCS.
+
+
+
+-----------
+
+
+.. _format input files:
 
 Format Input Files
 ===================
 
-	Let's take a look at the format of these files.
 
-**a. BAM_directories.tsv**
+BamQuery requires two input file paths to search for RNA expression:
+
+**A) BAM_directories:** list of Bam files in which the search is performed
+**B) peptides.tsv:** list of peptides to be searched
+
+
+**A) BAM_directories.tsv**
 --------------------------
 
 	This file should look like follows:
@@ -63,17 +112,20 @@ Format Input Files
 	   :alt: Format BAM_directories.tsv
 	   :align: left
 
-	BamQuery will search for all BAM/CRAM files in each path you include.
+	BamQuery collects all BAM/CRAM files in each path included in the list. For instance from the path /home/gtex/, BamQuery collects all the bam files for every tissue in gtex.
 
 	Note that:
 
 	1. The first column is the name of the BAM/CRAM file or group of files to be queried. This name should describe the type of BAM/CRAM file(s).
 	2. The second column should be the path to the BAM/CRAM file(s).
-	3. The first and second columns are separated by a tab space. Please make sure that the space between the two columns is a tab space, otherwise BamQuery will throw an exception.
-	4. 4. Do not use any headers in your tsv file.
+	3. The first and second columns are separated by a tab space. 
+	4. Do not use any headers in your tsv file.
 
 
-**b. peptides.tsv**
+.. _peptides tsv:
+
+
+**B) peptides.tsv**
 -------------------
 
 	This file should look like follows:
@@ -83,41 +135,36 @@ Format Input Files
 	   :align: left
 
 
-	Note that all peptides can be pulled into a single peptides.tsv, however, you must follow the format assigned for each mode.
+	Note that all modes can be merged into a single peptides.tsv, however, you must follow the format assigned for each mode.
 
-	**Peptides in peptide mode:** 
-	running peptides in this mode assumes that you only know the amino acid sequence of the peptide. BamQuery will reverse translate those peptides in order to find all possible locations in the genome for the MAP coding sequences.
 	
-	Two columns separated by a tab space: 
+	.. warning::
+		If a peptide has several peptide types, separate each peptide type with ", or ;". For example: `lymphoma,colon`, would mean that the peptide was identified in lymphoma and colon cells.
 
-	a. In the first column add the amino acid sequence of the peptide.
-	b. In the second column add the type of peptide to identify it. This name, for example, may refer to the condition or sample in which the peptide was identified. 
+	**Peptides in peptide mode:** |br|
+	Two columns separated by a tab space: |br|
+	a. amino acid sequence of the peptide. |br|
+	b. type of peptide to identify it. This name, for example, may refer to the condition or sample in which the peptide was identified. 
 		
-	**Peptides in coding sequence mode:** running peptides in this mode assumes that the amino acid and nucleotide sequence of each peptide queried is known.
-	
-	Three columns separated by a tab space: 
-
-	a. In the first column the amino acid sequence of the peptide is added. 
-	b. In the second column the nucleotide sequence of the peptide.
-	c. In the third column the type of peptide to identify it. 
+	**Peptides in coding sequence mode:** |br|
+	Three columns separated by a tab space: |br|
+	a. amino acid sequence of the peptide. |br|
+	b. nucleotide sequence of the peptide. |br|
+	c. type of peptide to identify it. 
 		
-	**Peptides in manual mode:** 
-	running peptides in this mode assumes that the amino acid, nucleotide coding sequence, and the location and strand of each peptide queried are known.
-	
-	Five columns separated by a tab space:
-
-	a. In the first column add the amino acid sequence of the peptide.
-	b. In the second column add the nucleotide sequence of the peptide.
-	c. In the third column add the position of the peptide.
-	d. In the fourth column add the strand (-) backward or (+) forward for the location of the peptide in the genome.
-	e. In the last column add the type of peptide to identify it. 
+	**Peptides in manual mode:** |br|
+	Five columns separated by a tab space: |br|
+	a. amino acid sequence of the peptide. |br|
+	b. nucleotide sequence of the peptide. |br|
+	c. position of the peptide. |br|
+	d. strand backward (-) or forward (+) for the location of the peptide in the genome. |br|
+	e. type of peptide to identify it. 
 
 	.. warning::
 		The peptide location must follow the format: chrX:start-end|start-end. Note: chrX (for any chromosome), start = start location, end = end location. Only use "|" to specify if the peptide is spliced.
 		The strand must be specified as (-) backward or (+) forward.
 		
 
+.. |br| raw:: html
 
-.. warning::
-	If a peptide has several peptide types, separate each peptide type with ", or ;". For example: `lymphoma,colon`, would mean that the peptide was identified in lymphoma and colon cells.
-
+      <br>

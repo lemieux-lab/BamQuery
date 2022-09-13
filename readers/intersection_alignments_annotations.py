@@ -6,9 +6,10 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class IntersectAnnotations:
 
-	def __init__(self, perfect_alignments, path_to_output_folder, mode, name_exp, super_logger, genome_version):
+	def __init__(self, perfect_alignments, path_to_output_folder, mode, name_exp, super_logger, genome_version, mouse):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.perfect_alignments = perfect_alignments
+		self.mouse = mouse
 
 		if mode == 'translation':
 			self.path_to_output_folder = path_to_output_folder+'res_translation/BED_files/'
@@ -26,6 +27,9 @@ class IntersectAnnotations:
 		else:
 			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v38_104/gencode.v38.primary_assembly.annotation.gtf'
 		
+		if self.mouse:
+			self.annotation_transcripts = path_to_lib+'genome_versions/genome_mouse_m30/gencode.vM30.primary_assembly.annotation.gtf'
+
 		self.annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
 
 
@@ -89,6 +93,25 @@ class IntersectAnnotations:
 			self.super_logger.info('Using bedtools to intersect alignments to annotations.')
 
 			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_EREs+' -wao > '+self.path_to_output_folder + '/intersection_with_annotated_EREs.bed'
+			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+			out, err = p_1.communicate()
+
+			t_2 = time.time()
+			total = t_2-t_0
+			self.super_logger.info('Total time run function perform_intersection_with_annotation to end : %f min', (total/60.0))
+		else:
+			self.super_logger.info('intersection_with_annotations.bed file already collected in the output folder : %s --> Skipping this step!', self.path_to_output_folder + 'intersection_with_annotations.bed')
+	
+	def perform_intersection_with_annotation_mouse(self):
+
+		exists = os.path.exists(self.path_to_output_folder+ 'intersection_with_annotated_transcripts.bed')
+		
+		if not exists :
+			t_0 = time.time()
+
+			self.super_logger.info('Using bedtools to intersect alignments to annotations.')
+
+			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed' 
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 			out, err = p_1.communicate()
 

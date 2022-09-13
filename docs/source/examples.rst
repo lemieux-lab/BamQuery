@@ -2,25 +2,23 @@
 Cookbook
 ========
 
-.. _normal_mode_example:
 
-BamQuery always expects to find in the input folder `path_to_input_folder` the files : **BAM_directories.tsv** and **peptides.tsv**. 
+.. _normal mode example:
 
 normal mode example
 ===================
-
-Although BamQuery has the --mode option, you can run the command line without specifying normal mode, as this is the default mode for running BamQuery.
 
 **Command line:**
 
 .. code::
 
-	BamQuery.py ./normal_mode_example/Input normal_mode_example
+	BamQuery.py ./normal_mode_example/Input normal_mode_example 
 
 **1. Input**
 ------------
 
-Download BAM_directories.tsv and peptides.tsv for an example of the format of these files.
+Input folder `path_to_input_folder` containing the files : **BAM_directories.tsv** and **peptides.tsv**. 
+Please download BAM_directories.tsv and peptides.tsv to access an example of the format of these files.
 
 See:
 :download:`BAM_directories.tsv <_static/BAM_directories.tsv>`
@@ -31,9 +29,9 @@ See:
 **2. Output**
 -------------
 
-BamQuery will create a new directory called **output** in the same directory as the input folder.
+BamQuery creates an **output** directory in the same path as the input folder.
 
-This directory will contain 4 folders and the main outputs are organized as follows:
+This directory contains 4 folders and the main results are organized as follows:
 
 .. code::
 
@@ -49,15 +47,19 @@ This directory will contain 4 folders and the main outputs are organized as foll
 	│   │   │   ├── all_peptides
 	│   │   │   │   └── normal_mode_All_peptides.pdf
 	│   │   │   └── by_peptide_type
-	│   │   │       └── normal_mode_Ovarian_All_samples.pdf
+	│   │   │       ├── normal_mode_0D5P_Melanoma_ctrl_All_samples.pdf
+	│   │   │       └── normal_mode_0D5P_Melanoma_DAC_All_samples.pdf
 	│   │   └── genome_and_ERE_annotation
 	│   │       ├── all_peptides
 	│   │       │   └── normal_mode_All_peptides.pdf
 	│   │       └── by_peptide_type
-	│   │           └── normal_mode_Ovarian.pdf
+	│   │           ├── normal_mode_0D5P_Melanoma_ctrl.pdf
+	│   │           └── normal_mode_0D5P_Melanoma_DAC.pdf
 	│   └── heat_maps
 	│       └── transcription_evidence_heatmap
 	│           ├── average_transcription_expression_heatmap
+	│           │   ├── normal_mode_rna_norm_all_tissues.pdf
+	│           │   ├── normal_mode_rna_norm_selected_tissues.pdf
 	│           │   └── norm_info.csv
 	│           └── total_transcription_expression_heatmap
 	└── res
@@ -69,10 +71,7 @@ This directory will contain 4 folders and the main outputs are organized as foll
 	    │   └── summary_info_biotypes
 	    │       ├── 1_General_Gen_and_ERE_Biotype_Consensus.csv
 	    │       ├── 2_Sample_Gen_and_ERE_Biotype_Consensus.csv
-	    │       ├── 3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv
-	    │       ├── biotypes_by_peptide_alignment_and_sample_explained_RNA.csv
-	    │       ├── biotypes_by_peptide_genome_explained.csv
-	    │       └── biotypes_by_peptide_sample_explained_RNA.csv
+	    │       └── 3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv
 	    ├── info_bam_files_tissues.csv
 	    └── normal_mode_count_norm_info.xlsx
 
@@ -95,19 +94,41 @@ This directory will contain 4 folders and the main outputs are organized as foll
 **missed_peptides.info file**
 
 
-This file will tell you the peptides for which BamQuery could not find locations in the genome. Therefore, quantification of the expression of these peptides is lacking.
+This file reports the peptides for which BamQuery has not been able to find locations to evaluate their expression. 
 
 .. _normal mode example info alignments explanation xlsx file:
 
 **normal_mode_example_info_alignments.xlsx file**
 
-This file reports, for each peptide queried, all locations in the genome that are perfect alignments for one or more MAP coding sequences. For each MAP: the position, the strand, the MCS, reference amino acid, nucleotide differences and the SNVs annotated in the dbSNP database are reported. In the case of the latter, it will be reported that the coding sequence has some difference with the reference genome, but that it has been compensated by one or more annotated SNVs.
+
+.. _COSMIC: https://cancer.sanger.ac.uk/cosmic
+
+This file reports, for each peptide queried, all locations in the genome that are perfect alignments for one or more MAP coding sequences. In addition, it reports the somatic mutations annotated in the `COSMIC`_ database, encountered in the queried peptides.
 
 
-.. thumbnail:: _images/normal_mode_example_info_alignments.png
+`Sheet : Perfect Alignments`
 
+For each MAP: position, strand, MCS, reference amino acid, nucleotide differences and SNVs annotated in the dbSNP database are reported. In the case of the latter, it will be reported that the coding sequence has some difference with the reference genome, but has been compensated by one or more annotated SNVs.
+
+
+.. thumbnail:: _images/normal_mode_example_info_alignments.jpg
+
+
+`Sheet : COSMIC Information`
+
+Reports whether the SNVs displayed by the peptides have already been annotated as somatic mutations in the COSMIC database.
+
+
+.. thumbnail:: _images/Cosmic.jpg
+
+Find here the `Additional information`_ description from COSMIC.
+
+
+.. _Additional information: https://cancer.sanger.ac.uk/cosmic/download
 
 .. _Logs:
+
+-----
 
 **2.2. Logs**
 -------------
@@ -121,17 +142,20 @@ This file reports, for each peptide queried, all locations in the genome that ar
 
 **BamQuery_Res_normal_mode_example.log file**
 
-This file reports all the steps that have been performed in the BamQuery search. Please refer to this file for troubleshooting.
+This file reports all steps that have been performed in the BamQuery search. Refer to this file for the query time of all peptide alignments in the bams, the number of perfect peptide alignments, and the summary of the parameters used in the search.
 
 **Get_Read_Count_BAM_directories.log file**
 
-This file reports the BAM/CRAM files from which the primary read counts have been collected and stored in the Bam_files_info.dic file.
+This file reports for each BAM/CRAM file in the **BAM_directories.tsv** the total number of primary read counts.
 
+
+-----
 
 **2.3. plots**
 --------------
 
-The Plots folder will contain the heat map expression and biotype analysis plots for all peptides.
+The Plots folder contains the heat map and biotype analysis expression plots for all peptides.
+If the --plots parameter is specified, pie charts of the biotype classification are produced. 
 
 .. code::
 
@@ -141,69 +165,88 @@ The Plots folder will contain the heat map expression and biotype analysis plots
 	│   │   │   ├── all_peptides
 	│   │   │   │   └── normal_mode_All_peptides.pdf
 	│   │   │   └── by_peptide_type
-	│   │   │       └── normal_mode_Ovarian_All_samples.pdf
+	│   │   │       ├── normal_mode_0D5P_Melanoma_ctrl_All_samples.pdf
+	│   │   │       └── normal_mode_0D5P_Melanoma_DAC_All_samples.pdf
 	│   │   └── genome_and_ERE_annotation
 	│   │       ├── all_peptides
 	│   │       │   └── normal_mode_All_peptides.pdf
 	│   │       └── by_peptide_type
-	│   │           └── normal_mode_Ovarian.pdf
+	│   │           ├── normal_mode_0D5P_Melanoma_ctrl.pdf
+	│   │           └── normal_mode_0D5P_Melanoma_DAC.pdf
 	│   └── heat_maps
 	│       └── transcription_evidence_heatmap
 	│           ├── average_transcription_expression_heatmap
+	│           │   ├── normal_mode_rna_norm_all_tissues.pdf
+	│           │   ├── normal_mode_rna_norm_selected_tissues.pdf
 	│           │   └── norm_info.csv
 	│           └── total_transcription_expression_heatmap
-
 	
+
+**2.3.1 biotypes**
+-------------------
+
+The `biotype_by_sample_group` folder contains the biotype assignment based on transcription expression, i.e. the biotype is computed based on those locations where there are underlying RNA-seq reads. For more information please refers to :ref:`biotype` and :ref:`biotypes`
+
+This folder contains pie charts organised as follows:
+
+1) `all_peptides`: Pie chart depicting the general assignment of biotypes for all peptides queried based on their transcription in the BAM/CRAM files consulted.  
+
+.. image:: _images/biotype_transcription.jpg
+   :alt: Biotype based on transcription
+   :align: center
+   :scale: 50 %
+
+
+2) `by_peptide_type`: Pie charts showing the general assignment of biotypes according to each peptide type (specified in the **peptides.tsv** file) based on transcript expression, i.e. biotype is calculated based on the locations where there are underlying RNA-seq reads
+
+
+The `genome_and_ERE_annotation` folder contains the biotype assignment regardless of transcript expression, i.e. the biotype assignment for each peptide is calculated based on all locations in the genome (expressed or not).
+
+This folder contains pie charts organised as follows:
+
+1) `all_peptides`: Pie chart depicting the general assignment of biotypes for all peptides queried based on all the locations for all the peptides.  
+
+.. image:: _images/biotype_locations.jpg
+   :alt: Biotype based on locations
+   :align: center
+   :scale: 50 %
+
+2) `by_peptide_type`: Pie charts showing the general assignment of biotypes according to each peptide type (specified in the **peptides.tsv** file) based on all the locations for all the peptides. 
+
+
 .. _heat maps folder:
 
-**heat_maps folder**
 
-This folder will contain the normalization modes `full` and `average`. 
+**2.3.2 heat_maps**
+-------------------
 
-In `full` normalization mode, for each peptide the :math:`rphm` (see `log10 RPHM RNA seq by peptide`_) will be calculated for each BAM/CRAM file queried and the set will be represented in the heat map (normal_mode_example_rna_norm.pdf). 
+This folder contains the heat maps representing the transcript expression levels of all peptides queried.
 
-In addition, for each peptide you will find the read counts in each BAM/CRAM file (normal_mode_example_rna_counts.pdf), see `read count RNA seq by peptide`_.
+`average_transcription_expression_heatmap` folder: Heat maps depicting transcription expression of all peptides queried as a function of tissue associated with BAM/CRAM files and tissue type.
 
-In the `average` normalization mode, for each peptide the `rphm` will be calculated as an average for each tissue type in which the queried BAM/CRAM files are grouped. 
 
-The plots for the "mean" normalization mode are stored in the "r_plot" folder.
+`_norm_all_tissues.pdf` : heat map depicting the level of transcript expression associated with all tissue types.
+
+.. thumbnail:: _images/average_transcription_expression_heatmap.jpg
+
+
+`_norm_selected_tissues.pdf` : heat map depicting the expression level of transcripts associated with selected tissues (short list of tissues).
+
+.. thumbnail:: _images/average_transcription_expression_heatmap_selected.jpg
+
+
+`norm_info.csv`: reports, for each peptide consulted, the mean and median rphm values according to the tissues associated with the BAM/CRAM files.
+
+.. thumbnail:: _images/norm_info_.jpg
+
+
+`total_transcription_expression_heatmap` folder: Heat map depicting the transcript expression of all peptides queried as a function of each BAM/CRAM file.
 
 .. warning::
-	Heat maps will be displayed for searches with less than 400 peptides.
+	1. Heat maps are produced for searches with less than 400 peptides.
+	2. Heat map in total_transcription_expression_heatmap is produced only if the number of BAM/CRAM files queried are less than 100 tissues.
 
-**biotypes**
-
-.. code::
-	
-	biotype_by_sample_group
-	-----------------------|
-	      		       |---:> all_peptides
-	      		       |---:> by_peptide_type
-
-`biotype_by_sample_group` folder contains the biotype assignment based on transcription/translation expression, i.e. the biotype is computed only for those locations where there are underlying RNA-seq reads or Ribo-seq reads. See `Transcription_translation_based`_
-
-This folder contains pie charts organised as follows:
-
-1) `all_peptides`: in this folder you will find the biotype assignment for each group BAM/CRAM file you have specified in the **BAM_directories.tsv** file along with the biotype assignment for all peptides without taking into account the BAM/CRAM files. This assignment is made by weighting the biotypes according to the number of reads mapped to the positions of each biotype.  
-
-2) `by_peptide_type`: in this folder you will find the biotype assignment for each peptide type that you have specified in the **peptides.tsv** file in relation to each BAM/CRAM group that you have specified in the **BAM_directories.tsv** file. This assignment is made by weighting the biotypes according to the number of reads mapped to the positions of each biotype.  
-
-
-.. code::
-	
-	genome_and_ERE_annotation
-	-------------------------|
-	      		         |---:> all_peptides
-	      		         |---:> by_peptide_type
-
-`genome_and_ERE_annotation` folder contains the biotype assignment based on genome locations, i.e. the biotype is computed for all the locations for the peptides queried. See `Genome_based biotype`_
-
-This folder contains pie charts organised as follows:
-
-1) `all_peptides`: in this folder you will find the biotype assignment for each group BAM/CRAM file you have specified in the **BAM_directories.tsv** file along with the biotype assignment for all peptides without taking into account the BAM/CRAM files. 
-
-2) `by_peptide_type`: in this folder you will find the biotype assignment for each peptide type you have specified in the **peptides.tsv** file accordingly  each group BAM/CRAM file you have specified in the **BAM_directories.tsv** file.
-
+-----------
 
 **2.4. res**
 ------------
@@ -219,101 +262,133 @@ This folder contains pie charts organised as follows:
 	    │   └── summary_info_biotypes
 	    │       ├── 1_General_Gen_and_ERE_Biotype_Consensus.csv
 	    │       ├── 2_Sample_Gen_and_ERE_Biotype_Consensus.csv
-	    │       ├── 3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv
-	    │       ├── biotypes_by_peptide_alignment_and_sample_explained_RNA.csv
-	    │       ├── biotypes_by_peptide_genome_explained.csv
-	    │       └── biotypes_by_peptide_sample_explained_RNA.csv
+	    │       └── 3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv
 	    ├── info_bam_files_tissues.csv
 	    └── normal_mode_count_norm_info.xlsx
 
+
+**2.4.1. biotype_classification**
+---------------------------------
+
+.. _Ensembl: https://m.ensembl.org/info/genome/genebuild/biotypes.html
+
 .. note::
-	The biotype annotation is derived from the intersection of the peptide positions with the genomic and ERE annotations. 
+	The biotype annotation is derived from the intersection of the peptide positions with the genomic and ERE annotations. For more information see :ref:`biotypes`.
 
-	From the genomic annotations, the biotypes reported for each intersected transcript are at the gene level, transcript level and genomic position level. 
+	From the genomic annotations, 3 levels of biotypes are reported : gene level, transcript level and genomic position level. 
 
-	At the gene level a transcript biotype could be :
+	At the gene level, the biotype assigned to the location is given by the biotype type of the gene in the genomic annotations of `Ensembl`_, for instance:
 		* protein_coding,
 		* lincRNA,
-		* intergenic, etc...
+		* intergenic...
 
-	At the transcript level a transcript biotype could be :
+	At the transcript level, the biotype assigned to the location is given by the biotype type of the transcript in the genomic annotations of `Ensembl`_, for instance:
 		* protein_coding,
-		* processed_transcript,
-		* nonsense_mediated_decay, 
-		* TEC, etc...
+		* processed_transcript, TEC, etc...
 
-	At the genomic position level a transcript biotype could be :
-		* in_frame,
+	At the genomic position level, the biotype assigned to the location is given by the overlapping region between the peptide and the transcript annotated in `Ensembl`_, for instance:
+		* In_frame,
 		* junctions,
 		* introns,
-		* 3'UTR,
-		* 5'UTR,
-		* frameshitf,
-		* intergenic, etc...
+		* 3'UTR, etc...
 
-	As for the ERE annotations, the biotypes reported are the name, class and family of the ERE that is intersected with a given position. 
+	As for the ERE annotations, 3 levels of biotypes as reported:  name, class and family of the ERE instersecting a location. 
 
 	.. thumbnail:: _images/genomic_ere_annotation.png
       		         
 
-.. note::
-	The consensus biotype (**genome-based** and **transcript/translation-based**) is calculated from the biotypes relative to the combination of the `genomic position level` and `ERE class` intersection annotation.
 
-**Annotation_Biotypes_consensus.xlsx file**
+**full_info_biotypes**
 
+.. _Genomic_and_ERE_Annotations_Full:
 
-.. _Genome_based biotype:
+`1_Genomic_and_ERE_Annotations_Full.csv`: 
+Reports for each peptide, each MCS at each location and for each BAM/CRAM included in **BAM_directories.tsv**:
+	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
+	g) also, the total count of RNA-seq reads bearing the given MCS at the given location.
 
-`General Gen & ERE Biotype (Genome_based biotype):` this sheet reports, for each peptide queried, the consensus biotype based on all genome locations, along with the total read count for each of the bam files that were included in the **BAM_directories.tsv** file
-
-.. thumbnail:: _images/annotation_biotypes_consenus_A.png
-
-.. _Transcription_translation_based:
-
-`Sample Gen & ERE Biotype (Transcription/translation_based):` this sheet reports, for each peptide queried, the consensus biotype based only on the genome locations where for each sample (BAM/CRAM file) there are mapped reads. 
-
-The consensus is weighted according to the number of mapped reads at each location. For example, if in-frame locations of a known protein in the genome have a higher number of mapped reads, the consensus biotype will be weighted to favor those locations. The "Total RNA read count" and "Total ribo read count" are also reported accordingly. 
-
-.. thumbnail:: _images/annotation_biotypes_consenus_B.png
+.. thumbnail:: _images/genomic_and_ERE_Annotations_Full.jpg
 
 
-`Group Samples Gen & ERE Biotype (Transcription/translation_based):` similar to the `Sample Gen & ERE Biotype` sheet, this sheet reports, for each peptide queried, the consensus biotype based only on the genome locations where for each sample group (BAM/CRAM files) there are mapped reads. The sample group is the name you specified in **BAM_directories.tsv** or **BAM_ribo_directories.tsv** for a path to the BAM/CRAM files.
+.. _Genomic_and_ERE_Annotations_Summary_Full:
 
-The consensus is weighted according to the number of mapped reads at each location. For example, if `in-frame` locations of a known protein in the genome have a higher number of mapped reads, the consensus biotype will be weighted to favor those locations. The "Total RNA read count" and "Total ribo read count" are also reported accordingly. 
+`2_Genomic_and_ERE_Annotations_Summary_Full.csv`: 
+Reports for each peptide, each location and for each BAM/CRAM included in **BAM_directories.tsv**:
+	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
+	g)also, the total count of RNA-seq reads bearing MCS at the given location.
 
-.. thumbnail:: _images/annotation_biotypes_consenus_C.png
-
-.. note::
-   Please refer to the `Annotation_Biotypes_full_info.xlsx` file to find more information about the biotyping computation.
-
-   `Genomic and ERE Annotations` sheet: this sheet reports all the positions of each peptide (coding sequence, strand) and the genomic and ERE annotations derived from each position. For each position the total read count of each BAM/CRAM file is also reported.
-
-   `Genomic and ERE Annotations_` sheet: this sheet reports all the positions of each peptide (strand) and the genomic and ERE annotations derived from each position. For each position the total read count of each BAM/CRAM file is also reported. The difference between this sheet and the previous one is that the positions will be reported only once, since the coding sequence is not reported here.
-
-   `Genomic & ERE Anno. By Region` sheet: this sheet reports for every position the weighted biotype according to the frequencies of genomic position and the ERE class.
+.. thumbnail:: _images/genomic_and_ERE_Annotations_Summary_Full.jpg
 
 
-.. _normal mode example count norm info xlsx file:
+.. _Genomic_and_ERE_Anno_by_Region_Full:
 
-**normal_mode_example_count_norm_info.xlsx file**
+`3_Genomic_and_ERE_Anno_by_Region_Full.csv`: 
+Reports for each peptide, each location and for each BAM/CRAM included in **BAM_directories.tsv**:
+	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
+	g)also, the total count of RNA-seq reads bearing MCS at the given location.
 
-`Alignments Read count RNA-seq :` this sheet reports, for each peptide queried, all the locations in the genome that are perfect alignments for one or several Coding Sequences of a peptide. For each position, the strand, the coding sequence, and the read count for every BAM/CRAM file are reported.
+.. thumbnail:: _images/genomic_and_ERE_Anno_by_Region_Full.jpg
 
-.. thumbnail:: _images/normal_mode_example_count_norm_info_A.png
+-----
+
+**summary_info_biotypes**
+
+.. _General_Gen_and_ERE_Biotype_Consensus:
+
+`1_General_Gen_and_ERE_Biotype_Consensus.csv`: 
+It reports for each peptide the consensus biotype based on all locations in the genome, so the percentage is computed from the frequencies of occurrence of the biotypes. For example, 3 locations were collected for a given peptide.
+Location 1 intersects one transcript of a canonical protein (in_frame), location 2 intersects two transcripts of a different canonical protein (first transcript: in_frame, second transcript: 3'UTR), location 3 intersects the intronic region of a different transcript. The final biotype corresponds to: In_frame : 50%, 3'UTR : 25%, Introns : 25%. i.e, no takes into consideration the transcription expression).
+
+.. thumbnail:: _images/general_Gen_and_ERE_Biotype_Consensus.jpg
+
+
+.. _Sample_Gen_and_ERE_Biotype_Consensus:
+
+`2_Sample_Gen_and_ERE_Biotype_Consensus.csv`: 
+It reports for each peptide the consensus biotype based on all expressed locations in the genome. Hence the percentage is computed from the count of RNA-seq reads attributed to each biotype according to the coefficients estimated using the EM algorithm as a function of the total reads for the given peptide (only expressed locations are taken into account to calculate the percentage) in all the samples.
+
+.. thumbnail:: _images/sample_Gen_and_ERE_Biotype_Consensus.jpg
+
+
+.. _Group_Samples_Gen_and_ERE_Biotype_Consensus:
+
+`3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv`: 
+It reports for each peptide the consensus biotype based on all expressed locations in the genome. Hence the percentage is computed from the count of RNA-seq reads attributed to each biotype according to the coefficients estimated using the EM algorithm as a function of the total reads for the given peptide in every group of samples as well as for all the samples (only expressed locations are taken into account to calculate the percentage) for each group of samples and all the samples.
+
+.. thumbnail:: _images/group_Samples_Gen_and_ERE_Biotype_Consensus.jpg
+
+-----
+
+.. _normal_mode_count_norm_info:
+
+**normal_mode_count_norm_info.xlsx**
+
+
+`Sheet : Alignments Read count RNA-seq`
+
+This sheet reports for each peptide queried, all positions in the genome that are perfect alignments for one or more coding sequences of a peptide are reported. For each position, the strand, coding sequence and read count for each BAM/CRAM file are reported.
+
+.. thumbnail:: _images/alignments_Read_count_RNA_seq.jpg
 
 .. _read count RNA seq by peptide:
 
-`Read count RNA-seq by peptide :` this sheet reports, for each peptide queried, the total read count for each BAM/CRAM file considering all positions. This information is used to plot the read count's heatmap. See `heat maps folder`_
 
-.. thumbnail:: _images/normal_mode_example_count_norm_info_B.png
+`Sheet : Read count RNA-seq by peptide`
+
+This sheet reports for each peptide queried, the total reads for each BAM/CRAM file considering all positions. 
+
+.. thumbnail:: _images/read_count_RNA_seq_by_peptide.jpg
 
 .. _log10 RPHM RNA seq by peptide:
 
-`log10(RPHM) RNA-seq by peptide :` this sheet reports, for each peptide queried, the :math:`rphm`  `(read per hundred million)` for each BAM/CRAM file considering all positions. :math:`rphm = (read\_overlap * 10^8)/total\_reads` with `total_reads` representing the total number of reads sequenced in a given RNA-Seq experiment. These values are log-transformed :math:`log_{10}(rphm + 1)`.
 
-This information is used to plot the rphm heatmap. See `heat maps folder`_
+`Sheet : log10(RPHM) RNA-seq by peptide`
 
-.. thumbnail:: _images/normal_mode_example_count_norm_info_C.png
+This sheet reports for each peptide queried, the :math:`rphm` `(read per hundred million)` for each BAM/CRAM file considering all expressed positions. The :math:`rphm = (read\_overlap * 10^8)/total\_primary\_reads` with `total_primary_reads` representing the total number of reads sequenced in a given RNA-Seq experiment. These values are transformed into logarithm :math:`log_{10}(rphm + 1)`.
+
+This information is used to plot the rphm heat map. See `heat maps folder`_
+
+.. thumbnail:: _images/log10RPHM.jpg
 
 
 ---------------
@@ -406,8 +481,5 @@ In the res_light, BamQuery only outputs the file `light_mode_example_count_norm_
 
    .. warning::
    		WARNING: you cannot modify the **BAM_directories.tsv**, otherwise you will not have consistent information.
-
-
-
 
 

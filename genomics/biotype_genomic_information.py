@@ -13,9 +13,10 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class BiotypeGenomicSearch:
 
-	def __init__(self, peptides_intersected, genome_version, path_to_output_folder):
+	def __init__(self, peptides_intersected, genome_version, path_to_output_folder, mouse):
 		self.peptides_intersected = peptides_intersected
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
+		self.mouse = mouse
 
 		if genome_version == 'v26_88': 
 			self.genome_index = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa.fai'
@@ -29,6 +30,11 @@ class BiotypeGenomicSearch:
 			self.genome_index = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa.fai'
 			self.genome = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
 			self.annotations_file = path_to_lib+'genome_versions/genome_v38_104/Info_Transcripts_Annotations.dic'
+
+		if self.mouse:
+			self.genome_index = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
+			self.annotations_file = path_to_lib+'genome_versions/genome_mouse_m30/Info_Transcripts_Annotations.dic'
 
 		path = self.path_to_output_folder_alignments +'/alignments_summary_information.pkl'
 		self.alignments_summary_information = pd.read_pickle(path)

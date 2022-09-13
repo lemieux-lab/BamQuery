@@ -16,40 +16,55 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BiotypeAssignation:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, order_sample_bam_files_rna, dev, plots, super_logger, genome_version):
+	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, order_sample_bam_files_rna, dev, plots, super_logger, genome_version, mouse):
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
 		self.mode = mode
 		self.plots = plots
 		self.super_logger = super_logger
+		self.mouse = mouse
 
 		exists = os.path.exists(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic') 
 		exists_2 = os.path.exists(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic') 
 		
-		if exists and exists_2:
-			try:
-				with open(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic', 'rb') as handle:
-					self.peptides_intersected_ere = pickle.load(handle)
+		if exists:
+			if not self.mouse and exists_2:
+				try:
+					with open(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic', 'rb') as handle:
+						self.peptides_intersected_ere = pickle.load(handle)
 
-				with open(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic', 'rb') as handle:
-					self.information_final_biotypes_peptides = pickle.load(handle)
-			except ValueError:
-				import pickle5
-				with open(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic', 'rb') as handle:
-					self.peptides_intersected_ere = pickle5.load(handle)
+					with open(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic', 'rb') as handle:
+						self.information_final_biotypes_peptides = pickle.load(handle)
+				except ValueError:
+					import pickle5
+					with open(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic', 'rb') as handle:
+						self.peptides_intersected_ere = pickle5.load(handle)
 
+					with open(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic', 'rb') as handle:
+						self.information_final_biotypes_peptides = pickle5.load(handle)
+			if self.mouse:
 				with open(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic', 'rb') as handle:
-					self.information_final_biotypes_peptides = pickle5.load(handle)
+						self.information_final_biotypes_peptides = pickle.load(handle)
+
+				self.peptides_intersected_ere = {}
 
 		else:
-			self.get_info_bed_files = GetInformationBEDIntersection(path_to_output_folder, self.mode )
+			self.get_info_bed_files = GetInformationBEDIntersection(path_to_output_folder, self.mode, self.mouse )
 			self.get_info_bed_files.get_information_genomic_annotation(genome_version)
-			self.get_info_bed_files.get_information_ERE_annotation()
-			self.peptides_intersected_ere = self.get_info_bed_files.peptides_intersected_ere
+			if not self.mouse:
+				self.get_info_bed_files.get_information_ERE_annotation()
+				self.peptides_intersected_ere = self.get_info_bed_files.peptides_intersected_ere
+			else:
+				self.peptides_intersected_ere = {}
+			
 			self.information_final_biotypes_peptides = self.get_info_bed_files.information_final_biotypes_peptides
+			
 
-		with open(path_to_lib+'ERE_info.dic', 'rb') as handle:
-			self.ere_info = pickle.load(handle)
+		if not self.mouse:
+			with open(path_to_lib+'ERE_info.dic', 'rb') as handle:
+				self.ere_info = pickle.load(handle)
+		else:
+			self.ere_info = {}
 
 		with open(path_to_lib+'coefficients.dic', 'rb') as handle:
 			coefficients = pickle.load(handle)
@@ -66,6 +81,7 @@ class BiotypeAssignation:
 		self.order_sample_bam_files_rna = order_sample_bam_files_rna
 		self.bam_files_list_rna = bam_files_list_rna
 		self.dev = dev
+
 			
 	def get_biotypes(self, info_peptide_alignments, peptides_by_type):
 
@@ -185,7 +201,11 @@ class BiotypeAssignation:
 					except KeyError:
 						info_alignments_peptide = []
 
-		columns_gen_ere = ['Peptide Type', 'Peptide','Alignment', 'MCS', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
+		if not self.mouse:
+			columns_gen_ere = ['Peptide Type', 'Peptide','Alignment', 'MCS', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
+		else:
+			columns_gen_ere = ['Peptide Type', 'Peptide','Alignment', 'MCS', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name (n/a)', 'ERE class (n/a)', 'ERE family (n/a)']
+		
 		columns_gen_ere.extend(self.bam_files_list_rna)
 		columns_gen_ere.extend(['Total reads count RNA'])
 		self.data_gen_ere = pd.DataFrame(data_gen_ere, columns = columns_gen_ere)
@@ -209,7 +229,11 @@ class BiotypeAssignation:
 		self.bam_files_columns.extend(['Total reads count RNA'])
 		
 		# Genomic and ERE Annotation Full - without MCS
-		groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
+		if not self.mouse:
+			groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
+		else:
+			groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name (n/a)', 'ERE class (n/a)', 'ERE family (n/a)']
+
 		self.df_total_by_position_gen_ere = self.data_gen_ere.groupby(groupby_columns)[self.bam_files_columns].sum().reset_index()
 		self.df_total_by_position_gen_ere = pd.DataFrame(self.df_total_by_position_gen_ere, columns = groupby_columns+self.bam_files_columns)
 		if self.dev:
@@ -219,11 +243,12 @@ class BiotypeAssignation:
 		def biotypes_translation(row):
 			if row['genomic_position_biotype'] != '':
 				row['genomic_position_biotype'] = self.biotypes_names[row['genomic_position_biotype']]
-			if row['ERE class'] != '':
-				if 'antisense_' in row['ERE name']:
-					row['ERE class'] = 'antisense_'+self.biotypes_names[row['ERE class']]
-				else:
-					row['ERE class'] = self.biotypes_names[row['ERE class']]
+			if not self.mouse:
+				if row['ERE class'] != '':
+					if 'antisense_' in row['ERE name']:
+						row['ERE class'] = 'antisense_'+self.biotypes_names[row['ERE class']]
+					else:
+						row['ERE class'] = self.biotypes_names[row['ERE class']]
 			return row
 
 		self.data_gen_ere = self.data_gen_ere.apply(lambda row : biotypes_translation(row), axis = 1)
@@ -319,8 +344,12 @@ class BiotypeAssignation:
 			group = df_position_genomic_position_ere_class.get_group((peptide_type, peptide, alignment, strand))
 
 			genomic_biotypes = list(group['genomic_position_biotype'])
-			ere_biotypes = list(filter(lambda a: a != '', group['ERE class']))
+			if not self.mouse :
+				ere_biotypes = list(filter(lambda a: a != '', group['ERE class']))
+			else:
+				ere_biotypes = []
 			total_biotypes = list(genomic_biotypes+ere_biotypes)
+
 
 			if '' in total_biotypes:
 				total_biotypes = list(filter(('').__ne__, total_biotypes))
@@ -548,7 +577,7 @@ class BiotypeAssignation:
 				df_position_biotypes_info_2.loc[(df_position_biotypes_info_2['Peptide Type'] == peptide_type) & (df_position_biotypes_info_2['Peptide'] == peptide), 'Best Guess'] = best_guess
 				
 				if bam_file == 'Total reads count RNA' :
-					row_input['Best Guess RNA'] = best_guess
+					row_input['Best Guess'] = best_guess
 				
 			return row_input
 
@@ -565,7 +594,7 @@ class BiotypeAssignation:
 			
 			if bam_file == 'Total reads count RNA' :
 				df_position_biotypes_info_2['Best Guess'] = ''
-				df_biotype_by_peptide_by_sample['Best Guess RNA'] = ''
+				df_biotype_by_peptide_by_sample['Best Guess'] = ''
 			
 			df_biotype_by_peptide_by_sample = df_biotype_by_peptide_by_sample.apply(lambda row : set_string_biotype_by_sample(row), axis = 1)
 			
@@ -596,7 +625,7 @@ class BiotypeAssignation:
 
 		path = self.path_to_output_folder+'/res/biotype_classification/summary_info_biotypes/2_Sample_Gen_and_ERE_Biotype_Consensus.csv'
 		df_biotype_by_peptide_by_sample.to_csv(path, index=False)
-		extracted_cols = df_biotype_by_peptide_by_sample[['Total reads count RNA', 'Best Guess RNA']]
+		extracted_cols = df_biotype_by_peptide_by_sample[['Total reads count RNA', 'Best Guess']]
 
 		return extracted_cols
 	

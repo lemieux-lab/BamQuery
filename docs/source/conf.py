@@ -39,6 +39,7 @@ extensions = [ 'sphinxcontrib.images', 'sphinx.ext.autosectionlabel'
 
 autosectionlabel_prefix_document = True
 
+html_scaled_image_link = False
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

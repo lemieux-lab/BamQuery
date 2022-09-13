@@ -12,7 +12,7 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class GetInformationBEDIntersection:
 
-	def __init__(self, path_to_output_folder, mode):
+	def __init__(self, path_to_output_folder, mode, mouse):
 		self.path_to_output_folder = path_to_output_folder
 
 		if mode == 'translation':
@@ -22,6 +22,7 @@ class GetInformationBEDIntersection:
 
 		path = self.path_to_output_folder +'/alignments/alignments_summary_information.pkl'
 		self.alignments_summary_information = pd.read_pickle(path)
+		self.mouse = mouse
 		
 
 	def get_information_genomic_annotation(self, genome_version):
@@ -78,7 +79,7 @@ class GetInformationBEDIntersection:
 							self.peptides_intersected[key_peptide] = dic
 
 					
-		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected, genome_version, self.path_to_output_folder)
+		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected, genome_version, self.path_to_output_folder, self.mouse)
 		self.information_final_biotypes_peptides = self.biotype_genomic_annotation_search.get_biotype_from_intersected_transcripts()
 		
 		with open(self.path_to_output_folder_bed_files+'/information_final_biotypes_peptides.dic', 'wb') as handle:

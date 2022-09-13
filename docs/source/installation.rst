@@ -1,5 +1,7 @@
-============
-Installation
-============
+.. _instalation:
 
-This is in process!
+===============================
+Installation and Configuration
+===============================
+
+In preparation!

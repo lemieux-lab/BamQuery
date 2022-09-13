@@ -434,7 +434,7 @@ def translation_seq(chr, seq):
 	return translation
 
 
-def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version, mode):
+def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version, mode, mouse):
 
 	global path_to_db
 	global super_logger
@@ -456,6 +456,10 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 		genomePathFai = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa.fai'
 		genomePath = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
 
+	if mouse:
+		genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
+		genomePath = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
+
 	if mode == 'translation':
 		mode_translation = True
 	else:
@@ -463,7 +467,7 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 
 	super_logger.info('Using genome version %s. ', genomePath)
 	
-	if dbSNP == 0:
+	if dbSNP == 0 or mouse:
 		path_to_db = ''
 	elif dbSNP == 149:
 		if common:
@@ -480,6 +484,7 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 			path_to_db = path_to_lib+'/snps_dics_155_common/'
 		else:
 			path_to_db = path_to_lib+'/snps_dics_155/'
+
 
 	super_logger.info('Using dbSNP database %s with COMMON SNPs = %s. Database Path : %s ', str(dbSNP), str(common), str(path_to_db))
 	

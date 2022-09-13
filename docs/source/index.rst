@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. image:: _static/favicon.png
+.. image:: _images/favicon.png
    :alt: BamQuery logo
 
 BamQuery
@@ -33,22 +33,15 @@ BamQuery is developed by `Maria Virginia Ruiz Cuevas`_ at the *Institute for Res
 .. _Maria Virginia Ruiz Cuevas: https://github.com/VirginieR
 .. _IRIC: http://www.iric.ca
 
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   installation.rst
    method.rst
    command.rst
    examples.rst
    biotype_classification.rst
-
+   installation.rst
+   
 ==========
 
-Indices
-=======
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
