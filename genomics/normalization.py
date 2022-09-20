@@ -9,7 +9,7 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class Normalization:
 
-	def __init__(self, path_to_output_folder, name_exp, peptides_types, mode, light, super_logger):
+	def __init__(self, path_to_output_folder, name_exp, peptides_types, mode, light, super_logger, dev):
 		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 		self.light = light
 		self.mode = mode
@@ -30,7 +30,7 @@ class Normalization:
 		self.path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 		self.peptides_types = peptides_types
 		self.super_logger = super_logger
-
+		self.dev = dev
 
 	def get_normalization(self, df_counts, type_save):
 
@@ -105,9 +105,10 @@ class Normalization:
 				aux.append(info_tissue[2])
 				data.append(aux)
 
-			with open(self.path_to_output_folder+"info_bam_files_tissues.csv", 'w') as csvFile:
-				writer = csv.writer(csvFile)
-				writer.writerows(data)
+			if self.dev:
+				with open(self.path_to_output_folder+"info_bam_files_tissues.csv", 'w') as csvFile:
+					writer = csv.writer(csvFile)
+					writer.writerows(data)
 
 			info_tissue_peptide = {}
 			df_counts.set_index(['Peptide Type','Peptide'], inplace=True)

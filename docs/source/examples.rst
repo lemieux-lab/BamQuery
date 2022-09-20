@@ -72,7 +72,6 @@ This directory contains 4 folders and the main results are organized as follows:
 	    │       ├── 1_General_Gen_and_ERE_Biotype_Consensus.csv
 	    │       ├── 2_Sample_Gen_and_ERE_Biotype_Consensus.csv
 	    │       └── 3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv
-	    ├── info_bam_files_tissues.csv
 	    └── normal_mode_count_norm_info.xlsx
 
 
@@ -80,6 +79,7 @@ This directory contains 4 folders and the main results are organized as follows:
 
 .. _output_normal_mode_example:
 
+.. _alignments:
 
 **2.1. Alignments**
 -------------------
@@ -182,7 +182,7 @@ If the --plots parameter is specified, pie charts of the biotype classification 
 	│           └── total_transcription_expression_heatmap
 	
 
-**2.3.1 biotypes**
+**biotypes**
 -------------------
 
 The `biotype_by_sample_group` folder contains the biotype assignment based on transcription expression, i.e. the biotype is computed based on those locations where there are underlying RNA-seq reads. For more information please refers to :ref:`biotype` and :ref:`biotypes`
@@ -217,7 +217,7 @@ This folder contains pie charts organised as follows:
 .. _heat maps folder:
 
 
-**2.3.2 heat_maps**
+**heat_maps**
 -------------------
 
 This folder contains the heat maps representing the transcript expression levels of all peptides queried.
@@ -263,11 +263,10 @@ This folder contains the heat maps representing the transcript expression levels
 	    │       ├── 1_General_Gen_and_ERE_Biotype_Consensus.csv
 	    │       ├── 2_Sample_Gen_and_ERE_Biotype_Consensus.csv
 	    │       └── 3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv
-	    ├── info_bam_files_tissues.csv
 	    └── normal_mode_count_norm_info.xlsx
 
 
-**2.4.1. biotype_classification**
+**biotype_classification**
 ---------------------------------
 
 .. _Ensembl: https://m.ensembl.org/info/genome/genebuild/biotypes.html
@@ -398,9 +397,7 @@ This information is used to plot the rphm heat map. See `heat maps folder`_
 light mode example
 ===================
 
-In light mode, BamQuery expects to find in the input folder `path_to_input_folder` the files **BAM_directories.tsv** and **peptides.tsv**. 
-
-In this mode, BamQuery will only display the peptide count and normalization, therefore, no biotyping analysis will be performed for the peptides.
+The light mode of BamQuery was designed to perform a quick search for peptide expression in the specified BAM/CRAM files. In this mode, BamQuery only reports peptide counts and normalization, so no biotyping analysis is performed for peptides (no graph (heat map, pie chart) is produced).
 
 **Command line:**
 
@@ -408,78 +405,57 @@ In this mode, BamQuery will only display the peptide count and normalization, th
 
 	BamQuery.py ./normal_mode_example/Input normal_mode_example --light
 
-**1. Input**
-------------
 
-See:
-:download:`BAM_directories.tsv <_static/BAM_directories.tsv>`
-
-See:
-:download:`peptides.tsv <_static/peptides_full.tsv>`
+As for normal mode, the input folder `path_to_input_folder` must containt the files : **BAM_directories.tsv** and **peptides.tsv**.
 
 **2. Output**
 -------------
 
-.. image:: _images/output_light.png
-   :scale: 30 %
-   :alt: output
-   :align: center
+BamQuery creates an **output** directory in the same path as the input folder.
+
+This directory contains 3 folders and the main results are organized as follows:
+
+.. code::
+
+	├── alignments
+	│   ├── light_mode_info_alignments.xlsx
+	│   └── missed_peptides.info
+	├── logs
+	│   ├── BamQuery_Res_light_mode.log
+	│   └── Information_BAM_directories.log
+	└── res_light
+	    └── light_mode_count_norm_info.xlsx
+
+The output files in `light mode` are similar to those in `normal mode`, see `output_normal_mode_example`_ for detailed information about the output files.
+
+
+.. note::
+		After running BamQuery in `--light` mode, it is possible to run BamQuery in normal mode (to obtain biotype classification and other output files) for a subset of peptides (peptides of interest `PoIs`). To do this, first run BamQuery in light mode by adding the `--dev` parameter. Once BamQuery light has finished, modify the **peptides.tsv** file, to remove the peptides you are no longer interested in. Finally, run the BamQuery search in `normal mode` by removing the `--light` option from the command line. By doing this, BamQuery takes the information already obtained for the expression in light mode and produces heatmap plots and does the biotype analysis only for the `PoIs`.
+
+   .. warning::
+   		WARNING: do not modify the **BAM_directories.tsv**, otherwise you will not have consistent information.
 
 
 ---------------
 
-**2.1. Alignments**
--------------------
+.. _single_cell_example:
+
+single cell example
+===================
+
 
 .. code::
-
-	
-	Output
-	------|
-	      |---:> alignments
-	      -----------------|
-	      		       |---:> Alignments_information_light.dic
-	      		       |---:> missed_peptides.info
-	      		       |---:> light_mode_example_info_alignments.xlsx
-	      		     
-
-**Alignments_information_light.dic file**
+	.
+	├── alignments
+	│   ├── missed_peptides.info
+	│   └── sc_example_info_alignments.xlsx
+	├── logs
+	│   ├── BamQuery_Res_sc_example.log
+	│   └── Information_BAM_directories.log
+	└── res
+	    ├── sc_example_rna_sc_count_All_alignments.csv
+	    └── sc_example_rna_sc_count.csv
 
 
-This file is a Python dictionary containing all the information related to the perfect alignments of the queried peptides. In this dictionary you can also find the read counts for all the peptides in each of the locations for each BAM/CRAM file.
-
-**missed_peptides.info file**
-
-
-This file will tell you the peptides for which BamQuery could not find locations in the genome. 
-
-**light_mode_example_info_alignments.xlsx file**
-
-This file reports, for each peptide queried, all the locations in the genome that are perfect alignments for one or several Coding Sequences of a peptide. For each position, the strand, the coding sequence, the possible amino acid and nucleotide differences, and the SNVs annotated in the dbSNP database are reported. In the case of the latter, it will inform you that the coding sequence has some difference with the reference genome, but that it has been compensated by one or more annotated SNVs.
-
-For more information: `normal mode example info alignments explanation xlsx file`_
-
-
-**2.2. Logs**
--------------
-
-See `Logs`_
-
-**2.3. res_light**
-------------------
-
-In the res_light, BamQuery only outputs the file `light_mode_example_count_norm_info.xls`. This file contains the `Alignments Read count RNA-seq`, `Read count RNA-seq by peptide` and `log10(RPHM) RNA-seq by peptide`. For more information, see : `normal mode example count norm info xlsx file`_
-
-.. note::
-   The light mode of BamQuery was designed to perform a quick search for peptide expression in the specified BAM/CRAM files. In this mode, BamQuery will not display any graphs and no biotype analysis will be performed.
-
-   After running BamQuery in `--light` mode, you may be interested in getting more information on some of the peptides, this group of peptides we will call Peptides of Interest `PoI`. If this is the case, you will need to modify the **peptides.tsv** file, to remove the peptides in which you are no longer interested. 
-
-   Consequently, launch the BamQuery search, this time removing the `--light` option from the command line, meaning that you will run BamQuery in the `normal` mode. By doing this, BamQuery will take the information already obtained for the expression of the initial peptides and keep only the expression corresponding to your `PoIs`. From this information, BamQuery will display the heat map plots and the biotype analysis will be performed. 
-
-   Please refer to `output_normal_mode_example`_ to know more about the BamQuery output in `normal` mode.
-
-   .. warning::
-   		WARNING: you cannot modify the **BAM_directories.tsv**, otherwise you will not have consistent information.
 
 

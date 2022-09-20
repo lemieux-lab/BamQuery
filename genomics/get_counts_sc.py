@@ -64,7 +64,7 @@ class GetCountsSC:
 		
 		if last_treated_bam_file:
 
-			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'rb') as fp:
+			with open(self.path_to_output_folder_alignments+'info_treated_bam_files.pkl', 'rb') as fp:
 				last_treated_bam_file = pickle.load(fp)
 
 			try:
@@ -215,14 +215,18 @@ class GetCountsSC:
 			pool.join()
 			pool.clear()
 
-			with open(self.path_to_output_folder_alignments+'info_trated_bam_files.pkl', 'wb') as f:  
+			with open(self.path_to_output_folder_alignments+'info_treated_bam_files.pkl', 'wb') as f:  
 				pickle.dump(idx, f)
 			
 			with open(alignment_information_sc_path, 'wb') as handle:
 				pickle.dump(alignment_information_sc, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			cell_lines = list(cell_lines)
-			header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']+cell_lines
+			if len(cell_lines) == 0:
+				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand', 'No intersected cells']
+			
+			else:
+				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']+cell_lines
 			data = []
 			
 			for peptide, info_peptide in peptides_info.items():
@@ -234,7 +238,7 @@ class GetCountsSC:
 					strand = key_splited[1]
 					
 					for sequence, value_sequence in info_sequences.items():
-						if len(value_sequence)>0:
+						if len(value_sequence)>0 :
 							aux = [peptide_type, peptide, alignment, sequence, strand]
 							zeros = [0]*len(cell_lines)
 							for cell, count in value_sequence.items():
@@ -242,6 +246,9 @@ class GetCountsSC:
 								zeros[index] = count
 							aux = aux+zeros
 							data.append(aux)
+					if len(cell_lines) == 0:
+						aux = [peptide_type, peptide, alignment, sequence, strand, 0]
+						data.append(aux)
 
 			df_alignments = pd.DataFrame(data, columns = header)
 			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum().reset_index()
@@ -303,7 +310,6 @@ class GetCountsSC:
 				splice_pos.add(fini)
 			
 		counts = self.get_depth_with_view(region_to_query, bam_file, name_sample, library, sens, strand, sequences, pos_set, splice_pos)
-		
 
 		to_return = [[peptide, alignment, name_sample, strand]]
 		

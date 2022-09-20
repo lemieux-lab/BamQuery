@@ -85,7 +85,7 @@ Optional Arguments
 **-\-mode**
 ------------
 
-BamQuery has to modes of search : normal or translation. |br|
+BamQuery has two modes of search : normal or translation. |br|
 By default, BamQuery runs in normal mode.
 
 	**Normal mode:**

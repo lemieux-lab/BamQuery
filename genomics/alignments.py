@@ -308,6 +308,7 @@ def get_info_cosmic(snv_alignments):
 def write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, df1, df2, df3):
 	if len(df1) < 1048576:
 		writer = pd.ExcelWriter(path_to_output_folder_alignments+name_exp+'_info_alignments.xlsx', engine='xlsxwriter')
+		print ('Here')
 		writer.book.use_zip64()
 		df1.to_excel(writer, sheet_name='Perfect Alignments')
 		if len(df2) > 0:

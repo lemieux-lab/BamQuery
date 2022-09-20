@@ -107,7 +107,7 @@ class BamQuery:
 
 			self.super_logger.info('========== Get Count RNA : Done! ============ ')
 
-			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger)
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger, self.dev)
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			
 			if not self.light: 
@@ -147,7 +147,7 @@ class BamQuery:
 
 			self.super_logger.info('Information rna counts for peptides of interest collected!')
 
-			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger)
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger, self.dev)
 			def_norm_rna = normalization.get_normalization(df_counts_rna, '_rna_norm.csv')
 			
 			self.super_logger.info('Information norm counts for peptides of interest collected!')
@@ -207,7 +207,7 @@ class BamQuery:
 
 			self.super_logger.info('========== Get Count Ribo : Done! ============ ')
 
-			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger)
+			normalization = Normalization(self.path_to_output_folder, self.name_exp, self.input_file_treatment.all_mode_peptide, self.mode, self.light, self.super_logger, self.dev)
 			def_norm_ribo = normalization.get_normalization(df_counts_ribo, '_ribo_norm.csv')
 			
 			if not self.light: 
@@ -365,7 +365,7 @@ class BamQuery:
 		list_bam_files_order_rna = []
 		order_sample_bam_files_rna = {}
 
-		for name_sample, info_bam in sorted(self.bam_files_info.bam_files_list.items(), key=lambda e: e[1][-1], reverse=False):
+		for name_sample, info_bam in sorted(self.bam_files_info.bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 			list_bam_files_order_rna.append(name_sample)
 			group = info_bam[3]
 			try:
@@ -455,7 +455,6 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 		shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/AUX_files', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/temps_files', ignore_errors=True)
-		os.remove(path_to_output_folder+"res/info_bam_files_tissues.csv")
 
 	except FileNotFoundError:
 		pass
@@ -547,7 +546,17 @@ def main(argv):
 	
 
 	if not dev:
-		
+		if sc:
+			try:
+				shutil.rmtree(path_to_output_folder+'genome_alignments')
+				shutil.rmtree(path_to_output_folder+'res/temps_files')
+				os.remove(path_to_output_folder+"alignments/Alignments_information_sc.dic")
+				os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
+				os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
+				os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
+			except FileNotFoundError:
+				pass
+
 		if not light:
 			try:
 				shutil.rmtree(path_to_output_folder+'genome_alignments')
@@ -562,10 +571,18 @@ def main(argv):
 				pass
 		else:
 			try:
+				shutil.rmtree(path_to_output_folder+'genome_alignments')
 				shutil.rmtree(path_to_output_folder+'res_light/temps_files')
 				shutil.rmtree(path_to_output_folder+'res_light/BED_files')
+				shutil.rmtree(path_to_output_folder+'res_light/AUX_files')
+				os.remove(path_to_output_folder+"alignments/Alignments_information_light_rna.dic")
+				os.remove(path_to_output_folder+"alignments/Alignments_information_light.dic")
+				os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
+				os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
 			except FileNotFoundError:
 				pass
+
+
 
 	t2 = time.time()
 	total = t2-t0
