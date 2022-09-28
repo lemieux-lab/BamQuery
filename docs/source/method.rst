@@ -17,7 +17,7 @@ BamQuery works on Bam files in five steps.
 1. Reverse translation of MHC-I-associated peptides (MAPs). 
 -----------------------------------------------------------
 
-Each MAP in `Peptide mode`_ peptide mode is reverse-translated. MAP coding sequences (MCS) are compiled into a **<query_name>.fastq** file along with any MCS from MAPs in the `MAP coding sequence mode`_ .
+Each MAP in `Peptide mode`_ is reverse-translated. MAP coding sequences (MCS) are compiled into a **<query_name>.fastq** file along with any MCS from MAPs in the `MAP coding sequence mode`_ .
 
 .. _collect locations:
 
@@ -142,23 +142,23 @@ BamQuery requires two input file paths to search for RNA expression:
 		If a peptide has several peptide types, separate each peptide type with ", or ;". For example: `lymphoma,colon`, would mean that the peptide was identified in lymphoma and colon cells.
 
 	**Peptides in peptide mode:** |br|
-	Two columns separated by a tab space: |br|
-	a. amino acid sequence of the peptide. |br|
-	b. type of peptide to identify it. This name, for example, may refer to the condition or sample in which the peptide was identified. 
+	Two columns separated by a tab space:
+		a. amino acid sequence of the peptide. |br|
+		b. type of peptide to identify it. This name, for example, may refer to the condition or sample in which the peptide was identified. 
 		
 	**Peptides in coding sequence mode:** |br|
-	Three columns separated by a tab space: |br|
-	a. amino acid sequence of the peptide. |br|
-	b. nucleotide sequence of the peptide. |br|
-	c. type of peptide to identify it. 
+	Three columns separated by a tab space: 
+		a. amino acid sequence of the peptide. |br|
+		b. nucleotide sequence of the peptide. |br|
+		c. type of peptide to identify it. 
 		
 	**Peptides in manual mode:** |br|
-	Five columns separated by a tab space: |br|
-	a. amino acid sequence of the peptide. |br|
-	b. nucleotide sequence of the peptide. |br|
-	c. position of the peptide. |br|
-	d. strand backward (-) or forward (+) for the location of the peptide in the genome. |br|
-	e. type of peptide to identify it. 
+	Five columns separated by a tab space:
+		* a. amino acid sequence of the peptide. |br|
+		b. nucleotide sequence of the peptide. |br|
+		c. position of the peptide. |br|
+		d. strand backward (-) or forward (+) for the location of the peptide in the genome. |br|
+		e. type of peptide to identify it. 
 
 	.. warning::
 		The peptide location must follow the format: chrX:start-end|start-end. Note: chrX (for any chromosome), start = start location, end = end location. Only use "|" to specify if the peptide is spliced.

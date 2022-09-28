@@ -11,6 +11,7 @@ from BamQuery import running_for_web
 from celery import Celery
 import random, time
 
+
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = '226f3ae1820d1919837515c79dfe4a84'
@@ -24,11 +25,12 @@ celery.conf.update(app.config)
 @app.route("/search", methods=['POST', 'GET'])
 def search():
 	form = BamQuery_search()
-	form_2 = Retrieve_results()
 	image_file = url_for('static', filename='favicon.png')
 	
 	if form.validate_on_submit():
 		name_exp = form.name_query.data
+		adding_random_name = str(random.getrandbits(16))
+		name_exp = name_exp+'_'+adding_random_name
 		parent_dir = os.path.join(app.root_path, 'static/temps')
 		path_search = os.path.join(parent_dir, name_exp)
 		path_input = os.path.join(path_search, 'Input')
@@ -38,7 +40,7 @@ def search():
 		genome_version = form.genome_version.data
 		data_base_snp = form.data_base_snp.data
 
-		#try:
+		
 		if not exists_search and not exists_light:
 			
 			os.mkdir(path_search)
@@ -54,18 +56,25 @@ def search():
 			else:
 				path_to_bam_directories = os.path.join(app.root_path, 'static/BAM_directories.tsv')
 				shutil.copy2(path_to_bam_directories, path_input)
-				task = running_BamQuery.apply_async(args = [path_input, name_exp, form.strandedness.data, form.th_out.data, genome_version, data_base_snp])
-				flash(f'Please do not close this page, you must wait for the query to be completed !', 'success')
+				task = running_BamQuery.apply_async(args = [path_input, name_exp, True, form.th_out.data, genome_version, data_base_snp])
+				message = 'Your query '+name_exp+' has been launched. \n Please do not close this page until your query has completed, otherwise you should get the query name to download the results later.'
+				flash(message, 'success')
 				return render_template('results.html', title ='Results', image_file = image_file, name_exp = name_exp, task_id = task.id)
 
-		#except FileExistsError:
-		#	flash(f'Name of Query { name_exp } already in use. Please change the name of the query !', 'error')
 
+	return render_template('search.html', title ='Search', image_file = image_file, form = form, block=False)
+
+@app.route("/retrival", methods=['POST', 'GET'])
+def retrival():
+	form_2 = Retrieve_results()
+	image_file = url_for('static', filename='favicon.png')
+	
 	if form_2.validate_on_submit():
-		name_exp = form_2.name_query_to_retrieve.data
-		path_output = os.path.join(app.root_path, 'static/temps',name_exp,'output')
-		filename = 'data.zip'
 		try:
+			name_exp = form_2.name_query_to_retrieve.data
+			path_output = os.path.join(app.root_path, 'static/temps',name_exp,'output')
+			filename = 'data.zip'
+		
 			shutil.make_archive(path_output, 'zip', path_output)
 			path_output = path_output+'.zip'
 
@@ -77,11 +86,10 @@ def search():
 				'Content-Disposition': 'attachment; filename=%s;' % filename
 			})
 		except FileNotFoundError:
-			flash(f'No query with this name: { name_exp } is found in our server !', 'error')	
+			flash(f'No query with this name: { name_exp } is found in our server !', 'error')
 
-		#return send_file(path_output, mimetype='application/zip', as_attachment=True, attachment_filename='data.zip')
+	return render_template('retrival.html', title ='Retrival', image_file = image_file, form_2 = form_2, block=False)
 
-	return render_template('search.html', title ='Search', image_file = image_file, form = form, form_2 = form_2, block=False)
 
 def file_len(fname):
 	with open(fname) as f:

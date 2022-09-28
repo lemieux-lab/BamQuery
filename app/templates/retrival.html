@@ -1,0 +1,67 @@
+
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+	.progress {
+		width: 100%;
+		text-align: center;
+	}
+</style>
+
+<div class="col-sm-8" style="margin-top:20px;">
+	<div class="content-section">
+		<div class="media">
+			<!-- <p style="float: right;"><img class="rounded-circle account-img" src="{{ image_file }}"></p> --> 
+			<h3>Retrieval of query results</h3>
+			<small class="text-muted">
+				<p>If you have already launched a query and have not been able to retrieve your results, please enter the name of your query to download your results. Once you have downloaded your results, they will be deleted from our server. </p>
+
+			</small>
+		</div>
+
+<form method="POST" action="" enctype="multipart/form-data">
+	{{ form_2.hidden_tag() }}
+	<fieldset class="form-group">
+		<legend class="border-bottom mb-4">Retrieve Results</legend>  
+
+		<div class="row" >
+			<div class="col" class="form-group">
+
+				{{ form_2.name_query_to_retrieve.label(class="form-control-label") }}
+
+				{% if form_2.name_query_to_retrieve.errors %}
+					{{ form_2.name_query_to_retrieve(class="form-control form-control-sm is-invalid") }}
+					<div class="invalid-feedback">
+						{% for error in form_2.name_query_to_retrieve.errors %}
+							<span>{{ error }}</span>
+						{% endfor %}
+					</div>
+				{% else %}
+					{{ form_2.name_query_to_retrieve(class="form-control") }}
+				{% endif %}
+			</div>
+		</div>
+	</fieldset>
+</div>
+</div>
+	<div class="container">
+		<div class="row"> 
+			
+				<div class="form-group col">
+				{{ form_2.submit_name_query(class="btn btn-outline-info") }}
+				</div>
+		</div>
+	</div>
+	<br>
+		<div class="row"> 
+		<legend class="border-bottom mb-4"></legend>
+		</div>
+
+</form>	
+
+
+{% endblock content %} 
+
+
+

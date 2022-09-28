@@ -442,19 +442,15 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	total = t2-t0
 	
 	super_logger.info('Total time run function BamQuery to end : %f min', (total/60.0))
-	handlers = super_logger.handlers[:]
-	for handler in handlers:
-		super_logger.removeHandler(handler)
-		handler.close()
-
+	logging.shutdown()
+	
 	try:
-		super_logger.info(' ========== Removing Temporal Files ============ ')
-		shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'genome_alignments', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'alignments', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/AUX_files', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/temps_files', ignore_errors=True)
+		shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)
 
 	except FileNotFoundError:
 		pass
@@ -467,35 +463,22 @@ def main(argv):
 
 	parser = argparse.ArgumentParser(description='======== BamQuery ========')
 	
-	parser.add_argument('path_to_input_folder', type=str,
-						help='Path to the input folder where to find BAM_directories.tsv and peptides.tsv')
-	parser.add_argument('name_exp', type=str,
-						help='BamQuery search Id')
-	parser.add_argument('--mode', type=str, default = 'normal',
-						help='BamQuery search mode : normal / translation')
-	parser.add_argument('--genome_version', type=str, default = 'v26_88',
-						help='Genome version supported : v26_88 / v33_99 / v38_104')
-	parser.add_argument('--th_out', type=float, default = 8.55,
-						help='Threshold to assess expression comparation with other tissues')
-	parser.add_argument('--dbSNP', type=int, default = 149,
-						help='BamQuery dbSNP : 149 / 151 / 155 / 0')
-	parser.add_argument('--c', action='store_true',
-						help='Take into account the only common SNPs from the dbSNP database chosen')
-	parser.add_argument('--strandedness', action='store_true',
-						help='Take into account strandedness of the samples')
-	parser.add_argument('--light', action='store_true',
-						help='Display only the count and norm count for peptides and regions')
-	parser.add_argument('--sc', action='store_true',
-						help='Query Single Cell Bam Files')
-	parser.add_argument('--var', action='store_true',
-						help='Keep Variants Alignments')
-	parser.add_argument('--maxmm', action='store_true',
-						help='Allow STAR to generate high amount of alignments')
-	parser.add_argument('--overlap', action='store_true',
-						help='Count overlapping reads')
+	parser.add_argument('path_to_input_folder', type=str, help='Path to the input folder where to find BAM_directories.tsv and peptides.tsv')
+	parser.add_argument('name_exp', type=str, help='BamQuery search Id')
+	parser.add_argument('--mode', type=str, default = 'normal', help='BamQuery search mode : normal / translation')
+	parser.add_argument('--genome_version', type=str, default = 'v26_88', help='Genome version supported : v26_88 / v33_99 / v38_104')
+	parser.add_argument('--th_out', type=float, default = 8.55, help='Threshold to assess expression comparation with other tissues')
+	parser.add_argument('--dbSNP', type=int, default = 149, help='BamQuery dbSNP : 149 / 151 / 155 / 0')
+	parser.add_argument('--c', action='store_true', help='Take into account the only common SNPs from the dbSNP database chosen')
+	parser.add_argument('--strandedness', action='store_true', help='Take into account strandedness of the samples')
+	parser.add_argument('--light', action='store_true', help='Display only the count and norm count for peptides and regions')
+	parser.add_argument('--sc', action='store_true', help='Query Single Cell Bam Files')
+	parser.add_argument('--var', action='store_true', help='Keep Variants Alignments')
+	parser.add_argument('--maxmm', action='store_true', help='Allow STAR to generate high amount of alignments')
+	parser.add_argument('--overlap', action='store_true', help='Count overlapping reads')
 	parser.add_argument('--plots', action='store_true', help='Plot biotype pie-charts')
-	parser.add_argument('--dev', action='store_true', help='Save all temps files')
 	parser.add_argument('--m', action='store_true', help='Mouse genome')
+	parser.add_argument('--dev', action='store_true', help='Save all temps files')
 
 	args = parser.parse_args()
 	
@@ -556,6 +539,18 @@ def main(argv):
 				os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
 			except FileNotFoundError:
 				pass
+		if mode == 'translation':
+			try:
+				shutil.rmtree(path_to_output_folder+'genome_alignments')
+				shutil.rmtree(path_to_output_folder+'res_translation/BED_files')
+				shutil.rmtree(path_to_output_folder+'res_translation/temps_files')
+				shutil.rmtree(path_to_output_folder+'res_translation/AUX_files')
+				os.remove(path_to_output_folder+"alignments/Alignments_information_ribo.dic")
+				os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
+				os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
+				os.remove(path_to_output_folder+"alignments/info_treated_ribo_bam_files.pkl")
+			except FileNotFoundError:
+				pass
 
 		if not light:
 			try:
@@ -569,7 +564,7 @@ def main(argv):
 				os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
 			except FileNotFoundError:
 				pass
-		else:
+		if mode == 'normal':
 			try:
 				shutil.rmtree(path_to_output_folder+'genome_alignments')
 				shutil.rmtree(path_to_output_folder+'res_light/temps_files')
@@ -583,15 +578,11 @@ def main(argv):
 				pass
 
 
-
 	t2 = time.time()
 	total = t2-t0
 	
 	super_logger.info('Total time run function BamQuery to end : %f min', (total/60.0))
-	handlers = super_logger.handlers[:]
-	for handler in handlers:
-		super_logger.removeHandler(handler)
-		handler.close()
+	logging.shutdown()
 
 if __name__ == "__main__":
 	main(sys.argv[1:])

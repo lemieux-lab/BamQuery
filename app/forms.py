@@ -35,8 +35,8 @@ class BamQuery_search(FlaskForm):
 
 class Retrieve_results(FlaskForm):
 
-	name_query_to_retrieve = StringField('Name Query :', 
+	name_query_to_retrieve = StringField('Enter the name of the query :', 
 		validators=[DataRequired(), Length(min=2, max=20)])
 
-	submit_name_query = SubmitField('Submit')
+	submit_name_query = SubmitField('Retrieve')
 

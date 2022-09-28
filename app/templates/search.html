@@ -14,8 +14,7 @@
 		<!-- <p style="float: right;"><img class="rounded-circle account-img" src="{{ image_file }}"></p> --> 
 		<h3>New Query</h3>
 		<small class="text-muted">
-			<p >The query may take some time, please do not close the web page until you have downloaded the results. <br>
-			After submitting the form have a cup of coffee. </p>
+			<p >The query may take some time, grab a coffee!<br></p>
 		</small>
 	</div>
 
@@ -55,7 +54,7 @@
 		<div class="w-100"></div>
 			<div class="col">
 				<small class="text-muted">
-						Set a name to identify your Query. Keep this name in mind to retrieve your results later.
+						Set a name to identify your query. Keep this name in mind to retrieve your results later.
 				</small>
 			</div>
 			<div class="col">
@@ -68,10 +67,6 @@
 				
 			</div>
 		<div class="w-100"></div>
-			<div class="col" class="form-check">
-					{{ form.strandedness.label(class="form-check-label") }}
-					<p align="align-self-center">{{ form.strandedness(class="form-check-input") }}</p>
-			</div>
 			<div  class="col" class="form-group">
 
 				{{ form.th_out.label(class="form-control-label") }}
@@ -87,17 +82,10 @@
 					{{ form.th_out(class="form-control") }}
 				{% endif %}
 			</div>
-
-		<div class="w-100"></div>
 			
 			<div class="col">
 				<small class="text-muted">
-						When using this option, BamQuery will take into account the strand on which the peptides are located in the genome. 
-						For more details please see the <a class="ml-2" href="{{ url_for('documentation') }}">documentation</a>.
-				</small>
-			</div>
-			<div class="col">
-				<small class="text-muted">
+				<p></p>	
 				This value changes the threshold that is considered for comparing the expression levels of different tissues. Default = 8.55 rphm (reads per hundred million).
 				</small>
 			</div>
@@ -131,68 +119,24 @@
 			</div>
 			
 		</div>
-		</div>
-
 	</fieldset>
-
-	<div class="row"> 
-		<legend class="border-bottom mb-4"></legend>
-	</div>
-
+</div>
 	<div class="container">
-		<div class="row"> 
+		<div class="col"> 
 			<div class="form-group col">
 			{{ form.submit(class="btn btn-outline-info") }}
 			</div>
 		</div>
 	</div>
 	</fieldset>
+	<br>
+		<div class="row"> 
+		<legend class="border-bottom mb-4"></legend>
+	</div>
 </form>
 
-</div>
-<div class="col-sm-8" style="margin-top:20px;">
-	<div class="content-section">
-		<div class="media">
-			<!-- <p style="float: right;"><img class="rounded-circle account-img" src="{{ image_file }}"></p> --> 
-			<h3>Retrieval of query results</h3>
-			<small class="text-muted">
-				<p>If you have already launched a query and have not been able to retrieve your results, please enter the name of your query to download your results. Once you have downloaded your results, they will be deleted from our server. </p>
 
-			</small>
-		</div>
-
-		<form method="POST" action="" enctype="multipart/form-data">
-		{{ form_2.hidden_tag() }}
-		
-			<div class="row">
-				<div class="col" class="form-group">
-
-					{{ form_2.name_query_to_retrieve.label(class="form_2-control-label") }}
-
-					{% if form_2.name_query_to_retrieve.errors %}
-						{{ form_2.name_query_to_retrieve(class="form_2-control form_2-control-lg is-invalid") }}
-						<div class="invalid-feedback">
-							{% for error in form_2.name_query_to_retrieve.errors %}
-								<span>{{ error }}</span>
-							{% endfor %}
-						</div>
-					{% else %}
-						{{ form_2.name_query_to_retrieve(class="form_2-control") }}
-					{% endif %}
-				</div>
-		
-				<div class="container">
-					<div class="row"> 
-						<div class="form-group col">
-						{{ form_2.submit_name_query(class="btn btn-outline-info") }}
-						</div>
-					</div>
-				</div>
-			</div>
-
-		</form>
-	</div>
-</div>
+<p></p>
 {% endblock content %} 
 
 

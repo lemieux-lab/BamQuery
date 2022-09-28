@@ -467,7 +467,10 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 
 	super_logger.info('Using genome version %s. ', genomePath)
 	
-	if dbSNP == 0 or mouse:
+	if mouse:
+		dbSNP = 'mouse_GRCm39'
+		path_to_db = path_to_lib+'/snps_dics_mouse_GRCm39/'
+	elif dbSNP == 0 :
 		path_to_db = ''
 	elif dbSNP == 149:
 		if common:

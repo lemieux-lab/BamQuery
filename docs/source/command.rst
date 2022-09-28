@@ -40,7 +40,9 @@ At the command line::
 		  --maxmm               Allows STAR to generate high amount of alignments
 		  --overlap             Count overlapping reads
 		  --plots               Plot biotype pie-charts
+		  --m                   Mouse genome
 		  --dev                 Save all temps files
+
 
 ====================
 

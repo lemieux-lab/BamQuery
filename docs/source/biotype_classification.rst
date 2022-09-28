@@ -17,8 +17,7 @@ BamQuery biotype classification is based on `Ensembl`_ and `Repeat_Masker`_ anno
 
 
 * **Protein-coding Regions: peptide harbored in a transcript containing an open reading frame (ORF)**
-	In this category the following transcripts types in gencode annotations are considered as **Protein-coding Regions**: 
-	Protein_coding, IG genes and TR genes.
+In this category the following transcripts types in gencode annotations are considered as **Protein-coding Regions**: Protein_coding, IG genes and TR genes.
 
     * **5'UTR**: peptide harbored into the 5' UnTranslated Region of the transcript
 
@@ -36,8 +35,7 @@ BamQuery biotype classification is based on `Ensembl`_ and `Repeat_Masker`_ anno
 
 
 * **Non-coding RNAs: peptide harbored in a transcript that doesn't containing an open reading frame (ORF)**	
-	In this category the following transcripts types in gencode annotations are considered as **Non-coding RNAs**: 
-	IG_C_pseudogene, IG_J_pseudogene, IG_V_pseudogene, IG_pseudogene, Mt_rRNA, Mt_tRNA, TEC, TR_J_pseudogene, TR_V_pseudogene, lncRNA, miRNA, misc_RNA, non_stop_decay, nonsense_mediated_decay, polymorphic_pseudogene, processed_pseudogene, processed_transcript, pseudogene, rRNA, rRNA_pseudogene, retained_intron, ribozyme, sRNA, scRNA, scaRNA, snRNA, snoRNA, transcribed_processed_pseudogene, transcribed_unitary_pseudogene, transcribed_unprocessed_pseudogene, translated_processed_pseudogene, translated_unprocessed_pseudogene, unitary_pseudogene, unprocessed_pseudogene, vault_RNA.
+In this category the following transcripts types in gencode annotations are considered as **Non-coding RNAs**: IG_C_pseudogene, IG_J_pseudogene, IG_V_pseudogene, IG_pseudogene, Mt_rRNA, Mt_tRNA, TEC, TR_J_pseudogene, TR_V_pseudogene, lncRNA, miRNA, misc_RNA, non_stop_decay, nonsense_mediated_decay, polymorphic_pseudogene, processed_pseudogene, processed_transcript, pseudogene, rRNA, rRNA_pseudogene, retained_intron, ribozyme, sRNA, scRNA, scaRNA, snRNA, snoRNA, transcribed_processed_pseudogene, transcribed_unitary_pseudogene, transcribed_unprocessed_pseudogene, translated_processed_pseudogene, translated_unprocessed_pseudogene, unitary_pseudogene, unprocessed_pseudogene, vault_RNA.
 
 	* **Non_coding Exons**: peptide harbored in the exons of the transcript
 
