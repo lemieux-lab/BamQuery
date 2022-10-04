@@ -25,8 +25,12 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_STAR_2.7.9a/'
 
 	if mouse:
-		index_genome = path_to_lib+'genome_versions/genome_mouse_m30/Index_STAR_2.7.9a/'
-	
+		if genome_version == 'M24':
+			index_genome = path_to_lib+'genome_versions/genome_mouse_m24/Index_STAR_2.7.9a/'
+
+		if genome_version == 'M30':
+			index_genome = path_to_lib+'genome_versions/genome_mouse_m30/Index_STAR_2.7.9a/'
+
 	exist = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 	exist_sam_dic = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam.dic')
 	exists_light = os.path.exists(path_to_output_folder_alignments+'/Alignments_information_light.dic')
@@ -75,7 +79,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		# 		' --seedNoneLociPerWindow '+ str(seedNoneLociPerWindow) +' --seedPerWindowNmax '+ str(seedPerWindowNmax)  +\
 		# 		' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --outFileNamePrefix '+path_to_output_folder_genome_alignments
 
-		command = 'module add star/2.7.9a; ulimit -s 8192; STAR --runThreadN 16'+\
+		command = 'ulimit -s 8192; STAR --runThreadN 16'+\
 				' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
 				' --alignEndsType EndToEnd --sjdbOverhang 32 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20'+\
 				' --outFilterMismatchNmax 4 --winAnchorMultimapNmax ' +str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
@@ -94,7 +98,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		print ("Total time run function alignment_CS_to_genome End : %s min" % (total/60.0))
 		super_logger.info('Total time run function alignment_CS_to_genome to end : %f min', (total/60.0))
 	else:
-		super_logger.info('Alignment file already exists in the output folder : %s --> Skipping this step!', path_to_output_folder_alignments+'/Aligned.out.sam')
+		super_logger.info('Alignment file already exists in the output folder : %s --> Skipping this step!', path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 	
 	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse)
 	return perfect_alignments
@@ -124,7 +128,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 
 			print ("Total time run function get_alignments End : %s " % (total/60.0))
 			super_logger.info('Total time run function get_alignments to end : %f min', (total/60.0))
-			super_logger.info('Total perfect aligments : %s ', str(len(res_star[0])))
+			super_logger.info('Total perfect alignments : %s ', str(len(res_star[0])))
 			
 			perfect_alignments = res_star[0]
 			variants_alignments = res_star[1]
@@ -196,7 +200,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 					import pickle5
 					perfect_alignments = pickle5.load(fp)
 
-			super_logger.info('Total perfect aligments : %s ', str(len(perfect_alignments)))
+			super_logger.info('Total perfect alignments : %s ', str(len(perfect_alignments)))
 			
 			try:
 				with open(path_to_output_folder_alignments+'alignments/missed_peptides.info') as f:

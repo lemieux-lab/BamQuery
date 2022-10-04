@@ -1,4 +1,4 @@
-import os, logging, threading, time, subprocess, concurrent.futures, getpass, pickle, sys, getopt, os, pysam, multiprocessing
+import os, logging, threading, time, subprocess, pickle, sys, getopt, os, pysam, multiprocessing
 from os import listdir
 from os.path import isfile, join
 from pathos.multiprocessing import ProcessPool

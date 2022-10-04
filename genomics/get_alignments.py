@@ -113,8 +113,8 @@ def find_ranges(iterable):
 
 def read_sam_file(sam_file):
 	time0 = time.time()
-	aligments_by_chromosome_strand = {}
-	MCS_aligments_by_chromosome_strand = {}
+	alignments_by_chromosome_strand = {}
+	MCS_alignments_by_chromosome_strand = {}
 	
 	cont = 0
 	with open(sam_file) as f:
@@ -144,22 +144,22 @@ def read_sam_file(sam_file):
 				key = str(readStart)+'|'+cigar+'|'+MCS+'|'+peptide+'|'+strand#+'|'+number_MCS
 				
 				try:
-					chromosomes_alignments = aligments_by_chromosome_strand[chr]
+					chromosomes_alignments = alignments_by_chromosome_strand[chr]
 					chromosomes_alignments.add(key)
 				except KeyError:
 					set_alignments = set()
 					set_alignments.add(key)
-					aligments_by_chromosome_strand[chr] = set_alignments
+					alignments_by_chromosome_strand[chr] = set_alignments
 					
 	timeFinal = time.time()
 	total = (timeFinal-time0) / 60.0
-	total_chromosomes = len(aligments_by_chromosome_strand)
+	total_chromosomes = len(alignments_by_chromosome_strand)
 	super_logger.info('Time reading SAM file : %f min Chromosomes %d ', total, total_chromosomes)
 	name_path = sam_file+'.dic'
 	with open(name_path, 'wb') as handle:
-		pickle.dump(aligments_by_chromosome_strand, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		pickle.dump(alignments_by_chromosome_strand, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-	return aligments_by_chromosome_strand
+	return alignments_by_chromosome_strand
 
 
 def get_alignments_chromosome(chr, chromosomes_alignments):
@@ -457,8 +457,12 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 		genomePath = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
 
 	if mouse:
-		genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
-		genomePath = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
+		if genome_version == 'M24':
+			genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm39.primary_assembly.genome.fa.fai'
+			genomePath = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm39.primary_assembly.genome.fa'
+		if genome_version == 'M30':
+			genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
+			genomePath = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
 
 	if mode == 'translation':
 		mode_translation = True
@@ -468,8 +472,10 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	super_logger.info('Using genome version %s. ', genomePath)
 	
 	if mouse:
-		dbSNP = 'mouse_GRCm39'
-		path_to_db = path_to_lib+'/snps_dics_mouse_GRCm39/'
+		if dbSNP == 'mouse_GRCm38':
+			path_to_db = path_to_lib+'/snps_dics_mouse_GRCm38/'
+		if dbSNP == 'mouse_GRCm39':
+			path_to_db = path_to_lib+'/snps_dics_mouse_GRCm39/'
 	elif dbSNP == 0 :
 		path_to_db = ''
 	elif dbSNP == 149:
@@ -493,20 +499,20 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	
 	exists = os.path.exists(sam_file+'.dic')
 	if not exists:
-		aligments_by_chromosome_strand = read_sam_file(sam_file)
+		alignments_by_chromosome_strand = read_sam_file(sam_file)
 	else:
 		try:
 			with open(sam_file+'.dic', 'rb') as fp:
-				aligments_by_chromosome_strand = pickle.load(fp)
+				alignments_by_chromosome_strand = pickle.load(fp)
 		except ValueError:
 			import pickle5
 			with open(sam_file+'.dic', 'rb') as fp:
-				aligments_by_chromosome_strand = pickle5.load(fp)
+				alignments_by_chromosome_strand = pickle5.load(fp)
 		super_logger.info('Information SAM file already collected !')
 
-	od = collections.OrderedDict(sorted(aligments_by_chromosome_strand.items(), reverse=True))
+	od = collections.OrderedDict(sorted(alignments_by_chromosome_strand.items(), reverse=True))
 
-	del aligments_by_chromosome_strand
+	del alignments_by_chromosome_strand
 
 	positions_mcs_peptides_perfect_alignment = {}
 	positions_mcs_peptides_variants_alignment = {}

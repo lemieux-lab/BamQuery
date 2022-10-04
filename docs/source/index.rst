@@ -6,16 +6,17 @@
 .. image:: _images/favicon.png
    :alt: BamQuery logo
 
-BamQuery
-==========
-A new proteogenomic tool to explore the immunopeptidome and validate tumor-specific antigens.
+
+BamQuery: a proteogenomic tool for the genome-wide exploration of the immunopeptidome 
 =============================================================================================
 
 .. image:: https://img.shields.io/badge/python-3.6-blue.svg 
 
-BamQuery is on `Github`_
+BamQuery is on `Github`_ and can be used from its `web interface`_.
 
 .. _Github: https://github.com/lemieux-lab/BamQuery
+
+.. _web interface: https://bamquery.iric.ca/
 
 A Quick Intro:
 -----------------

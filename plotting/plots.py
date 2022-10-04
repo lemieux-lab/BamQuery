@@ -7,7 +7,7 @@ import numpy as np
 import random
 import scipy.stats
 from matplotlib import cm
-import plotnine as p9
+
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"

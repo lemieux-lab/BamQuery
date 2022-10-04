@@ -501,6 +501,92 @@ Each BAM file is identified in sc_example_rna_sc_count_All_alignments.csv accord
 .. thumbnail:: _images/sc_example_rna_sc_count.jpg
 
 
+.. _translation_mode_example:
+
+Translation mode example
+========================
+
+BamQuery translation mode was designed to search BAM files from Ribo-seq data. In this mode, BamQuery can be used as a means to verify the presence of ribosomal profiling reads that overlap with the MCS of peptides of interest. Aware that the length of Ribo-seq reads varies between 28-24 ntd, BamQuery counts a read according to the percentage of overlap with the MCS. For example, if a Ribo-seq read overlaps with 70% of the MCS in a given region, BamQuery counts this read as 0.7 instead of 1.
+In this mode, instead of BAM_directories.tsv BamQuery expects a BAM_ribo_directories.tsv that includes the Ribo-seq datasets. 
+
+
+**Command line:**
+
+.. code::
+
+	BamQuery.py ./sc_example/Input sc_example --mode translation
+
+Input folder `path_to_input_folder` must containt the files : **BAM_ribo_directories.tsv** and **peptides.tsv**.
+
+**2. Output**
+-------------
+
+BamQuery creates an **output** directory in the same path as the input folder.
+
+This directory contains 3 folders and the main results are organized as follows:
+
+.. code::
+
+	├── alignments
+	│   ├── missed_peptides.info
+	│   └── translation_example_info_alignments.xlsx
+	├── logs
+	│   ├── BamQuery_Res_translation_example.log
+	│   └── Information_BAM_directories.log
+	├── plots
+	│   └── heat_maps
+	│       └── translation_evidence_heatmap
+	│           ├── average_translation_expression_heatmap
+	│           │   ├── norm_info.csv
+	│           │   ├── translation_example_ribo_norm_all_tissues.pdf
+	│           │   └── translation_example_ribo_norm_selected_tissues.pdf
+	│           └── total_translation_expression_heatmap
+	│               ├── translation_example_ribo_counts.csv
+	│               ├── translation_example_ribo_counts.pdf
+	│               ├── translation_example_ribo_norm.csv
+	│               └── translation_example_ribo_norm.pdf
+	└── res_translation
+	    └── translation_example_ribo_count_info.xlsx
+
+
+The output files with BamQuery in `translation mode` are similar to those in `normal mode`, see `output_normal_mode_example`_ for detailed information about the output files : missed_peptides.info, sc_example_info_alignments.xlsx and logs.
+
+**2.1. plots**
+---------------
+
+.. code::
+
+	plots
+	└── heat_maps
+		└── translation_evidence_heatmap
+			├── average_translation_expression_heatmap
+			│   ├── norm_info.csv
+			│   ├── translation_example_ribo_norm_all_tissues.pdf
+			│   └── translation_example_ribo_norm_selected_tissues.pdf
+			└── total_translation_expression_heatmap
+							├── translation_example_ribo_counts.csv
+							├── translation_example_ribo_counts.pdf
+							├── translation_example_ribo_norm.csv
+							└── translation_example_ribo_norm.pdf
+
+.. _sc_example_rna_sc_count_All_alignments:
+
+`sc_example_rna_sc_count_All_alignments.csv`: 
+Reports for each MCS of each peptide at a given location the total of RNA-seq reads in each cell found in single-cell BAM file included in **BAM_directories.tsv**. |br| 
+Each BAM file is identified in sc_example_rna_sc_count_All_alignments.csv according to the order in which the BAM file was included in the **BAM_directories.tsv**. For instance: `0_TCTGAGACAGGTCGTC` means that cell `TCTGAGACAGGTCGTC` is included in the first (`0`) BAM file in **BAM_directories.tsv**.
+
+.. thumbnail:: _images/sc_example_rna_sc_count_All_alignments.jpg
+
+
+.. _sc_example_rna_sc_count:
+
+`sc_example_rna_sc_count.csv`: 
+Reports for each peptide the total of RNA-seq reads in each cell found in single-cell BAM file included in **BAM_directories.tsv**. |br| 
+Each BAM file is identified in sc_example_rna_sc_count_All_alignments.csv according to the order in which the BAM file was included in the **BAM_directories.tsv**. For instance: `0_TCTGAGACAGGTCGTC` means that cell `TCTGAGACAGGTCGTC` is included in the first (`0`) BAM file in **BAM_directories.tsv**.
+
+.. thumbnail:: _images/sc_example_rna_sc_count.jpg
+
+
 
 .. |br| raw:: html
 

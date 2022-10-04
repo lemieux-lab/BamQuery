@@ -466,9 +466,9 @@ def main(argv):
 	parser.add_argument('path_to_input_folder', type=str, help='Path to the input folder where to find BAM_directories.tsv and peptides.tsv')
 	parser.add_argument('name_exp', type=str, help='BamQuery search Id')
 	parser.add_argument('--mode', type=str, default = 'normal', help='BamQuery search mode : normal / translation')
-	parser.add_argument('--genome_version', type=str, default = 'v26_88', help='Genome version supported : v26_88 / v33_99 / v38_104')
+	parser.add_argument('--genome_version', type=str, default = 'v26_88', help='Genome human releases : v26_88 / v33_99 / v38_104; Genome mouse releases : M24 / M30')
 	parser.add_argument('--th_out', type=float, default = 8.55, help='Threshold to assess expression comparation with other tissues')
-	parser.add_argument('--dbSNP', type=int, default = 149, help='BamQuery dbSNP : 149 / 151 / 155 / 0')
+	parser.add_argument('--dbSNP', type=int, default = 0, help='Human dbSNP : 149 / 151 / 155')
 	parser.add_argument('--c', action='store_true', help='Take into account the only common SNPs from the dbSNP database chosen')
 	parser.add_argument('--strandedness', action='store_true', help='Take into account strandedness of the samples')
 	parser.add_argument('--light', action='store_true', help='Display only the count and norm count for peptides and regions')
@@ -499,11 +499,22 @@ def main(argv):
 	overlap = args.overlap
 	mouse = args.m
 
+	if sc and mouse:
+		sys.stderr.write('error: %s\n' % 'Some arguments are not valid! Please verify the use of a single BamQuery method to perform the search. (sc or mouse)')
+		parser.print_help()
+		sys.exit(2)
+
+	if light:
+		plots = False
+
+	if mouse :
+		c = False
+
 	if sc :
 		mode = 'normal'
 		plots = False
 
-	if (mode != 'normal' and mode != 'translation') or (dbSNP != 0 and dbSNP != 149 and dbSNP != 151 and dbSNP != 155) or (genome_version != 'v26_88' and genome_version != 'v33_99' and genome_version != 'v38_104' ):
+	if (mode != 'normal' and mode != 'translation') or (dbSNP != 0 and dbSNP != 149 and dbSNP != 151 and dbSNP != 155) or (genome_version != 'v26_88' and genome_version != 'v33_99' and genome_version != 'v38_104' and genome_version != 'M24' and genome_version != 'M30' ):
 		sys.stderr.write('error: %s\n' % 'Some arguments are not valid!')
 		parser.print_help()
 		sys.exit(2)
@@ -515,67 +526,66 @@ def main(argv):
 
 	t0 = time.time()
 
-	super_logger.info('=============== BamQuery id : %s ===============', name_exp)
-	super_logger.info('=============== Parameters ===============')
-	super_logger.info(' - Mode : %s, Strandedness :  %s, Light:  %s ', mode, strandedness, str(light) )
-	super_logger.info(' - Single-Cell experiment (sc) :  %s', str(sc))
-	super_logger.info(' - dbSNP :  %s, COMMON SNPs : %s, Genome Version : %s ', str(dbSNP), str(c), genome_version)
-	super_logger.info(' - Plots : %s', str(plots))
-	super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
-	super_logger.info(' - Counting overlapping reads : %s', str(overlap))
-	super_logger.info(' - Mouse Genome : %s', str(mouse))
+	if mouse:
+		if (genome_version != 'M24' and genome_version != 'M30') or (genome_version == 'M24'):
+			genome_version = 'M24'
+			dbSNP = 'mouse_GRCm38'
+		if genome_version == 'M30':
+			genome_version = 'M30'
+			dbSNP = 'mouse_GRCm39'
+		super_logger.info('=============== Start Parameters ===============')
+		super_logger.info(' - BamQuery id : %s ', name_exp)
+		super_logger.info(' - Mode : %s, Strandedness :  %s, Light:  %s ', mode, strandedness, str(light) )
+		super_logger.info(' - Single-Cell experiment (sc) :  %s', str(sc))
+		super_logger.info(' - dbSNP :  %s, COMMON SNPs : %s, Genome Version : %s ', str(dbSNP), str(c), genome_version)
+		super_logger.info(' - Plots : %s', str(plots))
+		super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
+		super_logger.info(' - Counting overlapping reads : %s', str(overlap))
+		super_logger.info(' - Mouse Genome : %s', str(mouse))
+		super_logger.info('=============== End Parameters ===============')
+
+	else:
+		super_logger.info('=============== Start Parameters ===============')
+		super_logger.info(' - BamQuery id : %s ', name_exp)
+		super_logger.info(' - Mode : %s, Strandedness :  %s, Light:  %s ', mode, strandedness, str(light) )
+		super_logger.info(' - Single-Cell experiment (sc) :  %s', str(sc))
+		super_logger.info(' - dbSNP :  %s, COMMON SNPs : %s, Genome Version : %s ', str(dbSNP), str(c), genome_version)
+		super_logger.info(' - Plots : %s', str(plots))
+		super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
+		super_logger.info(' - Counting overlapping reads : %s', str(overlap))
+		super_logger.info(' - Mouse Genome : %s', str(mouse))
+		super_logger.info('=============== End Parameters ===============')
 
 	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse)
 	
 
 	if not dev:
+		os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
+		os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
+		os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
+		shutil.rmtree(path_to_output_folder+'genome_alignments')
+		
 		if sc:
-			try:
-				shutil.rmtree(path_to_output_folder+'genome_alignments')
-				shutil.rmtree(path_to_output_folder+'res/temps_files')
-				os.remove(path_to_output_folder+"alignments/Alignments_information_sc.dic")
-				os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
-				os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
-				os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
-			except FileNotFoundError:
-				pass
+			os.remove(path_to_output_folder+"alignments/Alignments_information_sc.dic")
+			
 		if mode == 'translation':
-			try:
-				shutil.rmtree(path_to_output_folder+'genome_alignments')
-				shutil.rmtree(path_to_output_folder+'res_translation/BED_files')
-				shutil.rmtree(path_to_output_folder+'res_translation/temps_files')
-				shutil.rmtree(path_to_output_folder+'res_translation/AUX_files')
-				os.remove(path_to_output_folder+"alignments/Alignments_information_ribo.dic")
-				os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
-				os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
-				os.remove(path_to_output_folder+"alignments/info_treated_ribo_bam_files.pkl")
-			except FileNotFoundError:
-				pass
-
-		if not light:
-			try:
-				shutil.rmtree(path_to_output_folder+'genome_alignments')
-				shutil.rmtree(path_to_output_folder+'res/BED_files')
-				shutil.rmtree(path_to_output_folder+'res/temps_files')
-				shutil.rmtree(path_to_output_folder+'res/AUX_files')
-				os.remove(path_to_output_folder+"alignments/Alignments_information_rna.dic")
-				os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
-				os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
-				os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
-			except FileNotFoundError:
-				pass
+			shutil.rmtree(path_to_output_folder+'res_translation/BED_files')
+			shutil.rmtree(path_to_output_folder+'res_translation/temps_files')
+			shutil.rmtree(path_to_output_folder+'res_translation/AUX_files')
+			os.remove(path_to_output_folder+"alignments/Alignments_information_ribo.dic")
+		
 		if mode == 'normal':
-			try:
-				shutil.rmtree(path_to_output_folder+'genome_alignments')
-				shutil.rmtree(path_to_output_folder+'res_light/temps_files')
-				shutil.rmtree(path_to_output_folder+'res_light/BED_files')
-				shutil.rmtree(path_to_output_folder+'res_light/AUX_files')
-				os.remove(path_to_output_folder+"alignments/Alignments_information_light_rna.dic")
-				os.remove(path_to_output_folder+"alignments/Alignments_information_light.dic")
-				os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
-				os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
-			except FileNotFoundError:
-				pass
+			shutil.rmtree(path_to_output_folder+'res/BED_files')
+			shutil.rmtree(path_to_output_folder+'res/AUX_files')
+			shutil.rmtree(path_to_output_folder+'res/temps_files')
+			os.remove(path_to_output_folder+"alignments/Alignments_information_rna.dic")
+
+		if light :
+			shutil.rmtree(path_to_output_folder+'res_light/temps_files')
+			shutil.rmtree(path_to_output_folder+'res_light/BED_files')
+			shutil.rmtree(path_to_output_folder+'res_light/AUX_files')
+			os.remove(path_to_output_folder+"alignments/Alignments_information_light_rna.dic")
+			os.remove(path_to_output_folder+"alignments/Alignments_information_light.dic")
 
 
 	t2 = time.time()

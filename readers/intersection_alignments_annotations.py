@@ -92,7 +92,7 @@ class IntersectAnnotations:
 
 			self.super_logger.info('Using bedtools to intersect alignments to annotations.')
 
-			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_EREs+' -wao > '+self.path_to_output_folder + '/intersection_with_annotated_EREs.bed'
+			command = 'bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_EREs+' -wao > '+self.path_to_output_folder + '/intersection_with_annotated_EREs.bed'
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 			out, err = p_1.communicate()
 
@@ -111,7 +111,7 @@ class IntersectAnnotations:
 
 			self.super_logger.info('Using bedtools to intersect alignments to annotations.')
 
-			command = 'module add bedtools; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed' 
+			command = 'bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed' 
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 			out, err = p_1.communicate()
 
@@ -128,7 +128,7 @@ class IntersectAnnotations:
 
 		self.super_logger.info('Using bedtools to intersect alignments to assemblies.')
 
-		command = 'module add bedtools;'
+		command = ''
 		for assembly, bed_to_intersect in assemblies_to_intersect:
 			command += 'bedtools intersect -a '+self.bed_file+' -b '+assembly+' -wao | grep -w StringTie > '+bed_to_intersect + ';'
 		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)

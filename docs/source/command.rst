@@ -26,10 +26,11 @@ At the command line::
 		  -h, --help            show this help message and exit
 		  --mode MODE           BamQuery search mode : normal / translation
 		  --genome_version GENOME_VERSION
-		                        Genome version supported : v26_88 / v33_99 / v38_104
+		                        Genome human releases : v26_88 / v33_99 / v38_104;
+		                        Genome mouse releases : M24 / M30
 		  --th_out TH_OUT       Threshold to assess expression comparation with other
 		                        tissues
-		  --dbSNP DBSNP         BamQuery dbSNP : 149 / 151 / 155 / 0
+		  --dbSNP DBSNP         Human dbSNP : 149 / 151 / 155 / 0
 		  --c                   Take into account the only common SNPs from the dbSNP
 		                        database chosen
 		  --strandedness        Take into account strandedness of the samples
@@ -60,10 +61,9 @@ To run BamQuery, create an input folder that includes two files: BAM_directories
 .. code::
 
 	
-	Input
-	----|
-	    |---:> BAM_directories.tsv
-	    |---:> peptides.tsv
+	├── Input
+		├── BAM_directories.tsv
+		└── peptides.tsv
 	    
 
 The BAM_directories.tsv file must contain the BAM/CRAM files in which the peptides are queried. |br|
@@ -95,7 +95,7 @@ By default, BamQuery runs in normal mode.
 	For more information, see :ref:`normal mode example`.
 
 	**Translation mode:**
-	Instead of BAM_directories.tsv, BamQuery expects to find a BAM_ribo_directories.tsv corresponding to the Ribo-seq datasets. In this mode, BamQuery can be used as a means to verify the presence of ribosomal profile reads for the peptides of interest. 
+	Instead of BAM_directories.tsv BamQuery expects a BAM_ribo_directories.tsv corresponding to the Ribo-seq datasets. In this mode, BamQuery can be used as a means to verify the presence of ribosomal profiling reads for the peptides of interest. 
 	For more information, see :ref:`translation_mode_example`.
 
 
@@ -103,7 +103,8 @@ By default, BamQuery runs in normal mode.
 
 **-\-genome_version**
 ----------------------
-This option allows to choose between three genome versions supported by BamQuery : v26_88 / v33_99 / v38_104. |br|
+This option allows to choose between three GRCh38 human genome annotation publication versions: v26_88 / v33_99 / v38_104. |br|
+In addition, this option together with **--m**, which allows BamQuery to search in the mouse genome, supports two mouse genome annotation versions of GRCm38 and GRCm39, respectively: M24 / M30. |br|
 By default, genome version v26_88. 
 
 
@@ -179,6 +180,10 @@ BamQuery counts an RNA-seq read if the read completely spans the MCS, however, w
 
 
 **-\-plots**
+-------------
+This option sets BamQuery to produce pie charts in the biotype analysis step.
+
+**-\-m**
 -------------
 This option sets BamQuery to produce pie charts in the biotype analysis step.
 

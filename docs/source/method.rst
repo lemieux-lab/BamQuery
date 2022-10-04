@@ -143,22 +143,22 @@ BamQuery requires two input file paths to search for RNA expression:
 
 	**Peptides in peptide mode:** |br|
 	Two columns separated by a tab space:
-		a. amino acid sequence of the peptide. |br|
-		b. type of peptide to identify it. This name, for example, may refer to the condition or sample in which the peptide was identified. 
+		* amino acid sequence of the peptide. |br|
+		* type of peptide to identify it. This name, for example, may refer to the condition or sample in which the peptide was identified. 
 		
 	**Peptides in coding sequence mode:** |br|
 	Three columns separated by a tab space: 
-		a. amino acid sequence of the peptide. |br|
-		b. nucleotide sequence of the peptide. |br|
-		c. type of peptide to identify it. 
+		* amino acid sequence of the peptide. |br|
+		* nucleotide sequence of the peptide. |br|
+		* type of peptide to identify it. 
 		
 	**Peptides in manual mode:** |br|
 	Five columns separated by a tab space:
-		* a. amino acid sequence of the peptide. |br|
-		b. nucleotide sequence of the peptide. |br|
-		c. position of the peptide. |br|
-		d. strand backward (-) or forward (+) for the location of the peptide in the genome. |br|
-		e. type of peptide to identify it. 
+		* amino acid sequence of the peptide. |br|
+		* nucleotide sequence of the peptide. |br|
+		* position of the peptide. |br|
+		* strand backward (-) or forward (+) for the location of the peptide in the genome. |br|
+		* type of peptide to identify it. 
 
 	.. warning::
 		The peptide location must follow the format: chrX:start-end|start-end. Note: chrX (for any chromosome), start = start location, end = end location. Only use "|" to specify if the peptide is spliced.

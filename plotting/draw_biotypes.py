@@ -1,9 +1,4 @@
-try:
-	import plotting.plots as plots
-except ModuleNotFoundError:
-	import sys 
-	sys.path += sys.path + ['/u/ruizma/BAM_Query/Scripts/Python/BamQuery/plotting/']
-	import plots as plots
+import plotting.plots as plots
 import gc
 
 def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
