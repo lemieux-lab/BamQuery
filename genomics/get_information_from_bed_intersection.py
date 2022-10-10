@@ -7,7 +7,6 @@ from collections import Counter
 from genomics.biotype_genomic_information import BiotypeGenomicSearch
 
 
-path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 __author__ = "Maria Virginia Ruiz Cuevas"
 
 class GetInformationBEDIntersection:

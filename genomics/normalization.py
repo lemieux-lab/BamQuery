@@ -5,12 +5,13 @@ import numpy as np
 
 NUM_WORKERS =  multiprocessing.cpu_count()
 
+path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 __author__ = "Maria Virginia Ruiz Cuevas"
 
 class Normalization:
 
 	def __init__(self, path_to_output_folder, name_exp, peptides_types, mode, light, super_logger, dev):
-		path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
+		
 		self.light = light
 		self.mode = mode
 		

@@ -569,22 +569,21 @@ The output files with BamQuery in `translation mode` are similar to those in `no
 							├── translation_example_ribo_norm.csv
 							└── translation_example_ribo_norm.pdf
 
-.. _sc_example_rna_sc_count_All_alignments:
+This folder contains the heat maps representing the transcript expression levels of all peptides queried.
 
-`sc_example_rna_sc_count_All_alignments.csv`: 
-Reports for each MCS of each peptide at a given location the total of RNA-seq reads in each cell found in single-cell BAM file included in **BAM_directories.tsv**. |br| 
-Each BAM file is identified in sc_example_rna_sc_count_All_alignments.csv according to the order in which the BAM file was included in the **BAM_directories.tsv**. For instance: `0_TCTGAGACAGGTCGTC` means that cell `TCTGAGACAGGTCGTC` is included in the first (`0`) BAM file in **BAM_directories.tsv**.
-
-.. thumbnail:: _images/sc_example_rna_sc_count_All_alignments.jpg
+`average_transcription_expression_heatmap` folder: Heat maps depicting transcription expression of all peptides queried as a function of tissue associated with BAM/CRAM files and tissue type.
 
 
-.. _sc_example_rna_sc_count:
+`_norm_all_tissues.pdf` : heat map depicting the level of transcript expression associated with all tissue types.
 
-`sc_example_rna_sc_count.csv`: 
-Reports for each peptide the total of RNA-seq reads in each cell found in single-cell BAM file included in **BAM_directories.tsv**. |br| 
-Each BAM file is identified in sc_example_rna_sc_count_All_alignments.csv according to the order in which the BAM file was included in the **BAM_directories.tsv**. For instance: `0_TCTGAGACAGGTCGTC` means that cell `TCTGAGACAGGTCGTC` is included in the first (`0`) BAM file in **BAM_directories.tsv**.
 
-.. thumbnail:: _images/sc_example_rna_sc_count.jpg
+`_norm_selected_tissues.pdf` : heat map depicting the expression level of transcripts associated with selected tissues (short list of tissues).
+
+
+`norm_info.csv`: reports, for each peptide consulted, the mean and median rphm values according to the tissues associated with the BAM/CRAM files.
+
+
+`total_transcription_expression_heatmap` folder: Heat map depicting the transcript expression of all peptides queried as a function of each BAM/CRAM file.
 
 
 

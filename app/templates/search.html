@@ -11,17 +11,29 @@
 
 <div class="content-section">
 	<div class="media">
+
 		<!-- <p style="float: right;"><img class="rounded-circle account-img" src="{{ image_file }}"></p> --> 
-		<h3>New Query</h3>
+		<h3>Interface Use:</h3>
 		<small class="text-muted">
-			<p >The query may take some time, grab a coffee!<br></p>
+			<p>
+This BamQuery interface facilitates tumor antigen prioritization. The interface queries a list of user-defined MAPs in mTECs and DCs samples, as these cells are proxies for tumor specificity and immunogenicity. This interface also incorporates a predictive logistic regression model to report the conferred probability that a MAP is immunogenic. 
+</p>
+<p>
+Entry requirements:
+<br>1. Query name (This name will be required to download your results).
+<br>2. List of MAPs (a maximum of 100 MAPs per run).
+<br>3. Select the genome version and the dbSNP database.
+</p>
 		</small>
 	</div>
+</div>
+
+<div class="content-section">
 
 <form method="POST" action="" enctype="multipart/form-data">
 	{{ form.hidden_tag() }}
 	<fieldset class="form-group">
-		<legend class="border-bottom mb-4">Query</legend>  
+		<legend class="border-bottom mb-4">NewQuery</legend>  
 
 		<div class="row" >
 			<div class="col" class="form-group">
@@ -38,35 +50,10 @@
 				{% else %}
 					{{ form.name_query(class="form-control") }}
 				{% endif %}
-			</div>
-
-			<div class="col"  class="form-group">
-				{{ form.peptides.label() }} 
-				<p align="align-self-center"> {{ form.peptides(class="form-control-file") }}</p>
-
-				{% if form.peptides.errors %}
-						{% for error in form.peptides.errors %}
-						<span class="text-danger">{{ error }}</span>
-						{% endfor %}
-				{% endif %}
-
-			</div>
-		<div class="w-100"></div>
-			<div class="col">
 				<small class="text-muted">
 						Set a name to identify your query. Keep this name in mind to retrieve your results later.
 				</small>
 			</div>
-			<div class="col">
-				<small class="text-muted">
-						For more details about the format of <b>peptides.tsv</b> please see the <a class="ml-2" href="{{ url_for('documentation') }}">documentation</a>.
-				</small>
-				<small class="text-muted">
-					 Limited number of peptides = 100 per run. 
-				</small>
-				
-			</div>
-		<div class="w-100"></div>
 			<div  class="col" class="form-group">
 
 				{{ form.th_out.label(class="form-control-label") }}
@@ -81,44 +68,66 @@
 				{% else %}
 					{{ form.th_out(class="form-control") }}
 				{% endif %}
-			</div>
-			
-			<div class="col">
 				<small class="text-muted">
-				<p></p>	
-				This value changes the threshold that is considered for comparing the expression levels of different tissues. Default = 8.55 rphm (reads per hundred million).
+				
+				This value changes the threshold that is considered for comparing the expression levels of different tissues. <br>
+				Default = 8.55 rphm (reads per hundred million).
 				</small>
+
 			</div>
-			
-		</div>
-
-		<div class="row" style="margin-top:20px;">
-
-		<div class="col" >
+			<div class="col" >
 			{{ form.genome_version.label(class="form-control-label") }}
 			{{ form.genome_version }}
+			<small class="text-muted">
+					<br>
+					Genome version supported : v26_88 / v33_99 / v38_104.
+			</small>
 		</div>
 		
 		<div class="col" >
 			{{ form.data_base_snp.label(class="form-control-label") }}
 			{{ form.data_base_snp}}
+			<small class="text-muted">
+				<br>
+					dbSNP supported : 149 / 151 / 155 / None.
+				</small>
 				
 		</div>
+			
+		<div class="row" >
+			<div class="col"  class="form-group">
 
-		<div class="w-100"></div>
-			
-			<div class="col">
+				{{ form.peptides_list.label() }} 
 				<small class="text-muted">
-						Genome version supported : v26_88 / v33_99 / v38_104.
+					<br>
+					 Limited number of peptides = 100 per run. One by one. 
+					 
+				<div class="row" >
+				<small class="text-muted">
+				<br>
+					 Peptides example list: 
+					 <br>
+					 YVHMVTHF
+					 <br>
+					 AAMLDTVVFK
+					 <br>
+					 ...
 				</small>
 			</div>
-			<div class="col">
-				<small class="text-muted">
-					dbSNP supported : 149 / 151 / 155 / Any.
 				</small>
+				<p align="align-self-center"> {{ form.peptides_list(class="form-control-file", cols="100", rows="11") }}</p>
+
+				{% if form.peptides_list.errors %}
+						{% for error in form.peptides_list.errors %}
+						<span class="text-danger">{{ error }}</span>
+						{% endfor %}
+				{% endif %}
+
+				
 			</div>
-			
+
 		</div>
+
 	</fieldset>
 </div>
 	<div class="container">

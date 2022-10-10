@@ -458,8 +458,8 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 
 	if mouse:
 		if genome_version == 'M24':
-			genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm39.primary_assembly.genome.fa.fai'
-			genomePath = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm39.primary_assembly.genome.fa'
+			genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm38.primary_assembly.genome.fa.fai'
+			genomePath = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm38.primary_assembly.genome.fa'
 		if genome_version == 'M30':
 			genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
 			genomePath = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'

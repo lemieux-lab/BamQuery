@@ -28,38 +28,33 @@ def search():
 	image_file = url_for('static', filename='favicon.png')
 	
 	if form.validate_on_submit():
-		name_exp = form.name_query.data
+		name_exp = form.name_query.data.strip()
+		name_exp_aux = name_exp
 		adding_random_name = str(random.getrandbits(16))
 		name_exp = name_exp+'_'+adding_random_name
+
 		parent_dir = os.path.join(app.root_path, 'static/temps')
 		path_search = os.path.join(parent_dir, name_exp)
 		path_input = os.path.join(path_search, 'Input')
 
 		exists_search = os.path.exists(path_search) 
 		exists_light = os.path.exists(path_input) 
+
 		genome_version = form.genome_version.data
 		data_base_snp = form.data_base_snp.data
 
 		
-		if not exists_search and not exists_light:
-			
-			os.mkdir(path_search)
-			os.mkdir(path_input)
-			
-		if form.peptides.data:
-			path_saved, state = save_peptides(form.peptides.data, path_input)
-			
-			if state == 'Error':
-				shutil.rmtree(path_search)
-				task_ids[name_exp] = 'No task'
-				flash(f'Sorry, peptides.tsv file contains more than 100 entries !', 'error')
-			else:
-				path_to_bam_directories = os.path.join(app.root_path, 'static/BAM_directories.tsv')
-				shutil.copy2(path_to_bam_directories, path_input)
-				task = running_BamQuery.apply_async(args = [path_input, name_exp, True, form.th_out.data, genome_version, data_base_snp])
-				message = 'Your query '+name_exp+' has been launched. \n Please do not close this page until your query has completed, otherwise you should get the query name to download the results later.'
-				flash(message, 'success')
-				return render_template('results.html', title ='Results', image_file = image_file, name_exp = name_exp, task_id = task.id)
+		if form.peptides_list.data:
+			if not exists_search and not exists_light:
+				os.mkdir(path_search)
+				os.mkdir(path_input)
+			path_saved, state = save_peptides(form.peptides_list.data, name_exp_aux, path_input)
+			path_to_bam_directories = os.path.join(app.root_path, 'static/BAM_directories.tsv')
+			shutil.copy2(path_to_bam_directories, path_input)
+			task = running_BamQuery.apply_async(args = [path_input, name_exp, True, form.th_out.data, genome_version, data_base_snp])
+			message = 'Your query '+name_exp+' has been launched. \n Please do not close this page until your query has completed, otherwise you should get the query name to download the results later.'
+			flash(message, 'success')
+			return render_template('results.html', title ='Results', image_file = image_file, name_exp = name_exp, task_id = task.id)
 
 
 	return render_template('search.html', title ='Search', image_file = image_file, form = form, block=False)
@@ -80,7 +75,11 @@ def retrival():
 
 			with open(path_output, 'rb') as f:
 				data = f.readlines()
-			shutil.rmtree(os.path.join(app.root_path, 'static/temps',name_exp))
+			try:
+				os.system('rm -rf "{}"'.format(os.path.join(app.root_path, 'static/temps',name_exp, '/logs')))
+				shutil.rmtree(os.path.join(app.root_path, 'static/temps',name_exp))
+			except:
+				pass
 			return Response(data, headers={
 				'Content-Type': 'application/zip',
 				'Content-Disposition': 'attachment; filename=%s;' % filename
@@ -97,19 +96,26 @@ def file_len(fname):
 			pass
 	return i + 1
 
-def save_peptides(form_peptides_file, path_input):
-	peptides_file_path = os.path.join(path_input, form_peptides_file.filename)
-	form_peptides_file.save(peptides_file_path)
-	peptides_number = file_len(peptides_file_path)
-	if peptides_number > 100:
-		return peptides_file_path, 'Error'
-	else:
-		return peptides_file_path, 'Success'
+def save_peptides(form_peptides_list, name_exp, path_input):
+	to_write = ''
+	peptides_list = form_peptides_list.split('\n')
+	for pep in peptides_list:
+		to_write+=pep.strip()+'\t'+name_exp+'\n'
+	
+	peptides_file_path = os.path.join(path_input, 'peptides.tsv')
+	peptides_file = open(peptides_file_path, 'w')
+	peptides_file.write(to_write)
+	peptides_file.close()
+	return peptides_file_path, 'Success'
 
 @app.route('/')
 @app.route('/about')
 def about():
 	return render_template('about.html')
+
+@app.route('/installation')
+def installation():
+	return render_template('installation.html')
 
 @app.route('/documentation', methods=['POST', 'GET'])
 def documentation():
@@ -189,7 +195,10 @@ def request_zip(name_exp):
 @app.route('/remove', methods=['POST'])
 def remove():
 	name_exp = request.form['name_exp']
-	shutil.rmtree(os.path.join(app.root_path, 'static/temps',name_exp))
+	try:
+		shutil.rmtree(os.path.join(app.root_path, 'static/temps',name_exp))
+	except:
+		pass
 	return redirect(url_for('search'))
 
 

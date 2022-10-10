@@ -429,7 +429,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
 
-	path_to_output_folder, super_logger, bam_files_logger  = directories_creation(path_to_input_folder, name_exp, mode, light, sc)
+	path_to_output_folder, super_logger, bam_files_logger, handler_super_logger, handler_bam_files_logger  = directories_creation(path_to_input_folder, name_exp, mode, light, sc)
 
 	t0 = time.time()
 
@@ -442,19 +442,25 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	total = t2-t0
 	
 	super_logger.info('Total time run function BamQuery to end : %f min', (total/60.0))
+	handler_super_logger.close()
+	handler_bam_files_logger.close()
 	logging.shutdown()
-	
+	del super_logger
+	del bam_files_logger
+	del handler_super_logger
+	del handler_bam_files_logger
+
 	try:
 		shutil.rmtree(path_to_output_folder+'genome_alignments', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'alignments', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/AUX_files', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/temps_files', ignore_errors=True)
-		shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)
-
+		os.system('rmdir /S /Q "{}"'.format(path_to_output_folder+'logs'))
+		os.system('rm -rf "{}"'.format(path_to_output_folder+'logs'))
+		shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)	
 	except FileNotFoundError:
 		pass
-	
 
 	return path_to_output_folder
 
@@ -474,7 +480,7 @@ def main(argv):
 	parser.add_argument('--light', action='store_true', help='Display only the count and norm count for peptides and regions')
 	parser.add_argument('--sc', action='store_true', help='Query Single Cell Bam Files')
 	parser.add_argument('--var', action='store_true', help='Keep Variants Alignments')
-	parser.add_argument('--maxmm', action='store_true', help='Allow STAR to generate high amount of alignments')
+	parser.add_argument('--maxmm', action='store_true', help='Enable STAR to generate a large number of alignments')
 	parser.add_argument('--overlap', action='store_true', help='Count overlapping reads')
 	parser.add_argument('--plots', action='store_true', help='Plot biotype pie-charts')
 	parser.add_argument('--m', action='store_true', help='Mouse genome')
@@ -522,7 +528,7 @@ def main(argv):
 	if path_to_input_folder[-1] != '/':
 		path_to_input_folder += '/'
 
-	path_to_output_folder, super_logger, bam_files_logger = directories_creation(path_to_input_folder, name_exp, mode, light, sc)
+	path_to_output_folder, super_logger, bam_files_logger, handler_super_logger, handler_bam_files_logger = directories_creation(path_to_input_folder, name_exp, mode, light, sc)
 
 	t0 = time.time()
 

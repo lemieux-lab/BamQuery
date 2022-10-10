@@ -30,15 +30,15 @@ At the command line::
 		                        Genome mouse releases : M24 / M30
 		  --th_out TH_OUT       Threshold to assess expression comparation with other
 		                        tissues
-		  --dbSNP DBSNP         Human dbSNP : 149 / 151 / 155 / 0
-		  --c                   Take into account the only common SNPs from the dbSNP
+		  --dbSNP DBSNP         Human dbSNP : 149 / 151 / 155
+		  --c                   Take into account only common SNPs from the dbSNP
 		                        database chosen
-		  --strandedness        Take into account strandedness of the samples
+		  --strandedness        Take into account the strandedness of the samples
 		  --light               Display only the count and norm count for peptides and
 		                        regions
 		  --sc                  Query Single Cell Bam Files
 		  --var                 Keep Variants Alignments
-		  --maxmm               Allows STAR to generate high amount of alignments
+		  --maxmm               Enable STAR to generate a large number of alignments
 		  --overlap             Count overlapping reads
 		  --plots               Plot biotype pie-charts
 		  --m                   Mouse genome
@@ -104,8 +104,8 @@ By default, BamQuery runs in normal mode.
 **-\-genome_version**
 ----------------------
 This option allows to choose between three GRCh38 human genome annotation publication versions: v26_88 / v33_99 / v38_104. |br|
-In addition, this option together with **--m**, which allows BamQuery to search in the mouse genome, supports two mouse genome annotation versions of GRCm38 and GRCm39, respectively: M24 / M30. |br|
-By default, genome version v26_88. 
+In addition, this option together with **-\-m** (which allows BamQuery to search in the mouse genome) supports two mouse genome annotation versions of GRCm38 and GRCm39, respectively: M24 / M30. |br|
+By default, BamQuery use the human genome version v26_88. 
 
 
 **-\-th_out**
@@ -119,8 +119,8 @@ By default, this threshold is 8.55 rphm (reads per hundred million).
 **-\-dbSNP**
 -------------
 
-This option allows you to choose between three versions of dbSNPs: 149 / 151 / 155. To specify that no dbSNP version shoubl be used, use dbSNP=0. |br|
-By default, dbSNP 149. 
+This option allows you to choose between three versions of dbSNPs: 149 / 151 / 155. |br|
+By default, dbSNP 0. 
 
 
 **-\-c**
@@ -185,7 +185,9 @@ This option sets BamQuery to produce pie charts in the biotype analysis step.
 
 **-\-m**
 -------------
-This option sets BamQuery to produce pie charts in the biotype analysis step.
+This option sets BamQuery to search for peptides in the mouse genome. |br|
+Along with the **-\-genome_version** option BamQuery can be parameterized to run the search on either of the two supported GRCm38 and GRCm39 mouse genome annotation versions: M24 / M30. If only the **-\-m** option is passed as an argument, BamQuery takes the default M24 mouse genome annotation version. |br|
+By default, the mouse genome annotation versions: M24 / M30, are used with the EVA database of genomic variation for the GRCm38 and GRCm39, respectively.
 
 
 **-\-dev**
@@ -194,7 +196,6 @@ This option allows you to save all intermediate files.
 
 .. warning::
 	Intermediate files can take up a lot of space.
-
 
 
 .. |br| raw:: html

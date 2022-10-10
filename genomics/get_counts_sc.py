@@ -15,7 +15,6 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 NUM_WORKERS =  multiprocessing.cpu_count()
 
-path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
 class GetCountsSC:
 

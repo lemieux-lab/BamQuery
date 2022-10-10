@@ -16,8 +16,6 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 NUM_WORKERS =  multiprocessing.cpu_count()
 
-path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
-
 class GetCounts:
 
 	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger):

@@ -33,13 +33,13 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 		logger.setLevel(level)
 		logger.addHandler(handler)
 
-		return logger
+		return logger, handler
 	
 	# First logger
 	nameLog = path_to_logs_folder+'BamQuery_Res_'+name_exp+'.log'
 	exists = os.path.exists(nameLog)
 	
-	super_logger = setup_logger('Super_Logger', nameLog, 'a')
+	super_logger, handler_super_logger = setup_logger('Super_Logger', nameLog, 'a')
 	if exists:
 		super_logger.info('')
 		super_logger.info('')
@@ -47,7 +47,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 	
 	# Second logger
 	nameLog = path_to_logs_folder+'Information_BAM_directories.log'
-	bam_files_logger = setup_logger('Bam_Files_Logger', nameLog, 'a')
+	bam_files_logger, handler_bam_files_logger = setup_logger('Bam_Files_Logger', nameLog, 'a')
 	
 	if mode == 'translation':
 		paths = [path_to_output_folder+'res_translation/temps_files/', 
@@ -117,6 +117,6 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 	super_logger.info('Path to output folder : %s ', path_to_output_folder)
 	super_logger.info('=============== # ===================')
 
-	return path_to_output_folder, super_logger, bam_files_logger
+	return path_to_output_folder, super_logger, bam_files_logger, handler_super_logger, handler_bam_files_logger
 
 

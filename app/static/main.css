@@ -128,3 +128,31 @@ div.body li, div.body dd {
 table.docutils .justify-align {
     text-align: justify;
 }
+
+form textarea#peptides_list {
+     width: 11em;
+     height: 7em;
+     max-width: 11em;
+     max-height: 100em;
+     background-color: #fafafa;
+  -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
+          border-radius: 3px;
+  border: 1px solid #cccccc;
+  margin-bottom: 10px;
+  padding: 5px;
+  font-size: 1.1em;
+}
+
+form input#name_query,
+form input#th_out,
+form input#name_query_to_retrieve{
+  width: 400px;
+  background-color: #fafafa;
+  -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
+          border-radius: 3px;
+  border: 1px solid #cccccc;
+  padding: 5px;
+  font-size: 1.1em;
+}

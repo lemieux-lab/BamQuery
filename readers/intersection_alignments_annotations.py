@@ -28,7 +28,10 @@ class IntersectAnnotations:
 			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v38_104/gencode.v38.primary_assembly.annotation.gtf'
 		
 		if self.mouse:
-			self.annotation_transcripts = path_to_lib+'genome_versions/genome_mouse_m30/gencode.vM30.primary_assembly.annotation.gtf'
+			if genome_version == 'M24':
+				self.annotation_transcripts = path_to_lib+'genome_versions/genome_mouse_m24/gencode.vM24.primary_assembly.annotation.gtf'
+			if genome_version == 'M30':
+				self.annotation_transcripts = path_to_lib+'genome_versions/genome_mouse_m30/gencode.vM30.primary_assembly.annotation.gtf'
 
 		self.annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
 

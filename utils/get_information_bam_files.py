@@ -169,14 +169,14 @@ class GetInformationBamFiles:
 						dictionary_total_reads_bam_files = pickle5.load(fp)
 			else:
 				dictionary_total_reads_bam_files = {}
-				print ('Bam_files_info dictionary is not found in the lib path. If this is the first time you are running \
-					BAMQuery or you are querying new samples, this will take a bit of time. Go for coffee! If it is not \
-					the case you should be worried, the Bam_files_info dictionary have been lost, now is generating a new Bam_files_info dictionary \
-					with the samples in this query.')
-				self.bam_files_logger.info('Bam_files_info dictionary is not found in the lib path. If this is the first time you are running \
-					BAMQuery or you are querying new samples, this will take a bit of time. Go for coffee! If it is not \
-					the case you should be worried, the Bam_files_info dictionary have been lost, now is generating a new Bam_files_info dictionary \
-					with the samples in this query.')
+				print ('The Bam_files_info dictionary is not found in the library path. If this is the first time you are running \
+					BamQuery or you are querying new samples, this will take a little time while retrieving the primary read count for each BAM file. If this is not the case, \
+					the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info  \
+					dictionary with the samples from this query.')
+				self.bam_files_logger.info('The Bam_files_info dictionary is not found in the library path. If this is the first time you are running \
+					BamQuery or you are querying new samples, this will take a little time while retrieving the primary read count for each BAM file. If this is not the case, \
+					the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info  \
+					dictionary with the samples from this query.')
 
 			
 			with open(bam_files) as f:

@@ -32,9 +32,15 @@ class BiotypeGenomicSearch:
 			self.annotations_file = path_to_lib+'genome_versions/genome_v38_104/Info_Transcripts_Annotations.dic'
 
 		if self.mouse:
-			self.genome_index = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
-			self.genome = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
-			self.annotations_file = path_to_lib+'genome_versions/genome_mouse_m30/Info_Transcripts_Annotations.dic'
+			if genome_version == 'M24':
+				self.genome_index = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm38.primary_assembly.genome.fa.fai'
+				self.genome = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm38.primary_assembly.genome.fa'
+				self.annotations_file = path_to_lib+'genome_versions/genome_mouse_m24/Info_Transcripts_Annotations.dic'
+
+			if genome_version == 'M30':
+				self.genome_index = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
+				self.genome = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
+				self.annotations_file = path_to_lib+'genome_versions/genome_mouse_m30/Info_Transcripts_Annotations.dic'
 
 		path = self.path_to_output_folder_alignments +'/alignments_summary_information.pkl'
 		self.alignments_summary_information = pd.read_pickle(path)
