@@ -25,7 +25,7 @@ def validate_peptides_list(form, field):
 		for pep in peptides:
 			if pep.strip().isdigit():
 				raise ValidationError('Number found in peptide sequence.')
-			if len(pep.strip()) > 11:
+			if len(pep.strip()) > 11 or len(pep.strip()) < 8:
 				print (pep.strip(), len(pep.strip()))
 				raise ValidationError('BamQuery analyze MAPs ranging in length from 8 to 11 amino acids (aa).')
 			if not m.match(pep.strip()):
