@@ -19,6 +19,8 @@ class MyFloatField(FloatField):
 				raise ValueError(self.gettext('Not a valid float value'))
 
 #https://wtforms.readthedocs.io/en/stable/validators/
+#https://www.digitalocean.com/community/tutorials/how-to-make-a-web-application-using-flask-in-python-3#step-5-displaying-all-posts
+#https://code.tutsplus.com/tutorials/intro-to-flask-adding-a-contact-page--net-28982
 def validate_peptides_list(form, field):
 		peptides = field.data.split('\n')
 		m = re.compile(r'[AGPTVCDEFHKNQYILRSMW]')

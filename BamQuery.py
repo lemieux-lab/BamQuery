@@ -1,8 +1,5 @@
-import time, sys, os, datetime, argparse, logging, _thread, shutil, pickle
-from os import listdir
-from os.path import isfile, join
+import time, sys, os, argparse, logging, shutil, pickle
 import pandas as pd
-from pandas import ExcelFile
 
 from readers.read_input import ReadInputFile
 from readers.info_transcripts_annotation import InfoTranscripts
@@ -244,7 +241,7 @@ class BamQuery:
 
 	def common_to_modes(self, bam_files_logger):
 
-		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger, self.sc, self.genome_version)
+		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger, self.sc, self.genome_version, self.mouse)
 
 		bam_files_logger 
 		handlers = bam_files_logger.handlers[:]

@@ -15,12 +15,13 @@ NUM_WORKERS =  int(multiprocessing.cpu_count()/2)
 
 class GetInformationBamFiles:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light, bam_files_logger, sc, genome_version):
+	def __init__(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light, bam_files_logger, sc, genome_version, mouse):
 		
 		self.bam_files_list = {}
 		self.bam_ribo_files_list = {}
 		self.bam_files_logger = bam_files_logger
 		self.sc = sc
+		self.mouse = mouse
 		
 		if genome_version == 'v26_88': 
 			self.genome_version_gtf= path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
@@ -76,7 +77,7 @@ class GetInformationBamFiles:
 					try:
 						path = line[1]
 					except IndexError:
-						raise Exception("Sorry, your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
+						raise Exception("Your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
 
 					if '.bam' in path or '.cram' in path:
 						bam_files_found = [path]
@@ -191,7 +192,7 @@ class GetInformationBamFiles:
 					except IndexError:
 						os.remove(path_to_lock_file)
 						self.bam_files_logger.info('Unlock Bam_files_info')
-						raise Exception("Sorry, your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
+						raise Exception("Your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
 
 					if '.bam' in path or '.cram' in path:
 						bam_files_found = [path]
@@ -326,11 +327,11 @@ class GetInformationBamFiles:
 						else:
 							os.remove(path_to_lock_file)
 							self.bam_files_logger.info('Unlock Bam_files_info')
-							raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
-					except:
+							raise SystemExit("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+					except Exception :
 						os.remove(path_to_lock_file)
 						self.bam_files_logger.info('Unlock Bam_files_info')
-						raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+						raise SystemExit("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
 				
 				with open(path_to_all_counts_file, 'wb') as handle:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -390,43 +391,85 @@ class GetInformationBamFiles:
 
 
 	def get_type_library(self, path):
+
+		#Chromosome 6: 125,138,678-125,143,430 
 		
-		try:
-			count_1 = int(pysam.view("-f1",'-c', path, 'chr12:6,537,097-6,537,227'))
-
-			if count_1 == 0 :
-				sequencing = 'single-end'
-				count_1 = int(pysam.view("-f0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
-				count_2 = int(pysam.view("-F0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
-			else:
-				sequencing = 'pair-end'
-				count_1 = int(pysam.view("-f0X50",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f80 to hexa
-				count_2 = int(pysam.view("-f0X60",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f96 to hexa
-
-			ratio = 0
+		if self.mouse:
 			try:
-				ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
-			except :
-				pass
-			
-			type_library = ''
-			
-			if ratio > 2 :
-				type_library = 'unstranded'
-			else:
-				if count_1 > count_2:
-					type_library = 'reverse'
-				elif count_2 > count_1:
-					type_library = 'forward'
-				elif count_1 == count_2 and count_1 == 0:
-					self.bam_files_logger.info('Guessing library for this Bam file %s fail. Adding unstranded library ! ' , path)
+				count_1 = int(pysam.view("-f1",'-c', path, 'chr6:125,138,678-125,143,430'))
+
+				if count_1 == 0 :
+					sequencing = 'single-end'
+					count_2 = int(pysam.view("-f0X10",'-c', path, 'chr6:125,138,678-125,143,430'))
+					count_1 = int(pysam.view("-F0X10",'-c', path, 'chr6:125,138,678-125,143,430'))
+				else:
+					sequencing = 'pair-end'
+					count_2 = int(pysam.view("-f0X50",'-c', path, 'chr6:125,138,678-125,143,430')) # Conversion -f80 to hexa
+					count_1 = int(pysam.view("-f0X60",'-c', path, 'chr6:125,138,678-125,143,430')) # Conversion -f96 to hexa
+
+				ratio = 0
+				try:
+					ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
+				except :
+					pass
+				
+				type_library = ''
+				
+				if ratio > 2 :
 					type_library = 'unstranded'
+				else:
+					if count_1 > count_2:
+						type_library = 'reverse'
+					elif count_2 > count_1:
+						type_library = 'forward'
+					elif count_1 == count_2 and count_1 == 0:
+						self.bam_files_logger.info('Guessing library for this Bam file %s fail. Adding unstranded library ! ' , path)
+						type_library = 'unstranded'
 
-			return type_library, sequencing
+				return type_library, sequencing
 
-		except pysam.utils.SamtoolsError: 
+			except pysam.utils.SamtoolsError: 
 
-			return '',''
+				return '',''
+
+		else:
+
+			try:
+				count_1 = int(pysam.view("-f1",'-c', path, 'chr12:6,537,097-6,537,227'))
+
+				if count_1 == 0 :
+					sequencing = 'single-end'
+					count_1 = int(pysam.view("-f0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
+					count_2 = int(pysam.view("-F0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
+				else:
+					sequencing = 'pair-end'
+					count_1 = int(pysam.view("-f0X50",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f80 to hexa
+					count_2 = int(pysam.view("-f0X60",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f96 to hexa
+
+				ratio = 0
+				try:
+					ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
+				except :
+					pass
+				
+				type_library = ''
+				
+				if ratio > 2 :
+					type_library = 'unstranded'
+				else:
+					if count_1 > count_2:
+						type_library = 'reverse'
+					elif count_2 > count_1:
+						type_library = 'forward'
+					elif count_1 == count_2 and count_1 == 0:
+						self.bam_files_logger.info('Guessing library for this Bam file %s fail. Adding unstranded library ! ' , path)
+						type_library = 'unstranded'
+
+				return type_library, sequencing
+
+			except pysam.utils.SamtoolsError: 
+
+				return '',''
 
 
 
