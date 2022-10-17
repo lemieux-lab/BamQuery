@@ -393,7 +393,7 @@ class GetInformationBamFiles:
 
 		# MOUSE GAPDH Chromosome 6: 125,138,678-125,143,430 
 		
-		if mouse:
+		if self.mouse:
 			position_gapdh_grch38 = 'chr6:125,163,139-125,163,436'
 			position_gapdh_grch39 = 'chr6:125,138,678-125,143,430'
 			try:
