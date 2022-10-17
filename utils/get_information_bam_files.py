@@ -1,7 +1,6 @@
 import os, threading, time, subprocess, concurrent.futures, getpass, pickle, sys, getopt, os, pysam, multiprocessing, csv
 from os import listdir
 from os.path import isfile, join
-from pathos.multiprocessing import ProcessPool
 import pandas as pd
 
 __author__ = "Maria Virginia Ruiz"
@@ -392,84 +391,80 @@ class GetInformationBamFiles:
 
 	def get_type_library(self, path):
 
-		#Chromosome 6: 125,138,678-125,143,430 
+		# MOUSE GAPDH Chromosome 6: 125,138,678-125,143,430 
 		
-		if self.mouse:
+		if mouse:
+			position_gapdh_grch38 = 'chr6:125,163,139-125,163,436'
+			position_gapdh_grch39 = 'chr6:125,138,678-125,143,430'
 			try:
-				count_1 = int(pysam.view("-f1",'-c', path, 'chr6:125,138,678-125,143,430'))
-
-				if count_1 == 0 :
-					sequencing = 'single-end'
-					count_2 = int(pysam.view("-f0X10",'-c', path, 'chr6:125,138,678-125,143,430'))
-					count_1 = int(pysam.view("-F0X10",'-c', path, 'chr6:125,138,678-125,143,430'))
-				else:
-					sequencing = 'pair-end'
-					count_2 = int(pysam.view("-f0X50",'-c', path, 'chr6:125,138,678-125,143,430')) # Conversion -f80 to hexa
-					count_1 = int(pysam.view("-f0X60",'-c', path, 'chr6:125,138,678-125,143,430')) # Conversion -f96 to hexa
-
-				ratio = 0
-				try:
-					ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
-				except :
-					pass
-				
-				type_library = ''
-				
-				if ratio > 2 :
-					type_library = 'unstranded'
-				else:
-					if count_1 > count_2:
-						type_library = 'reverse'
-					elif count_2 > count_1:
-						type_library = 'forward'
-					elif count_1 == count_2 and count_1 == 0:
-						self.bam_files_logger.info('Guessing library for this Bam file %s fail. Adding unstranded library ! ' , path)
-						type_library = 'unstranded'
-
-				return type_library, sequencing
-
+				count_gapdh_grch38 = int(pysam.view("-f1",'-c', path, position_gapdh_grch38))
+				count_gapdh_grch39 = int(pysam.view("-f1",'-c', path, position_gapdh_grch39))
 			except pysam.utils.SamtoolsError: 
-
 				return '',''
-
+			
+			if count_gapdh_grch38 > count_gapdh_grch39:
+				print ('GRCH 38')
+				sequencing = 'pair-end'
+				count_2 = int(pysam.view("-f0X50",'-c', path, position_gapdh_grch38)) # Conversion -f80 to hexa
+				count_1 = int(pysam.view("-f0X60",'-c', path, position_gapdh_grch38)) # Conversion -f96 to hexa
+				print ('-f80 ',count_2, '-f96 ',count_1)
+				
+			elif count_gapdh_grch39 > count_gapdh_grch38:
+				print ('GRCH 39')
+				sequencing = 'pair-end'
+				count_2 = int(pysam.view("-f0X50",'-c', path, position_gapdh_grch39)) # Conversion -f80 to hexa
+				count_1 = int(pysam.view("-f0X60",'-c', path, position_gapdh_grch39)) # Conversion -f96 to hexa
+				
+			if count_gapdh_grch38 == 0 and count_gapdh_grch39 == 0:
+				sequencing = 'single-end'
+				count_2_gapdh_grch38 = int(pysam.view("-f0X10",'-c', path, position_gapdh_grch38))
+				count_1_gapdh_grch38 = int(pysam.view("-F0X10",'-c', path, position_gapdh_grch38))
+				count_2_gapdh_grch39 = int(pysam.view("-f0X10",'-c', path, position_gapdh_grch39))
+				count_1_gapdh_grch39 = int(pysam.view("-F0X10",'-c', path, position_gapdh_grch39))
+				count_1 = count_1_gapdh_grch39
+				count_2 = count_2_gapdh_grch39
+				if (count_2_gapdh_grch38 + count_1_gapdh_grch38) > (count_2_gapdh_grch39+count_1_gapdh_grch39):
+					count_1 = count_1_gapdh_grch38
+					count_2 = count_2_gapdh_grch38
 		else:
-
+			position_gapdh_grch39 = 'chr12:6,537,097-6,537,227'
 			try:
-				count_1 = int(pysam.view("-f1",'-c', path, 'chr12:6,537,097-6,537,227'))
+				count_1 = int(pysam.view("-f1",'-c', path, position_gapdh_grch39))
 
 				if count_1 == 0 :
 					sequencing = 'single-end'
-					count_1 = int(pysam.view("-f0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
-					count_2 = int(pysam.view("-F0X10",'-c', path, 'chr12:6,537,097-6,537,227'))
+					count_1 = int(pysam.view("-f0X10",'-c', path, position_gapdh_grch39))
+					count_2 = int(pysam.view("-F0X10",'-c', path, position_gapdh_grch39))
 				else:
 					sequencing = 'pair-end'
-					count_1 = int(pysam.view("-f0X50",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f80 to hexa
-					count_2 = int(pysam.view("-f0X60",'-c', path, 'chr12:6,537,097-6,537,227')) # Conversion -f96 to hexa
-
-				ratio = 0
-				try:
-					ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
-				except :
-					pass
-				
-				type_library = ''
-				
-				if ratio > 2 :
-					type_library = 'unstranded'
-				else:
-					if count_1 > count_2:
-						type_library = 'reverse'
-					elif count_2 > count_1:
-						type_library = 'forward'
-					elif count_1 == count_2 and count_1 == 0:
-						self.bam_files_logger.info('Guessing library for this Bam file %s fail. Adding unstranded library ! ' , path)
-						type_library = 'unstranded'
-
-				return type_library, sequencing
-
+					count_1 = int(pysam.view("-f0X50",'-c', path, position_gapdh_grch39)) # Conversion -f80 to hexa
+					count_2 = int(pysam.view("-f0X60",'-c', path, position_gapdh_grch39)) # Conversion -f96 to hexa
 			except pysam.utils.SamtoolsError: 
 
 				return '',''
+
+		ratio = 0
+		try:
+			ratio = (count_1+count_2)/(abs(count_1-count_2)*1.0)
+		except :
+			pass
+
+		type_library = ''
+
+		if ratio > 2 :
+			type_library = 'unstranded'
+		else:
+			if count_1 > count_2:
+				type_library = 'reverse'
+			elif count_2 > count_1:
+				type_library = 'forward'
+			elif count_1 == count_2 and count_1 == 0:
+				print ('Guessing library for this Bam file %s fail. Adding unstranded library ! ' , path)
+				type_library = 'unstranded'
+
+		return type_library, sequencing
+
+			
 
 
 
