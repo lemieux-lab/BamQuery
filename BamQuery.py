@@ -21,6 +21,7 @@ import plotting.plots as plots
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
+path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-2])+'/lib/'
 
 class BamQuery:
 
@@ -406,7 +407,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	strandedness = strandedness
 	th_out = th_out
 	light = False
-	dev = True
+	dev = False
 	plots = True
 	c = False
 	sc = False
@@ -458,6 +459,9 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 		shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)	
 	except FileNotFoundError:
 		pass
+	
+	path_to_readme_file = path_to_lib+'README.txt'
+	shutil.copy2(path_to_readme_file, path_to_output_folder)
 
 	return path_to_output_folder
 
@@ -484,7 +488,6 @@ def main(argv):
 	parser.add_argument('--dev', action='store_true', help='Save all temps files')
 
 	args = parser.parse_args()
-	
 	path_to_input_folder = args.path_to_input_folder
 	name_exp = args.name_exp
 	mode = args.mode.lower()

@@ -24,19 +24,20 @@ Each MAP in `Peptide mode`_ is reverse-translated. MAP coding sequences (MCS) ar
 2. Collect the locations of the MAP Coding Sequences (MCS) in the genome. 
 --------------------------------------------------------------------------
 
-The MCSs in the **<query_name>.fastq** file are mapped through the STAR aligner to the reference genome version (GENCODE version 26, 33 or 38 ) selected by the user.
+The MCS in the **<query_name>.fastq** file are mapped with the STAR aligner to the reference genome version (GENCODE version 26, 33 or 38 ) selected.
 
-**The genomic locations of the MCS** are collected from the perfect alignments in the output STAR file Aligned.out.sam. 
-A perfect alignment is defined as one in which the MCS exactly matches the reference genome sequence. A perfect alignment is also one in which the MCS does not exactly match the reference, but any mismatch is supported by SNPs included in the user-selected dbSNP (149,151,155 dbSNP releases). 
+**The genomic locations of the MCSs** are collected from the alignments in STAR's Aligned.out.sam file.
+A perfect alignment is defined as one in which the MCS exactly matches the reference genome sequence. 
+A perfect alignment is also one in which the MCS does not exactly match the reference, but the mismatches are supported by SNPs included in the user-selected dbSNP (149,151,155 dbSNP releases). 
 
 
 3. Count RNA-seq reads that exactly bear the MCS. 
 --------------------------------------------------
 
-Each BAM/CRAM file will be queried at all genomic locations collected for a MAP. 
-The primary RNA-seq reads at each location will be queried using the python **pysam** library. Each read will be examined to count only those reads that carry the MCS reported at the location.
-Finally, BamQuery will report the total count of RNA-seq primary reads in each BAM/CRAM file that exactly match the MCS of a peptide. 
-
+Each BAM/CRAM file is queried at all genomic locations collected for each MAP. 
+From the BAM/CRAM file, primary alignments of the RNA-seq reads at each location are selected using the **pysam** library in python. 
+Each read is examined to select only those readings that contain the MCS reported at the location.
+Finally, BamQuery sums all RNA-seq reads (primary alignment) at all genomic locations that exactly match the MCS of a MAP.
 
 .. warning::
 	Total RNA-seq reads count changes according to the :ref:`strandedness` parameter.
@@ -44,7 +45,10 @@ Finally, BamQuery will report the total count of RNA-seq primary reads in each B
 4. Normalization. 
 -----------------
 
-The :math:`tr_{MAP}` count is transformed into a number of reads detected per :math:`10^{8}` reads sequenced (𝑟𝑝ℎ𝑚) following the formula : :eq:`rphm`. :math:`R_{t}` represents the total number of reads sequenced in a given RNA-Seq dataset. These final values are log-transformed :math:`log_{10} (𝑟𝑝ℎ𝑚 + 1)` to allow comparison and averaging between samples, thus removing the bias of large values.
+The :math:`tr_{MAP}` (total reads MAP) is transformed into a number of reads detected per :math:`10^{8}` reads sequenced (𝑟𝑝ℎ𝑚) 
+following the formula : :eq:`rphm`. |br|
+:math:`R_{t}` represents the total number of reads sequenced in a given RNA-Seq dataset. 
+These final values are log-transformed :math:`log_{10} (𝑟𝑝ℎ𝑚 + 1)` to allow comparison and averaging between samples, thus removing the bias of large values.
 
 
 .. math::
@@ -58,11 +62,12 @@ The :math:`tr_{MAP}` count is transformed into a number of reads detected per :m
 --------------------------
 
 Each MAP is classified according to all its MCS genomic locations and their transcription level. 
-Biotype screening is performed using GENCODE annotations according to the reference genome selected by the user and the RepeatMasker annotations to account for human ERE sequences. 
-All MCS genomic locations are included in a BED file for intersect with annotations using BEDtools.
-To account for locations overlapping with several transcripts, reads were scaled according to the read distribution coefficient for each biotype from estimation of those parameters with the expectation maximization (EM) statistical model. |br|
+Biotype screening is performed using the GENCODE annotations according to the reference genome selected by the user and the RepeatMasker annotations 
+to account for human ERE sequences. 
+All MCS genomic locations are included in a BED file for intersect with such annotations using BEDtools.
+To account for locations overlapping with several transcripts, reads were scaled according to the read distribution 
+coefficient for each biotype estimated with the expectation maximization (EM) statistical model. |br|
 For more information, see :ref:`biotypes`.
-
 
 As a result, BamQuery attributes a comprehensive RNA expression to any MAP of interest in any user-selected RNA-seq dataset. 
 

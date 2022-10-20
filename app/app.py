@@ -68,22 +68,26 @@ def retrival():
 		try:
 			name_exp = form_2.name_query_to_retrieve.data
 			path_output = os.path.join(app.root_path, 'static/temps',name_exp,'output')
-			filename = 'data.zip'
-		
-			shutil.make_archive(path_output, 'zip', path_output)
-			path_output = path_output+'.zip'
+			exists = os.path.exists(path_output+'/README.txt')
+			if exists:
+				filename = 'data.zip'
+			
+				shutil.make_archive(path_output, 'zip', path_output)
+				path_output = path_output+'.zip'
 
-			with open(path_output, 'rb') as f:
-				data = f.readlines()
-			try:
-				os.system('rm -rf "{}"'.format(os.path.join(app.root_path, 'static/temps',name_exp, '/logs')))
-				shutil.rmtree(os.path.join(app.root_path, 'static/temps',name_exp))
-			except:
-				pass
-			return Response(data, headers={
-				'Content-Type': 'application/zip',
-				'Content-Disposition': 'attachment; filename=%s;' % filename
-			})
+				with open(path_output, 'rb') as f:
+					data = f.readlines()
+				try:
+					os.system('rm -rf "{}"'.format(os.path.join(app.root_path, 'static/temps',name_exp, '/logs')))
+					shutil.rmtree(os.path.join(app.root_path, 'static/temps',name_exp))
+				except:
+					pass
+				return Response(data, headers={
+					'Content-Type': 'application/zip',
+					'Content-Disposition': 'attachment; filename=%s;' % filename
+				})
+			else:
+				flash(f'The query { name_exp } is still in process !', 'error')
 		except FileNotFoundError:
 			flash(f'No query with this name: { name_exp } is found in our server !', 'error')
 
