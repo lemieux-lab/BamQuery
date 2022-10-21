@@ -24,10 +24,6 @@ class Immunogenicity:
 		model_path = path_to_lib+'logistic_regression_best_model_cv_aug_31.sav'
 		regression_model = pickle.load(open(model_path, 'rb'))
 
-		info_bam_files_tissues = self.path_to_output_folder+'/res/info_bam_files_tissues.csv'
-		info_bam_files_tissues = pd.read_csv(info_bam_files_tissues) 
-
-
 		rphm_norm = pd.read_csv(data)
 
 		data_3 = []
@@ -35,11 +31,11 @@ class Immunogenicity:
 		for i, row in rphm_norm.iterrows():
 			peptide_type = row['Peptide Type']
 			peptide = row['Peptide']
-			samples_mtec = info_bam_files_tissues.loc[(info_bam_files_tissues['Sample category'] == 'mTEC')]['sample_ids'].values[0].split(' ')
+			samples_mtec = ['star_062015', 'star_102015', 'star_S5', 'star_S9', 'star_S10', 'star_S11', 'star_S16_mTECs', 'star_S15_mTECs', 'star_ERR2882510', 'star_ERR2882513', 'star_ERR2882514']
 			values_mtec = row[samples_mtec].values
 			mean_mtec = np.mean(values_mtec)
 			
-			samples_blood = info_bam_files_tissues.loc[(info_bam_files_tissues['Sample category'] == 'Blood_DC')]['sample_ids'].values[0].split(' ')
+			samples_blood = ['star_SRR7300571', 'star_SRR7300573', 'star_SRR7300593', 'star_SRR7300595', 'star_SRR7300613', 'star_SRR7300651', 'star_SRR7300653', 'star_SRR3084021', 'star_SRR3084022', 'star_SRR3084023', 'star_SRR3084024', 'star_SRR3084025', 'star_SRR3084026', 'star_SRR3084027', 'star_SRR3084028', 'star_SRR3084029', 'star_SRR3084030', 'star_SRR3084031', 'star_SRR3084032']
 			values_blood = row[samples_blood].values
 			mean_blood = np.mean(values_blood)
 			

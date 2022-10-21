@@ -26,7 +26,7 @@ Each MAP in `Peptide mode`_ is reverse-translated. MAP coding sequences (MCS) ar
 
 The MCS in the **<query_name>.fastq** file are mapped with the STAR aligner to the reference genome version (GENCODE version 26, 33 or 38 ) selected.
 
-**The genomic locations of the MCSs** are collected from the alignments in STAR's Aligned.out.sam file.
+**The genomic locations of the MCS** are collected from the alignments in STAR's Aligned.out.sam file.
 A perfect alignment is defined as one in which the MCS exactly matches the reference genome sequence. 
 A perfect alignment is also one in which the MCS does not exactly match the reference, but the mismatches are supported by SNPs included in the user-selected dbSNP (149,151,155 dbSNP releases). 
 
@@ -47,7 +47,7 @@ Finally, BamQuery sums all RNA-seq reads (primary alignment) at all genomic loca
 
 The :math:`tr_{MAP}` (total reads MAP) is transformed into a number of reads detected per :math:`10^{8}` reads sequenced (𝑟𝑝ℎ𝑚) 
 following the formula : :eq:`rphm`. |br|
-:math:`R_{t}` represents the total number of reads sequenced in a given RNA-Seq dataset. 
+:math:`R_{t}` represents the total number of reads sequenced in a given RNA-Seq dataset. |br|
 These final values are log-transformed :math:`log_{10} (𝑟𝑝ℎ𝑚 + 1)` to allow comparison and averaging between samples, thus removing the bias of large values.
 
 
