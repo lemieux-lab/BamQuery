@@ -1,21 +1,30 @@
-========
+########
 Cookbook
-========
+########
+
+See this guide for examples of different uses of BamQuery.
+
+BamQuery can search for peptide expression in the human (GRCh38, annotation versions v26_88 / v33_99 / v38_104) 
+and mouse (GRCm38 and GRCm39, annotation versions M24, M30, respectively) genomes.
+
+
+
+=======================
 
 
 .. _normal mode example:
-
+*******************
 normal mode example
-===================
+*******************
+
+**Input**
+#########
 
 **Command line:**
 
 .. code::
 
 	BamQuery.py ./normal_mode_example/Input normal_mode_example 
-
-**1. Input**
-------------
 
 Input folder `path_to_input_folder` containing the files : **BAM_directories.tsv** and **peptides.tsv**. 
 Please download BAM_directories.tsv and peptides.tsv to access an example of the format of these files.
@@ -26,8 +35,10 @@ See:
 See:
 :download:`peptides.tsv <_static/peptides.tsv>`
 
-**2. Output**
--------------
+.. _output_normal_mode_example:
+
+**Output**
+##########
 
 BamQuery creates an **output** directory in the same path as the input folder.
 
@@ -75,14 +86,13 @@ This directory contains 4 folders and the main results are organized as follows:
 	    └── normal_mode_count_norm_info.xlsx
 
 
----------------
 
-.. _output_normal_mode_example:
 
 .. _alignments:
 
-**2.1. Alignments**
--------------------
+
+**alignments**
+==============
 
 .. code::
 
@@ -126,12 +136,13 @@ Find here the `Additional information`_ description from COSMIC.
 
 .. _Additional information: https://cancer.sanger.ac.uk/cosmic/download
 
-.. _Logs:
 
 -----
 
-**2.2. Logs**
--------------
+.. _Logs:
+
+**logs**
+========
 
 .. code::
 
@@ -151,8 +162,8 @@ This file reports for each BAM/CRAM file in the **BAM_directories.tsv** the tota
 
 -----
 
-**2.3. plots**
---------------
+**plots**
+=========
 
 The Plots folder contains the heat map and biotype analysis expression plots for all peptides.
 If the --plots parameter is specified, pie charts of the biotype classification are produced. 
@@ -183,7 +194,7 @@ If the --plots parameter is specified, pie charts of the biotype classification 
 	
 
 **biotypes**
--------------------
+-------------
 
 The `biotype_by_sample_group` folder contains the biotype assignment based on transcription expression, i.e. the biotype is computed based on those locations where there are underlying RNA-seq reads. For more information please refers to :ref:`biotype` and :ref:`biotypes`
 
@@ -216,40 +227,43 @@ This folder contains pie charts organised as follows:
 
 .. _heat maps folder:
 
-
 **heat_maps**
--------------------
+-------------
 
-This folder contains the heat maps representing the transcript expression levels of all peptides queried.
+This folder contains the heat maps representing the transcription expression levels of all peptides queried.
 
-`average_transcription_expression_heatmap` folder: Heat maps depicting transcription expression of all peptides queried as a function of tissue associated with BAM/CRAM files and tissue type.
+`average_transcription_expression_heatmap` folder: 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Heat maps representing the mean transcription expression for each peptide queried in the tissues associated with the BAM/CRAM files.
 
-
-`_norm_all_tissues.pdf` : heat map depicting the level of transcript expression associated with all tissue types.
+`_norm_all_tissues.pdf` : Heat map representing the average level of transcription expression associated with tissue types, computed from all samples in the tissue.
 
 .. thumbnail:: _images/average_transcription_expression_heatmap.jpg
 
 
-`_norm_selected_tissues.pdf` : heat map depicting the expression level of transcripts associated with selected tissues (short list of tissues).
+`_norm_selected_tissues.pdf` : Heat map representing the average level of transcription expression associated with tissue types, computed from selected tissues (short list of tissues).
 
 .. thumbnail:: _images/average_transcription_expression_heatmap_selected.jpg
 
 
-`norm_info.csv`: reports, for each peptide consulted, the mean and median rphm values according to the tissues associated with the BAM/CRAM files.
+`norm_info.csv`: reports, for each peptide queried, the mean and median values of rphm in the tissues associated with the BAM/CRAM files.
 
 .. thumbnail:: _images/norm_info_.jpg
 
 
-`total_transcription_expression_heatmap` folder: Heat map depicting the transcript expression of all peptides queried as a function of each BAM/CRAM file.
+`total_transcription_expression_heatmap` folder: 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Heat maps representing the mean transcription expression and total number of RNA-seq reads for each peptide queried in each BAM/CRAM file.
 
 .. warning::
 	1. Heat maps are produced for searches with less than 400 peptides.
-	2. Heat map in total_transcription_expression_heatmap is produced only if the number of BAM/CRAM files queried are less than 100 tissues.
+	2. Heat maps in total_transcription_expression_heatmap is produced only if the number of BAM/CRAM files queried are less than 100.
+
 
 -----------
 
-**2.4. res**
-------------
+**res**
+=======
 
 .. code::
 
@@ -267,7 +281,7 @@ This folder contains the heat maps representing the transcript expression levels
 
 
 **biotype_classification**
----------------------------------
+--------------------------
 
 .. _Ensembl: https://m.ensembl.org/info/genome/genebuild/biotypes.html
 
@@ -298,13 +312,14 @@ This folder contains the heat maps representing the transcript expression levels
 
 
 **full_info_biotypes**
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. _Genomic_and_ERE_Annotations_Full:
 
 `1_Genomic_and_ERE_Annotations_Full.csv`: 
 Reports for each peptide, each MCS at each location and for each BAM/CRAM included in **BAM_directories.tsv**:
 	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
-	g) also, the total count of RNA-seq reads bearing the given MCS at the given location.
+	(g) also, the total count of RNA-seq reads bearing the given MCS at the given location.
 
 .. thumbnail:: _images/genomic_and_ERE_Annotations_Full.jpg
 
@@ -314,7 +329,7 @@ Reports for each peptide, each MCS at each location and for each BAM/CRAM includ
 `2_Genomic_and_ERE_Annotations_Summary_Full.csv`: 
 Reports for each peptide, each location and for each BAM/CRAM included in **BAM_directories.tsv**:
 	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
-	g)also, the total count of RNA-seq reads bearing MCS at the given location.
+	(g)also, the total count of RNA-seq reads bearing MCS at the given location.
 
 .. thumbnail:: _images/genomic_and_ERE_Annotations_Summary_Full.jpg
 
@@ -324,13 +339,13 @@ Reports for each peptide, each location and for each BAM/CRAM included in **BAM_
 `3_Genomic_and_ERE_Anno_by_Region_Full.csv`: 
 Reports for each peptide, each location and for each BAM/CRAM included in **BAM_directories.tsv**:
 	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
-	g)also, the total count of RNA-seq reads bearing MCS at the given location.
+	(g)also, the total count of RNA-seq reads bearing MCS at the given location.
 
 .. thumbnail:: _images/genomic_and_ERE_Anno_by_Region_Full.jpg
 
------
 
 **summary_info_biotypes**
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _General_Gen_and_ERE_Biotype_Consensus:
 
@@ -356,12 +371,11 @@ It reports for each peptide the consensus biotype based on all expressed locatio
 
 .. thumbnail:: _images/group_Samples_Gen_and_ERE_Biotype_Consensus.jpg
 
------
 
 .. _normal_mode_count_norm_info:
 
 **normal_mode_count_norm_info.xlsx**
-
+------------------------------------
 
 `Sheet : Alignments Read count RNA-seq`
 
@@ -390,202 +404,17 @@ This information is used to plot the rphm heat map. See `heat maps folder`_
 .. thumbnail:: _images/log10RPHM.jpg
 
 
----------------
+======================
 
-.. _light_mode_example:
+.. include:: light_mode.rst
 
-light mode example
-===================
+======================
 
-The light mode of BamQuery was designed to perform a quick search for peptide expression in the specified BAM/CRAM files. In this mode, BamQuery only reports peptide counts and normalization, so no biotyping analysis is performed for peptides (no graph (heat map, pie chart) is produced).
+.. include:: single_cell.rst
 
-**Command line:**
+======================
 
-.. code::
-
-	BamQuery.py ./normal_mode_example/Input normal_mode_example --light
-
-
-As for normal mode, the input folder `path_to_input_folder` must containt the files : **BAM_directories.tsv** and **peptides.tsv**.
-
-**2. Output**
--------------
-
-BamQuery creates an **output** directory in the same path as the input folder.
-
-This directory contains 3 folders and the main results are organized as follows:
-
-.. code::
-
-	├── alignments
-	│   ├── light_mode_info_alignments.xlsx
-	│   └── missed_peptides.info
-	├── logs
-	│  ├── BamQuery_Res_light_mode.log
-	│  └── Information_BAM_directories.log
-	└── res_light
-	    └── light_mode_count_norm_info.xlsx
-
-The output files in `light mode` are similar to those in `normal mode`, see `output_normal_mode_example`_ for detailed information about the output files.
-
-
-.. note::
-		After running BamQuery in `--light` mode, it is possible to run BamQuery in normal mode (to obtain biotype classification and other output files) for a subset of peptides (peptides of interest `PoIs`). To do this, first run BamQuery in light mode by adding the `--dev` parameter. Once BamQuery light has finished, modify the **peptides.tsv** file, to remove the peptides you are no longer interested in. Finally, run the BamQuery search in `normal mode` by removing the `--light` option from the command line. By doing this, BamQuery takes the information already obtained for the expression in light mode and produces heatmap plots and does the biotype analysis only for the `PoIs`.
-
-   .. warning::
-   		WARNING: do not modify the **BAM_directories.tsv**, otherwise you will not have consistent information.
-
-
----------------
-
-.. _single_cell_example:
-
-single cell example
-===================
-
-BamQuery single cell was designed to perform searches in BAM files from single-cell RNA-seq data. Therefore, BamQuery only reports peptide counts for each cell in each single-cell BAM file, so no biotyping analysis is performed for peptides (no graph (heat map, pie chart) is produced).
-
-**Command line:**
-
-.. code::
-
-	BamQuery.py ./sc_example/Input sc_example --sc
-
-As for normal mode, the input folder `path_to_input_folder` must containt the files : **BAM_directories.tsv** and **peptides.tsv**.
-
-**2. Output**
--------------
-
-BamQuery creates an **output** directory in the same path as the input folder.
-
-This directory contains 3 folders and the main results are organized as follows:
-
-.. code::
-
-	├── alignments
-	│   ├── missed_peptides.info
-	│   └── sc_example_info_alignments.xlsx
-	├── logs
-	│  ├── BamQuery_Res_sc_example.log
-	│  └── Information_BAM_directories.log
-	└── res
-	    ├── sc_example_rna_sc_count_All_alignments.csv
-	    └── sc_example_rna_sc_count.csv
-
-The output files with `BamQuery single cell` are similar to those in `normal mode`, see `output_normal_mode_example`_ for detailed information about the output files : missed_peptides.info, sc_example_info_alignments.xlsx and logs.
-
-**2.1. res**
-------------
-
-.. code::
-
-	res
-	    ├── sc_example_rna_sc_count_All_alignments.csv
-	    └── sc_example_rna_sc_count.csv
-
-.. _sc_example_rna_sc_count_All_alignments:
-
-`sc_example_rna_sc_count_All_alignments.csv`: 
-Reports for each MCS of each peptide at a given location the total of RNA-seq reads in each cell found in single-cell BAM file included in **BAM_directories.tsv**. |br| 
-Each BAM file is identified in sc_example_rna_sc_count_All_alignments.csv according to the order in which the BAM file was included in the **BAM_directories.tsv**. For instance: `0_TCTGAGACAGGTCGTC` means that cell `TCTGAGACAGGTCGTC` is included in the first (`0`) BAM file in **BAM_directories.tsv**.
-
-.. thumbnail:: _images/sc_example_rna_sc_count_All_alignments.jpg
-
-
-.. _sc_example_rna_sc_count:
-
-`sc_example_rna_sc_count.csv`: 
-Reports for each peptide the total of RNA-seq reads in each cell found in single-cell BAM file included in **BAM_directories.tsv**. |br| 
-Each BAM file is identified in sc_example_rna_sc_count_All_alignments.csv according to the order in which the BAM file was included in the **BAM_directories.tsv**. For instance: `0_TCTGAGACAGGTCGTC` means that cell `TCTGAGACAGGTCGTC` is included in the first (`0`) BAM file in **BAM_directories.tsv**.
-
-.. thumbnail:: _images/sc_example_rna_sc_count.jpg
-
-
-.. _translation_mode_example:
-
-Translation mode example
-========================
-
-BamQuery translation mode was designed to search BAM files from Ribo-seq data. In this mode, BamQuery can be used as a means to verify the presence of ribosomal profiling reads that overlap with the MCS of peptides of interest. Aware that the length of Ribo-seq reads varies between 28-24 ntd, BamQuery counts a read according to the percentage of overlap with the MCS. For example, if a Ribo-seq read overlaps with 70% of the MCS in a given region, BamQuery counts this read as 0.7 instead of 1.
-In this mode, instead of BAM_directories.tsv BamQuery expects a BAM_ribo_directories.tsv that includes the Ribo-seq datasets. 
-
-
-**Command line:**
-
-.. code::
-
-	BamQuery.py ./sc_example/Input sc_example --mode translation
-
-Input folder `path_to_input_folder` must containt the files : **BAM_ribo_directories.tsv** and **peptides.tsv**.
-
-**2. Output**
--------------
-
-BamQuery creates an **output** directory in the same path as the input folder.
-
-This directory contains 3 folders and the main results are organized as follows:
-
-.. code::
-
-	├── alignments
-	│   ├── missed_peptides.info
-	│   └── translation_example_info_alignments.xlsx
-	├── logs
-	│   ├── BamQuery_Res_translation_example.log
-	│   └── Information_BAM_directories.log
-	├── plots
-	│   └── heat_maps
-	│       └── translation_evidence_heatmap
-	│           ├── average_translation_expression_heatmap
-	│           │   ├── norm_info.csv
-	│           │   ├── translation_example_ribo_norm_all_tissues.pdf
-	│           │   └── translation_example_ribo_norm_selected_tissues.pdf
-	│           └── total_translation_expression_heatmap
-	│               ├── translation_example_ribo_counts.csv
-	│               ├── translation_example_ribo_counts.pdf
-	│               ├── translation_example_ribo_norm.csv
-	│               └── translation_example_ribo_norm.pdf
-	└── res_translation
-	    └── translation_example_ribo_count_info.xlsx
-
-
-The output files with BamQuery in `translation mode` are similar to those in `normal mode`, see `output_normal_mode_example`_ for detailed information about the output files : missed_peptides.info, sc_example_info_alignments.xlsx and logs.
-
-**2.1. plots**
----------------
-
-.. code::
-
-	plots
-	└── heat_maps
-		└── translation_evidence_heatmap
-			├── average_translation_expression_heatmap
-			│   ├── norm_info.csv
-			│   ├── translation_example_ribo_norm_all_tissues.pdf
-			│   └── translation_example_ribo_norm_selected_tissues.pdf
-			└── total_translation_expression_heatmap
-							├── translation_example_ribo_counts.csv
-							├── translation_example_ribo_counts.pdf
-							├── translation_example_ribo_norm.csv
-							└── translation_example_ribo_norm.pdf
-
-This folder contains the heat maps representing the transcript expression levels of all peptides queried.
-
-`average_transcription_expression_heatmap` folder: Heat maps depicting transcription expression of all peptides queried as a function of tissue associated with BAM/CRAM files and tissue type.
-
-
-`_norm_all_tissues.pdf` : heat map depicting the level of transcript expression associated with all tissue types.
-
-
-`_norm_selected_tissues.pdf` : heat map depicting the expression level of transcripts associated with selected tissues (short list of tissues).
-
-
-`norm_info.csv`: reports, for each peptide consulted, the mean and median rphm values according to the tissues associated with the BAM/CRAM files.
-
-
-`total_transcription_expression_heatmap` folder: Heat map depicting the transcript expression of all peptides queried as a function of each BAM/CRAM file.
-
-
+.. include:: translation.rst
 
 .. |br| raw:: html
 
