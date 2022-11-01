@@ -106,10 +106,9 @@ class Normalization:
 				aux.append(info_tissue[2])
 				data.append(aux)
 
-			if self.dev:
-				with open(self.path_to_output_folder+"info_bam_files_tissues.csv", 'w') as csvFile:
-					writer = csv.writer(csvFile)
-					writer.writerows(data)
+			with open(self.path_to_output_folder+"info_bam_files_tissues.csv", 'w') as csvFile:
+				writer = csv.writer(csvFile)
+				writer.writerows(data)
 
 			info_tissue_peptide = {}
 			df_counts.set_index(['Peptide Type','Peptide'], inplace=True)

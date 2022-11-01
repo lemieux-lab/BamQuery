@@ -19,7 +19,8 @@ class IntersectAnnotations:
 		self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
 		self.name_exp = name_exp
 		self.super_logger = super_logger
-		
+		self.annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
+
 		if genome_version == 'v26_88': 
 			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
 		elif genome_version == 'v33_99':
@@ -28,12 +29,13 @@ class IntersectAnnotations:
 			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v38_104/gencode.v38.primary_assembly.annotation.gtf'
 		
 		if self.mouse:
+			self.annotation_EREs = path_to_lib + 'EREs_souris.bed'
 			if genome_version == 'M24':
 				self.annotation_transcripts = path_to_lib+'genome_versions/genome_mouse_m24/gencode.vM24.primary_assembly.annotation.gtf'
 			if genome_version == 'M30':
 				self.annotation_transcripts = path_to_lib+'genome_versions/genome_mouse_m30/gencode.vM30.primary_assembly.annotation.gtf'
 
-		self.annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
+		
 
 
 	def generate_BED_files(self):
@@ -114,7 +116,7 @@ class IntersectAnnotations:
 
 			self.super_logger.info('Using bedtools to intersect alignments to annotations.')
 
-			command = 'bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed' 
+			command = 'bedtools intersect -a '+self.bed_file+' -b '+self.annotation_transcripts+' -wao | grep -w transcript > '+self.path_to_output_folder + '/intersection_with_annotated_transcripts.bed; bedtools intersect -a '+self.bed_file+' -b '+self.annotation_EREs+' -wao > '+self.path_to_output_folder + '/intersection_with_annotated_EREs.bed' 
 			p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 			out, err = p_1.communicate()
 

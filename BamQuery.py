@@ -1,4 +1,4 @@
-import time, sys, os, argparse, logging, shutil, pickle
+import time, sys, os, argparse, logging, shutil, pickle, gc
 import pandas as pd
 
 from readers.read_input import ReadInputFile
@@ -59,11 +59,11 @@ class BamQuery:
 	def run_bam_query_sc_mode(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
 		
-		name_path_normal = self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv'
+		name_path_normal = self.path_to_output_folder+'res/'+self.name_exp+'_rna_count.csv'
 		
 		exists_normal = os.path.exists(name_path_normal) 
 		
-		name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_rna_count.csv'
+		name_path = self.path_to_output_folder+'res/'+self.name_exp+'_rna_count.csv'
 		
 		if not exists_normal :
 			
@@ -79,18 +79,18 @@ class BamQuery:
 	def run_bam_query_normal_mode(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
 		
-		name_path_normal = self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx'
-		name_path_light = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
+		name_path_normal = self.path_to_output_folder+'res/'+self.name_exp+'_count_norm_info.xlsx'
+		name_path_light = self.path_to_output_folder+'res_light/'+self.name_exp+'_count_norm_info.xlsx'
 		
 		exists_normal = os.path.exists(name_path_normal) 
 		exists_light = os.path.exists(name_path_light) 
 
-		path_temps_file = self.path_to_output_folder+'/res/temps_files'
-
 		if not self.light:
-			name_path = self.path_to_output_folder+'/res/'+self.name_exp+'_count_norm_info.xlsx'
+			name_path = self.path_to_output_folder+'res/'+self.name_exp+'_count_norm_info.xlsx'
+			path_temps_file = self.path_to_output_folder+'res/temps_files/'
 		else:
-			name_path = self.path_to_output_folder+'/res_light/'+self.name_exp+'_count_norm_info.xlsx'
+			name_path = self.path_to_output_folder+'res_light/'+self.name_exp+'_count_norm_info.xlsx'
+			path_temps_file = self.path_to_output_folder+'res_light/temps_files/'
 
 		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
 			
@@ -114,10 +114,17 @@ class BamQuery:
 			df_counts_rna.reset_index(inplace=True)
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
-			if len(df_all_alignments_rna) < 1048576:
-				df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
+
+			if len(df_all_alignments_rna) < 1048576 and os.path.getsize(path_temps_file+self.name_exp+'_rna_count_All_alignments.csv') < 900000000: 
+				try:
+					df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
+				except MemoryError:
+					gc.collect()
+					df_all_alignments_rna.to_csv(self.path_to_output_folder+'res/'+self.name_exp+'_rna_count_All_alignments.csv', index=False)
+					#shutil.copyfile(path_temps_file+self.name_exp+'_rna_count_All_alignments.csv', self.path_to_output_folder+'res/'+self.name_exp+'_rna_count_All_alignments.csv')
 			else:
-				df_all_alignments_rna.to_csv(writer, index=False, header = 0)
+				df_all_alignments_rna.to_csv(self.path_to_output_folder+'res/'+self.name_exp+'_rna_count_All_alignments.csv', index=False)
+				
 			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
 			
@@ -133,7 +140,7 @@ class BamQuery:
 
 			df_counts_all_alignments = pd.read_excel(name_path_light, sheet_name='Alignments Read count RNA-seq', header=0, index_col=False, engine='openpyxl')
 
-			df_all_alignments_rna = df_counts_all_alignments[df_counts_all_alignments['Peptide'].isin(self.set_peptides)]
+			df_all_alignments_rna =  [df_counts_all_alignments['Peptide'].isin(self.set_peptides)]
 			df_all_alignments_rna.to_csv(self.path_to_output_folder+'/res/temps_files/'+self.name_exp+'_rna_count_All_alignments.csv', index=False, header=True)
 
 			self.super_logger.info('Information All alignments for peptides of interest collected!')
@@ -373,9 +380,12 @@ class BamQuery:
 
 		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, order_sample_bam_files_rna, self.dev, self.plots, self.super_logger, self.genome_version, self.mouse)
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type_user)
-		get_biotype.get_global_annotation()
-		
-		self.super_logger.info('========== Annotations : Done! ============ ')
+		try:
+			get_biotype.get_global_annotation()
+			self.super_logger.info('========== Annotations : Done! ============ ')
+		except MemoryError:
+			self.super_logger.info('Biotype classification has stopped due to lack of memory. Please try again by allocating more memory to the process or processing fewer peptides.')
+			return
 
 	def get_info_peptide_alignments(self):
 
@@ -449,6 +459,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	del handler_bam_files_logger
 
 	try:
+		os.remove(path_to_output_folder+"info_bam_files_tissues.csv")
 		shutil.rmtree(path_to_output_folder+'genome_alignments', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'alignments', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
