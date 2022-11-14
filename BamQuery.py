@@ -115,15 +115,13 @@ class BamQuery:
 			writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
 			writer.book.use_zip64()
 
-			if len(df_all_alignments_rna) < 1048576 and os.path.getsize(path_temps_file+self.name_exp+'_rna_count_All_alignments.csv') < 900000000: 
-				try:
-					df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
-				except MemoryError:
-					gc.collect()
-					df_all_alignments_rna.to_csv(self.path_to_output_folder+'res/'+self.name_exp+'_rna_count_All_alignments.csv', index=False)
-					#shutil.copyfile(path_temps_file+self.name_exp+'_rna_count_All_alignments.csv', self.path_to_output_folder+'res/'+self.name_exp+'_rna_count_All_alignments.csv')
+			if len(df_all_alignments_rna) < 1048576 and os.path.getsize(path_temps_file+self.name_exp+'_rna_count_All_alignments.csv') < 700000000: 
+				df_all_alignments_rna.to_excel(writer, sheet_name='Alignments Read count RNA-seq',index=False)
 			else:
-				df_all_alignments_rna.to_csv(self.path_to_output_folder+'res/'+self.name_exp+'_rna_count_All_alignments.csv', index=False)
+				if self.light:
+					df_all_alignments_rna.to_csv(self.path_to_output_folder+'res_light/'+self.name_exp+'_rna_count_All_alignments.csv', index=False)
+				else:
+					df_all_alignments_rna.to_csv(self.path_to_output_folder+'res/'+self.name_exp+'_rna_count_All_alignments.csv', index=False)
 				
 			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
