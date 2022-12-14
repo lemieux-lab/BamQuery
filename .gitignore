@@ -10,7 +10,7 @@ __pycache__/
 .DS_Store
 .AppleDouble
 .ipynb_checkpoints
-
+._*
 # Distribution / packaging
 .Python
 build/
