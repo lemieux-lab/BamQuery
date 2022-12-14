@@ -103,12 +103,12 @@ A docker container is also available to provide a self contained working environ
 
 **2. Download the docker image:**
 
-        wget https://bamquery.iric.ca/download/bamquery-2022-12-06.tar.gz
+        wget https://bamquery.iric.ca/download/bamquery-2022-12-14.tar.gz
         
 **3. Install the docker image (requires sudo access):**
         
-        gunzip bamquery-2022-12-06.tar.gz
-        sudo docker load --input bamquery-2022-12-06.tar
+        gunzip bamquery-2022-12-14.tar.gz
+        sudo docker load --input bamquery-2022-12-14.tar
        
 **4. Install required library files within $INSTALLDIR:** 
 
