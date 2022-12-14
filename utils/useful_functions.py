@@ -1,3 +1,10 @@
+# This code correspond to pyGeno. pyGeno is developed by Tariq Daouda at the Institute for Research in Immunology and Cancer (IRIC).
+# Daouda T, Perreault C and Lemieux S. 
+# pyGeno: A Python package for precision medicine and proteogenomics 
+# [version 1; peer review: awaiting peer review]. 
+# F1000Research 2016, 5:381 (https://doi.org/10.12688/f1000research.8251.1)
+
+
 
 # Translation tables
 # Ref: https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi

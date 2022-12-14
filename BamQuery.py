@@ -575,7 +575,10 @@ def main(argv):
 	
 
 	if not dev:
-		os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
+		try:
+			os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
+		except:
+			pass
 		os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
 		os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
 		shutil.rmtree(path_to_output_folder+'genome_alignments')
@@ -589,7 +592,7 @@ def main(argv):
 			shutil.rmtree(path_to_output_folder+'res_translation/AUX_files')
 			os.remove(path_to_output_folder+"alignments/Alignments_information_ribo.dic")
 		
-		if mode == 'normal':
+		if mode == 'normal' and not light:
 			shutil.rmtree(path_to_output_folder+'res/BED_files')
 			shutil.rmtree(path_to_output_folder+'res/AUX_files')
 			shutil.rmtree(path_to_output_folder+'res/temps_files')

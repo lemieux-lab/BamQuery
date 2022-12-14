@@ -10,6 +10,7 @@ BamQuery single cell was designed to perform searches in BAM files from single-c
 #########
 
 
+
 **Command line:**
 
 .. code::

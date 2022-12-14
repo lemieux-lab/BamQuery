@@ -1,4 +1,4 @@
-import os, time, pickle, _thread, csv, math, copy, pysam, copy, xlsxwriter, gc
+import os, time, pickle, _thread, csv, math, copy, copy, gc
 import pandas as pd
 import numpy as np
 import billiard as mp

@@ -170,6 +170,7 @@ BamQuery requires two input file paths to search for RNA expression:
 		The strand must be specified as (-) backward or (+) forward.
 		
 
+
 .. |br| raw:: html
 
       <br>

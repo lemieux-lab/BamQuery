@@ -5,7 +5,6 @@ Biotypes
 =========
 
 
-
 BamQuery biotype classification is based on `Ensembl`_ and `Repeat_Masker`_ annotations.
 
 
