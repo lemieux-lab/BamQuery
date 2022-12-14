@@ -27,7 +27,7 @@ A. Installation From source
         wget https://bamquery.iric.ca/download/bamquery-lib.tar.gz
         tar vxzf bamquery-lib.tar.gz
 
-2. Install python 3 and create a virtual environment
+3. Install python 3 and create a virtual environment
 ####################################################
 Python: https://www.python.org/ |br|
 
@@ -36,7 +36,7 @@ Python: https://www.python.org/ |br|
         python3 -m venv bamquery-venv
         source $INSTALLDIR/bamquery-venv/bin/activate
 
-2.a. Install python packages in the virtual environment |br|
+3.a. Install python packages in the virtual environment |br|
 
 .. code::
 
@@ -50,7 +50,7 @@ Python: https://www.python.org/ |br|
         pip install plotnine
         pip install sklearn
 
-3. Install external dependencies so that their binaries are available in your $PATH:
+4. Install external dependencies so that their binaries are available in your $PATH:
 ####################################################################################
 
 STAR 2.7.9a: https://github.com/alexdobin/STAR |br|
@@ -59,7 +59,7 @@ R: https://www.r-project.org/ |br|
 
 Required R packages: ggplot2, data.tables, ggpubr |br|
 
-4. Launch the analysis
+5. Launch the analysis
 ######################
 
 .. code::
@@ -155,7 +155,6 @@ Yes or No. This sets the BAM file as part of the selected samples to calculate t
 
 
 Once the file :code:`bam_files_tissues.csv` has been filled, you can relaunch BamQuery.
-
 
 .. |br| raw:: html
 
