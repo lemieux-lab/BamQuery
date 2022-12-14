@@ -132,7 +132,7 @@ Configuration
 Every time a BAM file is going to be queried for the first time, BamQuery is going to need information about its origin. |br| 
 This is why the following exception will appear when running BamQuery:
 
-.. py:exception:: fill in the :code:`bam_files_tissues.csv` file with the requested information:
+.. py:exception:: fill in the `bam_files_tissues.csv` file with the requested information:
 
     Before to continue you must provide the tissue type for the bam files annotated in the file : .../output/res/AUX_files/bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist.
 
