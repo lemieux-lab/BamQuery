@@ -126,7 +126,7 @@ A docker container is also available to provide a self contained working environ
         
         
 making sure to map any required folder mentionned in the input files (BAM locations, input folder) so that these paths may be available from within the container. 
-This is done with multiple arguments :code:`-v $DATAFOLDER:$DATAFOLDER` (where `$DATAFOLDER` is to be replaced by an actual folder name) and `-v $PWD:$PWD` if needed.
+This is done with multiple arguments `-v $DATAFOLDER:$DATAFOLDER` (where `$DATAFOLDER` is to be replaced by an actual folder name) and `-v $PWD:$PWD` if needed.
 Note also that we force the application to run with user permissions instead of root using the `--user $(id -u):$(id -g)` argument.
 
 For more information on configuration, see : https://bamquery.iric.ca/documentation/installation.html
