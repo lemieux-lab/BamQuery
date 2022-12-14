@@ -34,34 +34,38 @@ BamQuery is developed by Maria Virginia Ruiz Cuevas at the Institute for Researc
 * [ggplot2](https://github.com/tidyverse/ggplot2)
 * [data.table](https://github.com/Rdatatable/data.table)
 
-## Installation and configuration
 
-###  Installation From source
-Docker image of BamQuery is at .
+__________________________________________________________________________________________
+
+<h1>  Installation </h1>
+
+
+
+<h2>  Installation From source </h2>
+
+
 See the [user manual](https://bamquery.iric.ca/documentation/) for a detailed description usage.
 
-### Install from source
-
-1. Clone repository from github
+**1. Clone repository from github**
 
         export INSTALLDIR=/opt/bamquery
         mkdir $INSTALLDIR
         cd $INSTALLDIR
         git clone https://github.com/lemieux-lab/BamQuery.git
 
-2. Install required library files within $INSTALLDIR:
+**2. Install required library files within $INSTALLDIR:**
 
         wget https://bamquery.iric.ca/download/bamquery-lib.tar.gz
         tar vxzf bamquery-lib.tar.gz
 
-3. Install python 3 and create a virtual environment
+**3. Install python 3 and create a virtual environment**
 
 Python: https://www.python.org/
 
         python3 -m venv bamquery-venv
         source $INSTALLDIR/bamquery-venv/bin/activate
         
-3.a. Install python packages in the virtual environment
+**3.a. Install python packages in the virtual environment**
 
         pip install --upgrade pip
         pip install pandas
@@ -73,7 +77,7 @@ Python: https://www.python.org/
         pip install plotnine
         pip install sklearn
 
-4. Install external dependencies so that their binaries are available in your $PATH:
+**4. Install external dependencies so that their binaries are available in your $PATH:**
 
 STAR 2.7.9a: https://github.com/alexdobin/STAR
 bedtools: https://bedtools.readthedocs.io/en/latest/
@@ -81,9 +85,48 @@ R: https://www.r-project.org/
 
 Required R packages: ggplot2, data.tables, ggpubr
 
-5. Launch the analysis
+**5. Launch the analysis**
 
         python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
+        
+
+<h2>  Installation using the provided docker container </h2>
 
 
+A docker container is also available to provide a self contained working environment.
 
+**1. Create an install folder:**
+
+        export INSTALLDIR=/opt/bamquery
+        mkdir $INSTALLDIR
+        cd $INSTALLDIR
+
+**2. Download the docker image:**
+
+        wget https://bamquery.iric.ca/download/bamquery-2022-12-06.tar.gz
+        
+**3. Install the docker image (requires sudo access):**
+        
+        gunzip bamquery-2022-12-06.tar.gz
+        sudo docker load --input bamquery-2022-12-06.tar
+       
+**4. Install required library files within $INSTALLDIR:** 
+
+        wget https://bamquery.iric.ca/download/bamquery-lib.tar.gz
+        tar vxzf bamquery-lib.tar.gz
+        
+**5. Launch the analysis from the docker container:**
+
+        sudo docker run -i -t  \
+        --user $(id -u):$(id -g) \
+        -v $INSTALLDIR/lib:/opt/bamquery/lib \
+        -v $DATAFOLDER:$DATAFOLDER  \
+        -v $PWD:$PWD \
+        iric/bamquery:0.2 python3 /opt/bamquery/BamQuery/BamQuery.py path_to_input_folder name_exp
+        
+        
+making sure to map any required folder mentionned in the input files (BAM locations, input folder) so that these paths may be available from within the container. 
+This is done with multiple arguments :code:`-v $DATAFOLDER:$DATAFOLDER` (where `$DATAFOLDER` is to be replaced by an actual folder name) and `-v $PWD:$PWD` if needed.
+Note also that we force the application to run with user permissions instead of root using the `--user $(id -u):$(id -g)` argument.
+
+For more information on configuration, see : https://bamquery.iric.ca/documentation/installation.html
