@@ -2,7 +2,6 @@ import time, sys, os, argparse, logging, shutil, pickle, gc
 import pandas as pd
 
 from readers.read_input import ReadInputFile
-from readers.info_transcripts_annotation import InfoTranscripts
 from readers.intersection_alignments_annotations import IntersectAnnotations
 
 from utils.get_information_bam_files import GetInformationBamFiles
@@ -353,9 +352,6 @@ class BamQuery:
 		self.super_logger.info('========== Running get_annotations ============ ')
 		info_peptide_alignments = self.get_info_peptide_alignments()
 
-		get_info_transcripts = InfoTranscripts()
-		get_info_transcripts.set_values(self.genome_version)
-		
 		intersect_to_annotations = IntersectAnnotations(self.perfect_alignments, self.path_to_output_folder, self.mode, self.name_exp, self.super_logger, self.genome_version, self.mouse)
 		intersect_to_annotations.generate_BED_files()
 		if not self.mouse:
