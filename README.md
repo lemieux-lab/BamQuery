@@ -34,18 +34,56 @@ BamQuery is developed by Maria Virginia Ruiz Cuevas at the Institute for Researc
 * [ggplot2](https://github.com/tidyverse/ggplot2)
 * [data.table](https://github.com/Rdatatable/data.table)
 
-## Installation
+## Installation and configuration
 
-### Install via Docker
+###  Installation From source
 Docker image of BamQuery is at .
 See the [user manual](https://bamquery.iric.ca/documentation/) for a detailed description usage.
 
 ### Install from source
-1. Install all software listed above.
 
-2. Download or clone the BamQuery repository to your local system:
+1. Clone repository from github
 
-        git clone (https://github.com/lemieux-lab/BamQuery)
+        export INSTALLDIR=/opt/bamquery
+        mkdir $INSTALLDIR
+        cd $INSTALLDIR
+        git clone https://github.com/lemieux-lab/BamQuery.git
 
-3. Obtain the reference files.
+2. Install required library files within $INSTALLDIR:
+
+        wget https://bamquery.iric.ca/download/bamquery-lib.tar.gz
+        tar vxzf bamquery-lib.tar.gz
+
+3. Install python 3 and create a virtual environment
+
+Python: https://www.python.org/
+
+        python3 -m venv bamquery-venv
+        source $INSTALLDIR/bamquery-venv/bin/activate
+        
+3.a. Install python packages in the virtual environment
+
+        pip install --upgrade pip
+        pip install pandas
+        pip install pysam
+        pip install pathos
+        pip install xlsxwriter
+        pip install seaborn
+        pip install billiard
+        pip install plotnine
+        pip install sklearn
+
+4. Install external dependencies so that their binaries are available in your $PATH:
+
+STAR 2.7.9a: https://github.com/alexdobin/STAR
+bedtools: https://bedtools.readthedocs.io/en/latest/
+R: https://www.r-project.org/
+
+Required R packages: ggplot2, data.tables, ggpubr
+
+5. Launch the analysis
+
+        python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
+
+
 
