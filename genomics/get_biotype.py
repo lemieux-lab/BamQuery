@@ -16,14 +16,14 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class BiotypeAssignation:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, order_sample_bam_files_rna, dev, plots, super_logger, genome_version, mouse):
+	def __init__(self, path_to_output_folder, name_exp, mode, bam_files_list_rna, order_sample_bam_files_rna, dev, plots, super_logger, genome_version, mouse, threads):
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
 		self.mode = mode
 		self.plots = plots
 		self.super_logger = super_logger
 		self.mouse = mouse
-
+		
 		exists = os.path.exists(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic') 
 		exists_2 = os.path.exists(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic') 
 		
@@ -44,7 +44,7 @@ class BiotypeAssignation:
 
 
 		else:
-			self.get_info_bed_files = GetInformationBEDIntersection(path_to_output_folder, self.mode, self.mouse )
+			self.get_info_bed_files = GetInformationBEDIntersection(path_to_output_folder, self.mode, self.mouse, threads)
 			self.get_info_bed_files.get_information_genomic_annotation(genome_version)
 			self.get_info_bed_files.get_information_ERE_annotation()
 			self.peptides_intersected_ere = self.get_info_bed_files.peptides_intersected_ere

@@ -4,8 +4,6 @@ from pathos.multiprocessing import ProcessPool
 from collections import Counter
 import utils.useful_functions as uf
 
-NUM_WORKERS =  multiprocessing.cpu_count()
-
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
 __author__ = "Maria Virginia Ruiz Cuevas"
@@ -13,10 +11,11 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 
 class BiotypeGenomicSearch:
 
-	def __init__(self, peptides_intersected, genome_version, path_to_output_folder, mouse):
+	def __init__(self, peptides_intersected, genome_version, path_to_output_folder, mouse, threads):
 		self.peptides_intersected = peptides_intersected
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 		self.mouse = mouse
+		self.threads = threads
 
 		if genome_version == 'v26_88': 
 			self.genome_index = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa.fai'
@@ -81,7 +80,7 @@ class BiotypeGenomicSearch:
 						#if tsl != '4' and tsl != '5' : # Only well supported transcripts are taken into account for biotype calculation. https://m.ensembl.org/info/genome/genebuild/transcript_quality_tags.html
 						transcripts_to_search[transcript] = [info_transcript, [key_peptide]]
 		
-		pool_ = ProcessPool(nodes=NUM_WORKERS)
+		pool_ = ProcessPool(nodes=self.threads)
 		results = pool_.map(self.biotype_gene_and_transcript_level, list(transcripts_to_search.values()))
 		pool_.close()
 		pool_.join()

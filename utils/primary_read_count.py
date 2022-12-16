@@ -1,7 +1,7 @@
 import os, logging, threading, time, subprocess, pickle, sys, getopt, os, pysam, multiprocessing
 from os import listdir
 from os.path import isfile, join
-
+from pathos.multiprocessing import ProcessPool
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -97,7 +97,7 @@ def main(argv):
 		elif opt in ("-o", "--path_to_output_folder"):
 			path_to_output_folder = arg
 		elif opt in ("-t", "--threads"):
-			threads = arg
+			threads = int(arg)
 
 	
 	global path_to_lib

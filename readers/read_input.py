@@ -1,4 +1,4 @@
-import time, pysam, os
+import pysam, os
 import utils.useful_functions as uf
 
 ATGC = set()
@@ -11,15 +11,35 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
-genomePathFai = path_to_lib + 'GRCh38.primary_assembly.genome.fa.fai'
-genomePath = path_to_lib + 'GRCh38.primary_assembly.genome.fa'
 
 
 class ReadInputFile:
 
-	def __init__(self, path_to_input_folder, super_logger):
+	def __init__(self, path_to_input_folder, super_logger, genome_version):
 		self.path_to_input_folder = path_to_input_folder
 		self.super_logger = super_logger
+		self.genomePathFai = path_to_lib + 'GRCh38.primary_assembly.genome.fa.fai'
+		self.genomePath = path_to_lib + 'GRCh38.primary_assembly.genome.fa'
+
+		if genome_version == 'M24':
+			self.genome_index = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm38.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm38.primary_assembly.genome.fa'
+	
+		elif genome_version == 'M30':
+			self.genome_index = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
+
+		elif genome_version == 'v26_88': 
+			self.genome_index = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa'
+		elif genome_version == 'v33_99':
+			self.genome_index = path_to_lib + 'genome_versions/genome_v33_99/GRCh38.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_v33_99/GRCh38.primary_assembly.genome.fa'
+		else:
+			self.genome_index = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa.fai'
+			self.genome = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
+			self.annotations_file = path_to_lib+'genome_versions/genome_v38_104/Info_Transcripts_Annotations.dic'
+
 
 	def treatment_file(self):
 		self.peptide_mode = {}
@@ -54,7 +74,6 @@ class ReadInputFile:
 		with open(peptides_list) as f:
 			for index, line in enumerate(f):
 				line = line.strip().split('\t')
-				
 				if len(line) == 2: 
 					peptide = line[0].strip()
 					peptide_type = line[1].strip()
@@ -162,7 +181,7 @@ class ReadInputFile:
 
 	def get_local_reference(self, region, strand):
 
-		faFile = pysam.FastaFile(genomePath, genomePathFai)
+		faFile = pysam.FastaFile(self.genomePath, self.genomePathFai)
 		seqReference = ''
 		
 		chr = region.split(':')[0]

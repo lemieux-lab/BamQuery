@@ -1,8 +1,8 @@
-import os, subprocess, getpass, pickle, os, pysam, multiprocessing, csv
+import os, subprocess, getpass, pickle, os, pysam, csv
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
-import inspect
+import inspect, sys
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -183,6 +183,7 @@ class GetInformationBamFiles:
 						dictionary_total_reads_bam_files = pickle5.load(fp)
 			else:
 				dictionary_total_reads_bam_files = {}
+				print ('The Bam_files_info dictionary is not in the library path. If this is the first time you are running BamQuery or you are querying new samples, this will take a little time while the primary read count for each BAM file is retrieved. If this is not the case, the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info dictionary with the samples from this query.')
 				self.bam_files_logger.info('The Bam_files_info dictionary is not in the library path. If this is the first time you are running BamQuery or you are querying new samples, this will take a little time while the primary read count for each BAM file is retrieved. If this is not the case, the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info dictionary with the samples from this query.')
 
 			
@@ -364,7 +365,7 @@ class GetInformationBamFiles:
 					pickle.dump(bam_files_to_get_primary_read_count, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 				get_read_counts_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/primary_read_count.py'
-				command = 'python '+get_read_counts_path+' -i '+path_to_save_bam_files_to_search+' -o '+ path_to_output_folder+' -t '+self.threads
+				command = 'python '+get_read_counts_path+' -i '+path_to_save_bam_files_to_search+' -o '+ path_to_output_folder+' -t '+str(self.threads)
 				subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 				self.bam_files_logger.info('Total Bam Files to get primary read counts : %d ', len(bam_files_to_get_primary_read_count))
 

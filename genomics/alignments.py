@@ -1,7 +1,6 @@
-import os,time, subprocess, pickle, multiprocessing, os, csv
+import os,time, subprocess, pickle, os
 import genomics.get_alignments as get_alig
 import collections
-#from pathos.multiprocessing import ProcessPool
 import pandas as pd
 import billiard as mp
 
@@ -15,19 +14,19 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 	path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 	path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 
-	if genome_version == 'v26_88': 
-		index_genome = path_to_lib+'genome_versions/genome_v26_88/Index_STAR_2.7.9a/'
-	elif genome_version == 'v33_99':
-		index_genome = path_to_lib+'genome_versions/genome_v33_99/Index_STAR_2.7.9a/'
-	else:
-		index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_STAR_2.7.9a/'
-
 	if mouse:
 		if genome_version == 'M24':
 			index_genome = path_to_lib+'genome_versions/genome_mouse_m24/Index_STAR_2.7.9a/'
 
 		if genome_version == 'M30':
 			index_genome = path_to_lib+'genome_versions/genome_mouse_m30/Index_STAR_2.7.9a/'
+	else:
+		if genome_version == 'v26_88': 
+			index_genome = path_to_lib+'genome_versions/genome_v26_88/Index_STAR_2.7.9a/'
+		elif genome_version == 'v33_99':
+			index_genome = path_to_lib+'genome_versions/genome_v33_99/Index_STAR_2.7.9a/'
+		else:
+			index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_STAR_2.7.9a/'
 
 	exist = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 	exist_sam_dic = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam.dic')

@@ -257,7 +257,7 @@ class BamQuery:
 
 		self.super_logger.info('Total Bam Files to Query : %d.', len(self.bam_files_info.bam_files_list))
 
-		self.input_file_treatment = ReadInputFile(self.path_to_input_folder, self.super_logger)
+		self.input_file_treatment = ReadInputFile(self.path_to_input_folder, self.super_logger, self.genome_version)
 		self.input_file_treatment.treatment_file()
 
 		if self.dev:
@@ -373,7 +373,7 @@ class BamQuery:
 			except KeyError:
 				order_sample_bam_files_rna[group] = [name_sample]
 
-		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, order_sample_bam_files_rna, self.dev, self.plots, self.super_logger, self.genome_version, self.mouse)
+		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, order_sample_bam_files_rna, self.dev, self.plots, self.super_logger, self.genome_version, self.mouse, self.threads)
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type_user)
 		
 		try:
