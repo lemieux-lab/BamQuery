@@ -46,26 +46,66 @@ ________________________________________________________________________________
 
 See the [user manual](https://bamquery.iric.ca/documentation/) for a detailed description usage.
 
-**1. Clone repository from github**
+<h3>1. Clone repository from github</h3>
 
         export INSTALLDIR=/opt/bamquery
         mkdir $INSTALLDIR
         cd $INSTALLDIR
         git clone https://github.com/lemieux-lab/BamQuery.git
+        
+------------------
 
-**2. Install required library files within $INSTALLDIR:**
+<h3>2. Install required library files within $INSTALLDIR:</h3>
 
-        wget https://bamquery.iric.ca/download/bamquery-lib.tar.gz
-        tar vxzf bamquery-lib.tar.gz
+        wget https://bamquery.iric.ca/download/lib_essentials.tar.gz
+        tar vxzf lib_essentials.tar.gz
 
-**3. Install python 3 and create a virtual environment**
+ <br>
+ 
+<h4>2.a Installation of genomes</h4>
+
+BamQuery supports three different versions of the human genome (v26_88 / v33_99 / v38_104) and two versions of the mouse genome (GRCm38 and GRCm39, respectively: M24 / M30).
+
+You need to download the human or mouse genome version you wish to use to:
+        
+        cd lib/genome_versions
+
+And use the command below to download any human genome version : v26_88 or v33_99 or v38_104.
+
+        wget https://bamquery.iric.ca/download/genome_SET_VERSION.tar.gz
+                
+or to download any mouse genome version : m24, m30.
+
+        wget https://bamquery.iric.ca/download/genome_mouse_SET_VERSION.tar.gz
+                
+ <br>
+ 
+<h4>2.b Installation of SNPs</h4>
+
+BamQuery supports three different versions of dbSNPs of the human genome (149/151/155) and two versions of dbSNPs of the mouse genome (snps_GRCm38 and snps_GRCm39, respectively: M24 / M30).
+
+You can download the annotated snps you need to (by default BamQuery does not use snps):
+        
+        cd lib/snps
+
+And use the command below to download any dbSNP corresponding to human genome releases : 149 or 151 or 155.
+
+        wget https://bamquery.iric.ca/download/dbsnps_SET_RELEASE.tar.gz
+                
+or to download any dbSNP corresponding to mouse genome releases : GRCm38 or GRCm39.
+
+        wget https://bamquery.iric.ca/download/snps_dics_mouse_SET_RELEASE.tar.gz
+        
+        
+-----------------------
+<h3>3. Install python 3 and create a virtual environment</h3>
 
 Python: https://www.python.org/
 
         python3 -m venv bamquery-venv
         source $INSTALLDIR/bamquery-venv/bin/activate
         
-**3.a. Install python packages in the virtual environment**
+<h4>3.a. Install python packages in the virtual environment</h4>
 
         pip install --upgrade pip
         pip install pandas
@@ -76,6 +116,8 @@ Python: https://www.python.org/
         pip install billiard
         pip install plotnine
         pip install sklearn
+        
+---------------------
 
 **4. Install external dependencies so that their binaries are available in your $PATH:**
 
@@ -85,37 +127,50 @@ R: https://www.r-project.org/
 
 Required R packages: ggplot2, data.tables, ggpubr
 
+--------------------------
+
 **5. Launch the analysis**
 
         python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
         
+
+
+
+
+--------------------------
+
 
 <h2>  Installation using the provided docker container </h2>
 
 
 A docker container is also available to provide a self contained working environment.
 
-**1. Create an install folder:**
+<h3>1. Create an install folder:</h3>
 
         export INSTALLDIR=/opt/bamquery
         mkdir $INSTALLDIR
         cd $INSTALLDIR
 
-**2. Download the docker image:**
+------------------------  
+
+<h3>2. Download the docker image:</h3>
 
         wget https://bamquery.iric.ca/download/bamquery-2022-12-14.tar.gz
         
-**3. Install the docker image (requires sudo access):**
+------------------------       
+<h3>3. Install the docker image (requires sudo access):</h3>
         
         gunzip bamquery-2022-12-14.tar.gz
         sudo docker load --input bamquery-2022-12-14.tar
-       
-**4. Install required library files within $INSTALLDIR:** 
-
-        wget https://bamquery.iric.ca/download/bamquery-lib.tar.gz
-        tar vxzf bamquery-lib.tar.gz
         
-**5. Launch the analysis from the docker container:**
+------------------------        
+<h3>4. Install required library files within $INSTALLDIR:</h3>
+
+Please, follow the instructions in step 2 enumerated above. 
+
+
+------------------------        
+<h3>5. Launch the analysis from the docker container:</h3>
 
         sudo docker run -i -t  \
         --user $(id -u):$(id -g) \
