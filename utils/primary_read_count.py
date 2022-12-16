@@ -1,7 +1,7 @@
 import os, logging, threading, time, subprocess, pickle, sys, getopt, os, pysam, multiprocessing
 from os import listdir
 from os.path import isfile, join
-from pathos.multiprocessing import ProcessPool
+
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -10,7 +10,6 @@ path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
 files_with_not_permission = []
 
-NUM_WORKERS =  int(multiprocessing.cpu_count()/2)
 
 class GetPrimaryReadCountBamFiles:
 
@@ -31,14 +30,14 @@ class GetPrimaryReadCountBamFiles:
 		return bam_file_info_to_return
 
 
-	def set_values(self, path_to_lib, bam_files_list):
+	def set_values(self, path_to_lib, bam_files_list, threads):
 
 		path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 		
 		logging.info('Total Bam Files to Query : %d %s', len(bam_files_list), bam_files_list)
 		
-		if len(bam_files_list) >= NUM_WORKERS:
-			pool = ProcessPool(nodes=NUM_WORKERS)
+		if len(bam_files_list) >= threads:
+			pool = ProcessPool(nodes=threads)
 		else:
 			pool = ProcessPool(nodes=len(bam_files_list))
 		
@@ -84,9 +83,9 @@ def main(argv):
 	path_to_output_folder = ''
 
 	try:
-		opts, args = getopt.getopt(argv,"hi:o:",["path_to_input_folder=", "path_to_output_folder="])
+		opts, args = getopt.getopt(argv,"hi:o:t:",["path_to_input_folder=", "path_to_output_folder=", "threads="])
 	except getopt.GetoptError:
-		print ('GetPrimaryReadCountBamFiles.py -i <path_to_input_folder> -o <path_to_output_folder>')
+		print ('GetPrimaryReadCountBamFiles.py -i <path_to_input_folder> -o <path_to_output_folder> -t <threads>')
 		sys.exit(2)
 
 	for opt, arg in opts:
@@ -97,6 +96,8 @@ def main(argv):
 			path_to_input_folder = arg
 		elif opt in ("-o", "--path_to_output_folder"):
 			path_to_output_folder = arg
+		elif opt in ("-t", "--threads"):
+			threads = arg
 
 	
 	global path_to_lib
@@ -118,7 +119,7 @@ def main(argv):
 		with open(path_to_input_folder, 'rb') as fp:
 			bam_files_list = pickle5.load(fp)
 
-	Get_Read_Count_obj.set_values(path_to_lib, bam_files_list)
+	Get_Read_Count_obj.set_values(path_to_lib, bam_files_list, threads)
 	t2 = time.time()
 	total = t2-t0
 	logging.info('Total time run Primary read count to end : %f min', (total/60.0))

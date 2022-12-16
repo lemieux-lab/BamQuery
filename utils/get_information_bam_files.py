@@ -34,7 +34,8 @@ class GetInformationBamFiles:
 		self.bam_files_logger = bam_files_logger
 		self.sc = sc
 		self.mouse = mouse
-		
+		self.threads = threads
+
 		if genome_version == 'v26_88': 
 			self.genome_version_gtf= path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
 		elif genome_version == 'v33_99':
@@ -363,7 +364,7 @@ class GetInformationBamFiles:
 					pickle.dump(bam_files_to_get_primary_read_count, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 				get_read_counts_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])+'/primary_read_count.py'
-				command = 'python '+get_read_counts_path+' -i '+path_to_save_bam_files_to_search+' -o '+ path_to_output_folder
+				command = 'python '+get_read_counts_path+' -i '+path_to_save_bam_files_to_search+' -o '+ path_to_output_folder+' -t '+self.threads
 				subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True)
 				self.bam_files_logger.info('Total Bam Files to get primary read counts : %d ', len(bam_files_to_get_primary_read_count))
 

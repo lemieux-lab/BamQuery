@@ -247,7 +247,7 @@ class BamQuery:
 
 	def common_to_modes(self, bam_files_logger):
 
-		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger, self.sc, self.genome_version, self.mouse)
+		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger, self.sc, self.genome_version, self.mouse, self.threads)
 
 		bam_files_logger 
 		handlers = bam_files_logger.handlers[:]
