@@ -99,7 +99,7 @@ And use the command below to download any dbSNP corresponding to human genome re
                 
 or to download any dbSNP corresponding to mouse genome releases : GRCm38 or GRCm39.
 
-        wget https://bamquery.iric.ca/download/snps_dics_mouse_SET_RELEASE.tar.gz
+        wget https://bamquery.iric.ca/download/snps_mouse_SET_RELEASE.tar.gz
         
 Finally, you need to:
         
