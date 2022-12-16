@@ -375,7 +375,7 @@ class GetInformationBamFiles:
 				writer = csv.writer(csvFile)
 				writer.writerows(data)
 
-			raise Exception("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+			raise NeedMoreInfo("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
 
 		return bam_files_list
 	
