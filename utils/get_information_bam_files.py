@@ -27,7 +27,7 @@ class NeedMoreInfo(NoTraceBackWithLineNumber):
 
 class GetInformationBamFiles:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light, bam_files_logger, sc, genome_version, mouse):
+	def __init__(self, path_to_input_folder, path_to_output_folder, mode, strandedness, light, bam_files_logger, sc, genome_version, mouse, threads):
 		
 		self.bam_files_list = {}
 		self.bam_ribo_files_list = {}
