@@ -77,7 +77,12 @@ And use the command below to download any human genome version : v26_88 or v33_9
 or to download any mouse genome version : m24, m30.
 
         wget https://bamquery.iric.ca/download/genome_mouse_SET_VERSION.tar.gz
-                
+
+
+Finally, you need to:
+        
+        tar vxzf GENOME_VERSION.tar.gz
+        
  <br>
  
 <h4>2.b Installation of SNPs</h4>
@@ -96,7 +101,10 @@ or to download any dbSNP corresponding to mouse genome releases : GRCm38 or GRCm
 
         wget https://bamquery.iric.ca/download/snps_dics_mouse_SET_RELEASE.tar.gz
         
+Finally, you need to:
         
+        tar vxzf SNPS_RELEASE.tar.gz
+
 -----------------------
 <h3>3. Install python 3 and create a virtual environment</h3>
 
