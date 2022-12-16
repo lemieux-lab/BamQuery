@@ -65,9 +65,6 @@ class BiotypeAssignation:
 		self.biotypes_names = list(sorted_coefficients.keys())
 		self.coefficients = list(sorted_coefficients.values())
 
-		with open(path_to_lib+'splices_information.dic', 'rb') as handle:
-			self.splices_information = pickle.load(handle)
-
 		self.super_logger.info('========== Get information from Genomic and ERE annotation : Done! ============ ')
 
 		self.order_sample_bam_files_rna = order_sample_bam_files_rna
@@ -80,9 +77,7 @@ class BiotypeAssignation:
 		self.super_logger.info('========== Getting information to define biotyping... ============ ')
 		data_gen_ere = []
 		self.biotype_type = set()
-		self.splices_annotated = set()
-
-		spliced = 0
+		
 		for type_peptide, peptides in peptides_by_type.items():
 
 			for peptide in peptides:
@@ -104,29 +99,7 @@ class BiotypeAssignation:
 							strand = info_alignment[0]
 							rna_bam_files = info_alignment[1]
 							
-							if '|' in position:
-								chr = position.split(':')[0]
-								places = position.split(':')[1].split('-')
-								splices_areas = []
-								in_ = False
-								for place in places:
-									if '|' in place:
-										place_split = place.split('|')
-										place_to_search = chr+':'+str(int(place_split[0])+1)+'-'+str(int(place_split[1])-1)
-										try:
-											in_ = place_to_search in self.splices_information[strand][chr]
-											break
-										except KeyError:
-											pass
-								if in_:
-									spliced += 1
-									self.splices_annotated.add(position)
-
 							to_add_gen_ere = []
-
-							repNames = []
-							repClass_s = []
-							repFamilies = []
 
 							repName = ''
 							repClass = ''
@@ -161,7 +134,6 @@ class BiotypeAssignation:
 									transcript_level_biotype = peptide_genomic_biotypes[1]
 									genomic_position_biotype = self.biotypes_names.index(self.mod_type(peptide_genomic_biotypes[2]))
 										
-									#to_add_gen_ere = [type_peptide, peptide, position, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, ",".join(repNames), ",".join(repClass_s), ",".join(repFamilies)]
 									to_add_gen_ere = [type_peptide, peptide, position, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
 									
 									to_add_gen_ere.extend(rna_bam_files)
@@ -183,7 +155,6 @@ class BiotypeAssignation:
 								else:
 									self.biotype_type.add(genomic_position_biotype)
 								
-								#to_add_gen_ere = [type_peptide, peptide, position, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, ",".join(repNames), ",".join(repClass_s), ",".join(repFamilies)]
 								to_add_gen_ere = [type_peptide, peptide, position, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
 									
 								to_add_gen_ere.extend(rna_bam_files)

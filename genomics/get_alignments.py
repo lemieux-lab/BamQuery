@@ -473,26 +473,26 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	
 	if mouse:
 		if dbSNP == 'mouse_GRCm38':
-			path_to_db = path_to_lib+'/snps_dics_mouse_GRCm38/'
+			path_to_db = path_to_lib+'/snps/snps_dics_mouse_GRCm38/'
 		if dbSNP == 'mouse_GRCm39':
-			path_to_db = path_to_lib+'/snps_dics_mouse_GRCm39/'
+			path_to_db = path_to_lib+'/snps/snps_dics_mouse_GRCm39/'
 	elif dbSNP == 0 :
 		path_to_db = ''
 	elif dbSNP == 149:
 		if common:
-			path_to_db = path_to_lib+'/snps_dics_149_common/'
+			path_to_db = path_to_lib+'/snps/snps_dics_149_common/'
 		else:
-			path_to_db = path_to_lib+'/snps_dics_149/'
+			path_to_db = path_to_lib+'/snps/snps_dics_149/'
 	elif dbSNP == 151:
 		if common:
-			path_to_db = path_to_lib+'/snps_dics_151_common/'
+			path_to_db = path_to_lib+'/snps/snps_dics_151_common/'
 		else:
-			path_to_db = path_to_lib+'/snps_dics_151/'
+			path_to_db = path_to_lib+'/snps/snps_dics_151/'
 	else:
 		if common:
-			path_to_db = path_to_lib+'/snps_dics_155_common/'
+			path_to_db = path_to_lib+'/snps/snps_dics_155_common/'
 		else:
-			path_to_db = path_to_lib+'/snps_dics_155/'
+			path_to_db = path_to_lib+'/snps/snps_dics_155/'
 
 
 	super_logger.info('Using dbSNP database %s with COMMON SNPs = %s. Database Path : %s ', str(dbSNP), str(common), str(path_to_db))

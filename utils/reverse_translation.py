@@ -5,7 +5,6 @@ import billiard as mp
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
-NUM_WORKERS =  int(mp.cpu_count()/2)+2
 
 CODON_TABLE = {
 	'A': ('GCT', 'GCC', 'GCA', 'GCG'),
@@ -36,7 +35,7 @@ class ReverseTranslation:
 	def __init__(self):
 		pass
 
-	def reverse_translation(self, peptide_mode, CS_mode, path_to_output_folder, name_exp):
+	def reverse_translation(self, peptide_mode, CS_mode, path_to_output_folder, name_exp, threads):
 		
 		output_message = ''
 		self.output_file = path_to_output_folder+'genome_alignments/'+name_exp+'.fastq'
@@ -61,7 +60,7 @@ class ReverseTranslation:
 			
 			manager = mp.Manager()
 			q = manager.Queue() 
-			pool = mp.Pool(NUM_WORKERS)
+			pool = mp.Pool(threads)
 			watcher = pool.apply_async(self.listener, (q,))
 			results = pool.map(self.translate_reserve_peptide, peptides_list) 
 			

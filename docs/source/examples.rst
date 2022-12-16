@@ -8,11 +8,11 @@ BamQuery can search for peptide expression in the human (GRCh38, annotation vers
 and mouse (GRCm38 and GRCm39, annotation versions M24, M30, respectively) genomes.
 
 
-
 =======================
 
 
-.. _normal mode example:
+.. _normal_mode_example:
+
 *******************
 normal mode example
 *******************
@@ -395,7 +395,6 @@ This sheet reports for each peptide queried, the total reads for each BAM/CRAM f
 .. _log10 RPHM RNA seq by peptide:
 
 
-
 `Sheet : log10(RPHM) RNA-seq by peptide`
 
 This sheet reports for each peptide queried, the :math:`rphm` `(read per hundred million)` for each BAM/CRAM file considering all expressed positions. The :math:`rphm = (read\_overlap * 10^8)/total\_primary\_reads` with `total_primary_reads` representing the total number of reads sequenced in a given RNA-Seq experiment. These values are transformed into logarithm :math:`log_{10}(rphm + 1)`.
@@ -410,6 +409,8 @@ This information is used to plot the rphm heat map. See `heat maps folder`_
 .. include:: light_mode.rst
 
 ======================
+
+.. _single_cell_example:
 
 .. include:: single_cell.rst
 

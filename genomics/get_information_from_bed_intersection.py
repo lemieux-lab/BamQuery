@@ -1,6 +1,5 @@
-import os, logging, time, pickle, multiprocessing, _thread, csv, math, copy, pysam
+import pickle
 import pandas as pd
-from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
 import plotting.plots as plots
 from collections import Counter

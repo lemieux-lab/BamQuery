@@ -1,4 +1,4 @@
-import os, time, pickle, multiprocessing, _thread, csv, math, subprocess
+import os, time, subprocess
 import pandas as pd
 
 
@@ -19,14 +19,6 @@ class IntersectAnnotations:
 		self.bed_file = self.path_to_output_folder + 'to_intersect_to_annotations.bed'
 		self.name_exp = name_exp
 		self.super_logger = super_logger
-		self.annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
-
-		if genome_version == 'v26_88': 
-			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
-		elif genome_version == 'v33_99':
-			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v33_99/gencode.v33.primary_assembly.annotation.gtf'
-		else:
-			self.annotation_transcripts = path_to_lib+'genome_versions/genome_v38_104/gencode.v38.primary_assembly.annotation.gtf'
 		
 		if self.mouse:
 			self.annotation_EREs = path_to_lib + 'EREs_souris.bed'
@@ -34,9 +26,18 @@ class IntersectAnnotations:
 				self.annotation_transcripts = path_to_lib+'genome_versions/genome_mouse_m24/gencode.vM24.primary_assembly.annotation.gtf'
 			if genome_version == 'M30':
 				self.annotation_transcripts = path_to_lib+'genome_versions/genome_mouse_m30/gencode.vM30.primary_assembly.annotation.gtf'
+			
+		else:
+			self.annotation_EREs = path_to_lib + 'hg38_ucsc_repeatmasker.gtf'
+
+			if genome_version == 'v26_88': 
+				self.annotation_transcripts = path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
+			elif genome_version == 'v33_99':
+				self.annotation_transcripts = path_to_lib+'genome_versions/genome_v33_99/gencode.v33.primary_assembly.annotation.gtf'
+			elif genome_version == 'v38_104':
+				self.annotation_transcripts = path_to_lib+'genome_versions/genome_v38_104/gencode.v38.primary_assembly.annotation.gtf'
 
 		
-
 
 	def generate_BED_files(self):
 

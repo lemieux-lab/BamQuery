@@ -1,4 +1,4 @@
-import os, threading, time, subprocess, concurrent.futures, getpass, pickle, sys, getopt, os, pysam, multiprocessing, csv
+import os, subprocess, getpass, pickle, os, pysam, multiprocessing, csv
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
@@ -10,7 +10,6 @@ path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
 files_with_not_permission = []
 
-NUM_WORKERS =  int(multiprocessing.cpu_count()/2)
 
 class GetInformationBamFiles:
 

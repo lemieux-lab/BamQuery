@@ -1,14 +1,13 @@
+
 ********************
 single cell example
 ********************
 
-.. _single_cell_example:
 BamQuery single cell was designed to perform searches in BAM files from single-cell RNA-seq data. Therefore, BamQuery only reports peptide counts for each cell in each single-cell BAM file, so no biotyping analysis is performed for peptides (no graph (heat map, pie chart) is produced).
 
 
 **Input**
 #########
-
 
 
 **Command line:**

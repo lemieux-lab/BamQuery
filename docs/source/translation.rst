@@ -1,8 +1,9 @@
+.. _translation_mode_example:
+
 *************************
 translation mode example
 *************************
 
-.. _translation_mode_example:
 
 The BamQuery translation mode was designed to search BAM files from Ribo-seq data. In this mode, BamQuery can be used as a means to verify the presence of ribosomal profile reads that overlap with peptide MCSs. 
 to verify the presence of ribosomal profile reads that overlap with the MCS of the peptides of interest. Aware that the length of Ribo-seq reads varies between ~24-32 ntd, BamQuery counts an overlapping read according to its percentage overlap with the MCS. 
@@ -114,7 +115,6 @@ Heat maps representing the mean translation expression and total number of ribo-
 .. warning::
 	1. Heat maps are produced for searches with less than 400 peptides.
 	2. Heat map in total_translation_expression_heatmap is produced only if the number of BAM/CRAM files queried are less than 100 tissues.
-
 
 
 -----------

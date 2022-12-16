@@ -9,10 +9,8 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
-NUM_WORKERS =  multiprocessing.cpu_count()
 
-
-def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode, mouse):
+def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode, mouse, threads):
 
 	path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 	path_to_output_folder_alignments = path_to_output_folder+'alignments/'
@@ -36,7 +34,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 	exists_light = os.path.exists(path_to_output_folder_alignments+'/Alignments_information_light.dic')
 	exists_normal= os.path.exists(path_to_output_folder_alignments+'/Alignments_information.dic')
 	exists_fastq= os.path.exists(path_to_output_folder_genome_alignments+'/'+name_exp+'.fastq')
-
+	
 	if not exist and not exist_sam_dic and not exists_light and not exists_normal and exists_fastq:
 		t_0 = time.time()
 		inputFilesR1_1 = path_to_output_folder_genome_alignments+name_exp+'.fastq'
@@ -79,7 +77,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		# 		' --seedNoneLociPerWindow '+ str(seedNoneLociPerWindow) +' --seedPerWindowNmax '+ str(seedPerWindowNmax)  +\
 		# 		' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --outFileNamePrefix '+path_to_output_folder_genome_alignments
 
-		command = 'ulimit -s 8192; STAR --runThreadN 16'+\
+		command = 'ulimit -s 8192; STAR --runThreadN '+str(threads)+\
 				' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
 				' --alignEndsType EndToEnd --sjdbOverhang 32 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20'+\
 				' --outFilterMismatchNmax 4 --winAnchorMultimapNmax ' +str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
@@ -100,10 +98,10 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 	else:
 		super_logger.info('Alignment file already exists in the output folder : %s --> Skipping this step!', path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 	
-	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse)
+	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse, threads)
 	return perfect_alignments
 
-def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse):
+def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse, threads):
 	t_0 = time.time()
 	sam_file = path_to_output_folder_genome_alignments+'/Aligned.out.sam'
 	exists = os.path.exists(path_to_output_folder_alignments+'/Alignments_information.dic')
@@ -141,8 +139,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 							'Mutation Strand', 'Resistance', 'Score', 'Prediction', 'Status' ]
 
 			alignments = [perfect_alignments, variants_alignments]
-			pool = mp.Pool(NUM_WORKERS)
-			#pool = ProcessPool(nodes = NUM_WORKERS)
+			pool = mp.Pool(threads)
 			results = pool.map(generer_alignments_information, alignments)
 			
 			perfect_alignments_to_print = results[0][0]

@@ -24,7 +24,7 @@ path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-2])+'/lib/'
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse, t):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -43,6 +43,7 @@ class BamQuery:
 		self.genome_version = genome_version
 		self.overlap =  overlap
 		self.mouse = mouse
+		self.threads = t
 
 		if self.mode == 'normal':
 			if self.sc :
@@ -271,7 +272,7 @@ class BamQuery:
 		if len(self.input_file_treatment.peptide_mode) > 0 or len(self.input_file_treatment.CS_mode) > 0 :
 
 			self.reverse_translation = ReverseTranslation()
-			output_message = self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp)
+			output_message = self.reverse_translation.reverse_translation(self.input_file_treatment.peptide_mode, self.input_file_treatment.CS_mode, self.path_to_output_folder, self.name_exp, self.threads)
 			
 			self.super_logger.info(output_message)
 
@@ -279,7 +280,7 @@ class BamQuery:
 			print ('Reverse Translation : Done!')
 			
 			#self.alignments = Alignments(self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common, self.super_logger, self.var, self.maxmm, self.genome_version)
-			self.perfect_alignments, peptides_with_alignments = alignment_cs_to_genome(self.set_peptides, self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common, self.super_logger, self.var, self.maxmm, self.genome_version, self.mode, self.mouse)
+			self.perfect_alignments, peptides_with_alignments = alignment_cs_to_genome(self.set_peptides, self.path_to_output_folder, self.name_exp, self.light, self.dbSNP, self.common, self.super_logger, self.var, self.maxmm, self.genome_version, self.mode, self.mouse, self.threads)
 
 			self.super_logger.info('========== Alignment : Done! ============ ')
 			print ('Alignment : Done!')
@@ -374,6 +375,7 @@ class BamQuery:
 
 		get_biotype = BiotypeAssignation(self.path_to_output_folder, self.name_exp, self.mode, list_bam_files_order_rna, order_sample_bam_files_rna, self.dev, self.plots, self.super_logger, self.genome_version, self.mouse)
 		get_biotype.get_biotypes(info_peptide_alignments, self.input_file_treatment.peptides_by_type_user)
+		
 		try:
 			get_biotype.get_global_annotation()
 			self.super_logger.info('========== Annotations : Done! ============ ')
@@ -419,6 +421,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	maxmm = False
 	overlap = False
 	mouse = False
+	threads = 8
 	
 	if dbSNP == 'dbSNP_149':
 		dbSNP = 149
@@ -435,7 +438,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 
 	t0 = time.time()
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse, threads)
 	
 	predictions = Immunogenicity(path_to_output_folder, name_exp)
 	predictions.get_predictions()
@@ -474,11 +477,10 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 def main(argv):
 
 	parser = argparse.ArgumentParser(description='======== BamQuery ========')
-	
 	parser.add_argument('path_to_input_folder', type=str, help='Path to the input folder where to find BAM_directories.tsv and peptides.tsv')
 	parser.add_argument('name_exp', type=str, help='BamQuery search Id')
+	parser.add_argument('genome_version', type=str, help='Genome human releases : v26_88 / v33_99 / v38_104; Genome mouse releases : M24 / M30')
 	parser.add_argument('--mode', type=str, default = 'normal', help='BamQuery search mode : normal / translation')
-	parser.add_argument('--genome_version', type=str, default = 'v26_88', help='Genome human releases : v26_88 / v33_99 / v38_104; Genome mouse releases : M24 / M30')
 	parser.add_argument('--th_out', type=float, default = 8.55, help='Threshold to assess expression comparation with other tissues')
 	parser.add_argument('--dbSNP', type=int, default = 0, help='Human dbSNP : 149 / 151 / 155')
 	parser.add_argument('--c', action='store_true', help='Take into account the only common SNPs from the dbSNP database chosen')
@@ -491,10 +493,12 @@ def main(argv):
 	parser.add_argument('--plots', action='store_true', help='Plot biotype pie-charts')
 	parser.add_argument('--m', action='store_true', help='Mouse genome')
 	parser.add_argument('--dev', action='store_true', help='Save all temps files')
-
+	parser.add_argument('--t', type=int, default = 4, help='Specify the number of processing threads (CPUs) to use for BamQuery. The default is 4.')
+	
 	args = parser.parse_args()
 	path_to_input_folder = args.path_to_input_folder
 	name_exp = args.name_exp
+	genome_version = args.genome_version
 	mode = args.mode.lower()
 	dbSNP = args.dbSNP
 	strandedness = args.strandedness
@@ -506,9 +510,9 @@ def main(argv):
 	sc = args.sc
 	var = args.var
 	maxmm = args.maxmm
-	genome_version = args.genome_version
 	overlap = args.overlap
 	mouse = args.m
+	t=args.t
 
 	if sc and mouse:
 		sys.stderr.write('error: %s\n' % 'Some arguments are not valid! Please verify the use of a single BamQuery method to perform the search. (sc or mouse)')
@@ -553,6 +557,7 @@ def main(argv):
 		super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
 		super_logger.info(' - Counting overlapping reads : %s', str(overlap))
 		super_logger.info(' - Mouse Genome : %s', str(mouse))
+		super_logger.info(' - Threads : %s', str(t))
 		super_logger.info('=============== End Parameters ===============')
 
 	else:
@@ -565,9 +570,10 @@ def main(argv):
 		super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
 		super_logger.info(' - Counting overlapping reads : %s', str(overlap))
 		super_logger.info(' - Mouse Genome : %s', str(mouse))
+		super_logger.info(' - Threads : %s', str(t))
 		super_logger.info('=============== End Parameters ===============')
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse, t)
 	
 
 	if not dev:

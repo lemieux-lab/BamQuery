@@ -1,13 +1,16 @@
 
+.. _light_mode_example:
+
 *******************
 light mode example
 *******************
 
-.. _light_mode_example:
+
 The light mode of BamQuery was designed to perform a quick search for peptide expression in the specified BAM/CRAM files. In this mode, BamQuery only reports peptide counts and normalization, so no biotyping analysis is performed for peptides (heat map, pie chart are not produced).
 
 **Input**
 #########
+
 
 **Command line:**
 
