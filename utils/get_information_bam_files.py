@@ -2,6 +2,7 @@ import os, subprocess, getpass, pickle, os, pysam, multiprocessing, csv
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
+import inspect
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -9,6 +10,19 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
 files_with_not_permission = []
+
+
+class NoTraceBackWithLineNumber(Exception):
+    def __init__(self, msg):
+        try:
+            ln = sys.exc_info()[-1].tb_lineno
+        except AttributeError:
+            ln = inspect.currentframe().f_back.f_lineno
+        self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
+        sys.exit(self)
+
+class NeedMoreInfo(NoTraceBackWithLineNumber):
+    pass
 
 
 class GetInformationBamFiles:
@@ -168,14 +182,7 @@ class GetInformationBamFiles:
 						dictionary_total_reads_bam_files = pickle5.load(fp)
 			else:
 				dictionary_total_reads_bam_files = {}
-				print ('The Bam_files_info dictionary is not found in the library path. If this is the first time you are running \
-					BamQuery or you are querying new samples, this will take a little time while retrieving the primary read count for each BAM file. If this is not the case, \
-					the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info  \
-					dictionary with the samples from this query.')
-				self.bam_files_logger.info('The Bam_files_info dictionary is not found in the library path. If this is the first time you are running \
-					BamQuery or you are querying new samples, this will take a little time while retrieving the primary read count for each BAM file. If this is not the case, \
-					the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info  \
-					dictionary with the samples from this query.')
+				self.bam_files_logger.info('The Bam_files_info dictionary is not in the library path. If this is the first time you are running BamQuery or you are querying new samples, this will take a little time while the primary read count for each BAM file is retrieved. If this is not the case, the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info dictionary with the samples from this query.')
 
 			
 			with open(bam_files) as f:
@@ -325,11 +332,11 @@ class GetInformationBamFiles:
 						else:
 							os.remove(path_to_lock_file)
 							self.bam_files_logger.info('Unlock Bam_files_info')
-							raise SystemExit("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+							raise NeedMoreInfo("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
 					except Exception :
 						os.remove(path_to_lock_file)
 						self.bam_files_logger.info('Unlock Bam_files_info')
-						raise SystemExit("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+						raise NeedMoreInfo("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
 				
 				with open(path_to_all_counts_file, 'wb') as handle:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
