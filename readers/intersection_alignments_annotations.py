@@ -1,5 +1,4 @@
 import os, time, subprocess
-import pandas as pd
 
 
 __author__ = "Maria Virginia Ruiz Cuevas"

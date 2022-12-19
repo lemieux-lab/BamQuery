@@ -7,7 +7,6 @@ from operator import itemgetter
 import utils.useful_functions as uf
 import pickle
 from pathos.multiprocessing import ProcessPool
-import multiprocessing
 import collections
 
 __author__ = "Maria Virginia Ruiz Cuevas"
@@ -427,7 +426,7 @@ def translation_seq(chr, seq):
 	return translation
 
 
-def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version, mode, mouse):
+def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version, mode, mouse, threads):
 
 	global path_to_db
 	global super_logger
@@ -508,10 +507,9 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	
 	keys = list(od.keys())
 	values = list(od.values())
-	nodes = multiprocessing.cpu_count()
 	
 	if common or dbSNP == 149 or dbSNP == 0:
-		pool = ProcessPool(nodes=nodes)
+		pool = ProcessPool(nodes=threads)
 		results = pool.map(get_alignments_chromosome, keys, values)
 	
 		for res in results:

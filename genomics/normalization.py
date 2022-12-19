@@ -1,9 +1,8 @@
-import os, time, pickle, multiprocessing, csv, copy
+import os, time, pickle, csv, copy
 import pandas as pd
 import numpy as np
 
 
-NUM_WORKERS =  multiprocessing.cpu_count()
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 __author__ = "Maria Virginia Ruiz Cuevas"

@@ -1,6 +1,6 @@
 import warnings, os
 warnings.filterwarnings("ignore")
-import os, time, pickle, multiprocessing, os, pysam
+import os, time, pickle, os, pysam
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
@@ -12,19 +12,16 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
-NUM_WORKERS =  multiprocessing.cpu_count()
-
-
 class GetCountsSC:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger):
+	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger, threads):
 		self.path_to_output_folder = path_to_output_folder+'res/'
 		self.name_exp = name_exp
 		self.mode = mode
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 		self.peptides_by_type = peptides_by_type
 		self.super_logger = super_logger
-	
+		self.threads = threads
 
 	def filter_alignment_information(self, perfect_alignments, path_alignment_information):
 
@@ -125,7 +122,7 @@ class GetCountsSC:
 			values = list(modif_dic.values())
 			self.super_logger.info('Total unique regions : %s ', str(len(keys)))
 
-			pool = ProcessPool(nodes=NUM_WORKERS)
+			pool = ProcessPool(nodes=self.threads)
 
 			cell_lines = set()
 

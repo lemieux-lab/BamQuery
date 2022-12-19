@@ -118,7 +118,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 		
 		if not exists_light and not exists:
 
-			res_star = get_alig.get_alignments(sam_file, dbSNP, common, super_logger, var, genome_version, mode, mouse)
+			res_star = get_alig.get_alignments(sam_file, dbSNP, common, super_logger, var, genome_version, mode, mouse, threads)
 			
 			t_2 = time.time()
 			total = t_2-t_0
