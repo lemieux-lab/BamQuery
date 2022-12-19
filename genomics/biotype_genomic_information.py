@@ -1,7 +1,6 @@
-import os, logging, time, pickle, multiprocessing, _thread, csv, math, copy, pysam, time
+import os, time, pickle, pysam, time
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
-from collections import Counter
 import utils.useful_functions as uf
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
@@ -52,13 +51,8 @@ class BiotypeGenomicSearch:
 
 		self.information_biotypes_peptides = {}
 
-		try:
-			with open(self.annotations_file, 'rb') as fp:
-				info_transcripts_dic = pickle.load(fp)
-		except ValueError:
-			import pickle5
-			with open(self.annotations_file, 'rb') as fp:
-				info_transcripts_dic = pickle5.load(fp)
+		with open(self.annotations_file, 'rb') as fp:
+			info_transcripts_dic = pickle.load(fp)
 
 		# Get the information of the transcript from dictionary information
 		#{'AAAAPRPAL_chr13:99970439-99970465': {'chr13:99970439-99970465': ['ENST00000267294.4']}}

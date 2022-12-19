@@ -1,14 +1,14 @@
-import warnings, time, os, itertools
+import warnings
+warnings.filterwarnings("ignore")
+import time, os
 import pysam, re
 from itertools import groupby
 from operator import itemgetter
 import utils.useful_functions as uf
 import pickle
-import numpy as np
 from pathos.multiprocessing import ProcessPool
 import multiprocessing
 import collections
-import itertools
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -175,21 +175,14 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 
 	if path_to_db != '':
 		try:
-			try:
-				with open(path_to_db+chr+'.dic', 'rb') as fp:
-					chromosome = pickle.load(fp)
-			except ValueError:
-				import pickle5
-				with open(path_to_db+chr+'.dic', 'rb') as fp:
-					chromosome = pickle5.load(fp)
+			with open(path_to_db+chr+'.dic', 'rb') as fp:
+				chromosome = pickle.load(fp)
 		except IOError:
 			chromosome = {}
 	else:
 		chromosome = {}
 		
 	for position in chromosomes_alignments: 
-		snps_information = []
-		
 		split_position = position.split('|')
 		
 		readStart = int(split_position[0])
@@ -501,13 +494,8 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	if not exists:
 		alignments_by_chromosome_strand = read_sam_file(sam_file)
 	else:
-		try:
-			with open(sam_file+'.dic', 'rb') as fp:
-				alignments_by_chromosome_strand = pickle.load(fp)
-		except ValueError:
-			import pickle5
-			with open(sam_file+'.dic', 'rb') as fp:
-				alignments_by_chromosome_strand = pickle5.load(fp)
+		with open(sam_file+'.dic', 'rb') as fp:
+			alignments_by_chromosome_strand = pickle.load(fp)
 		super_logger.info('Information SAM file already collected !')
 
 	od = collections.OrderedDict(sorted(alignments_by_chromosome_strand.items(), reverse=True))

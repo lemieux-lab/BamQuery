@@ -1,15 +1,11 @@
 import os, shutil
 from flask import Flask, request, render_template, url_for, redirect, send_from_directory, flash, jsonify, send_file, Response
 from forms import BamQuery_search, Retrieve_results
-import secrets
 import sys
-import zipfile
-import io
-import pathlib
 sys.path.append('../')
 from BamQuery import running_for_web
 from celery import Celery
-import random, time
+import random
 
 
 app = Flask(__name__)

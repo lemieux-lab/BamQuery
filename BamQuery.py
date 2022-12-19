@@ -1,4 +1,4 @@
-import time, sys, os, argparse, logging, shutil, pickle, gc
+import time, sys, os, argparse, logging, shutil, pickle
 import pandas as pd
 
 from readers.read_input import ReadInputFile
@@ -67,7 +67,7 @@ class BamQuery:
 		
 		if not exists_normal :
 			
-			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
+			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger, self.threads)
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
 			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
@@ -94,7 +94,7 @@ class BamQuery:
 
 		if (self.light and not exists_light) or (not self.light and not exists_normal and not exists_light):
 			
-			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light,  self.input_file_treatment.all_mode_peptide, self.super_logger)
+			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light,  self.input_file_treatment.all_mode_peptide, self.super_logger, self.threads)
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list, self.overlap)
 			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
@@ -199,7 +199,7 @@ class BamQuery:
 		exists = os.path.exists(name_path) 
 
 		if not exists:
-			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
+			get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger, self.threads)
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list, True)
 			df_counts_ribo = res[0]
 			self.perfect_alignments = res[1]

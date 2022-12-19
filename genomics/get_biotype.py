@@ -1,10 +1,7 @@
-import os, time, pickle, _thread, csv, math, copy, copy, gc
+import os, pickle, copy, copy
 import pandas as pd
 import numpy as np
-import billiard as mp
-import utils.useful_functions as uf
 import plotting.draw_biotypes as plots
-from collections import Counter, OrderedDict
 from genomics.get_information_from_bed_intersection import GetInformationBEDIntersection
 from collections import Counter
 import operator
@@ -28,21 +25,11 @@ class BiotypeAssignation:
 		exists_2 = os.path.exists(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic') 
 		
 		if exists and exists_2:
-				try:
-					with open(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic', 'rb') as handle:
-						self.peptides_intersected_ere = pickle.load(handle)
+				with open(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic', 'rb') as handle:
+					self.peptides_intersected_ere = pickle.load(handle)
 
-					with open(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic', 'rb') as handle:
-						self.information_final_biotypes_peptides = pickle.load(handle)
-				except ValueError:
-					import pickle5
-					with open(self.path_to_output_folder+'/res/BED_files/peptides_intersected_ere.dic', 'rb') as handle:
-						self.peptides_intersected_ere = pickle5.load(handle)
-
-					with open(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic', 'rb') as handle:
-						self.information_final_biotypes_peptides = pickle5.load(handle)
-
-
+				with open(self.path_to_output_folder+'/res/BED_files/information_final_biotypes_peptides.dic', 'rb') as handle:
+					self.information_final_biotypes_peptides = pickle.load(handle)
 		else:
 			self.get_info_bed_files = GetInformationBEDIntersection(path_to_output_folder, self.mode, self.mouse, threads)
 			self.get_info_bed_files.get_information_genomic_annotation(genome_version)

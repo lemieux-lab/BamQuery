@@ -1,4 +1,4 @@
-import os, time, pickle, subprocess, multiprocessing, _thread, csv, math, copy
+import os, time, pickle, multiprocessing, csv, copy
 import pandas as pd
 import numpy as np
 
@@ -40,21 +40,12 @@ class Normalization:
 		if not exists:
 		
 			t_0 = time.time()
-			count_reads = {}
-
-			norm_matrix = []
-
 			incomplete = True
 
 			while incomplete:
 
-				try:
-					with open(self.path_to_all_counts_file, 'rb') as fp:
-						dictionary_total_reads_bam_files = pickle.load(fp)
-				except ValueError:
-					import pickle5
-					with open(self.path_to_all_counts_file, 'rb') as fp:
-						dictionary_total_reads_bam_files = pickle5.load(fp)
+				with open(self.path_to_all_counts_file, 'rb') as fp:
+					dictionary_total_reads_bam_files = pickle.load(fp)
 				
 				tissues_for_samples = {}
 				bam_files_list = list(df_counts.columns[2:])

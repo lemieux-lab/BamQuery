@@ -1,6 +1,6 @@
 import warnings, os
 warnings.filterwarnings("ignore")
-import os, time, subprocess, pickle, multiprocessing, os, _thread, csv, collections, pysam, copy
+import os, time, pickle, os, copy
 import genomics.get_counts_from_sample as get_counts_sample
 from readers.intersection_alignments_annotations import IntersectAnnotations
 from genomics.get_information_from_bed_intersection import GetInformationBEDIntersection
@@ -8,17 +8,13 @@ import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
 import numpy as np
-import math
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
-
-NUM_WORKERS =  multiprocessing.cpu_count()
-
 class GetCounts:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger):
+	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger, threads):
 		self.light = light
 		self.mode = mode
 		self.path_to_output_folder = path_to_output_folder
@@ -26,7 +22,8 @@ class GetCounts:
 		self.name_exp = name_exp
 		self.peptides_by_type = peptides_by_type
 		self.super_logger = super_logger
-		
+		self.threads = threads
+
 		if self.light:
 			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
 			self.alignment_information_path = self.path_to_output_folder_alignments+'Alignments_information_light_rna.dic'
@@ -139,7 +136,7 @@ class GetCounts:
 				with open(information_transcripts_intersected, 'rb') as fp:
 					self.transcripts_intersected = pickle.load(fp)
 			
-			pool = ProcessPool(nodes=NUM_WORKERS)
+			pool = ProcessPool(nodes=self.threads)
 
 			for idx, bam_file in enumerate(bam_files_list):
 				
@@ -364,7 +361,7 @@ class GetCounts:
 			
 			self.super_logger.info('Total unique regions : %s ', str(len(keys)))
 
-			pool = ProcessPool(nodes=NUM_WORKERS)
+			pool = ProcessPool(nodes=self.threads)
 
 			for idx, bam_file in enumerate(info_bams):
 				

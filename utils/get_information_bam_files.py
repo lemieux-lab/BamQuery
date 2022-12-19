@@ -119,14 +119,8 @@ class GetInformationBamFiles:
 				self.bam_files_logger.info('Total Bam Files to get transcriptome assembly : %d ', assemblage)
 
 		else:
-			
-			try:
-				with open(ribo_bam_files_info_query, 'rb') as fp:
-					bam_files_list = pickle.load(fp)
-			except ValueError:
-				import pickle5
-				with open(ribo_bam_files_info_query, 'rb') as fp:
-					bam_files_list = pickle5.load(fp)
+			with open(ribo_bam_files_info_query, 'rb') as fp:
+				bam_files_list = pickle.load(fp)
 
 			assemblage = 0
 			command = 'module load stringtie/1.3.6; ulimit -s 8192;'
@@ -174,13 +168,8 @@ class GetInformationBamFiles:
 				self.bam_files_logger.info('Lock Bam_files_info')
 
 			if exist :
-				try:
-					with open(path_to_all_counts_file, 'rb') as fp:
-						dictionary_total_reads_bam_files = pickle.load(fp)
-				except ValueError:
-					import pickle5
-					with open(path_to_all_counts_file, 'rb') as fp:
-						dictionary_total_reads_bam_files = pickle5.load(fp)
+				with open(path_to_all_counts_file, 'rb') as fp:
+					dictionary_total_reads_bam_files = pickle.load(fp)
 			else:
 				dictionary_total_reads_bam_files = {}
 				print ('The Bam_files_info dictionary is not in the library path. If this is the first time you are running BamQuery or you are querying new samples, this will take a little time while the primary read count for each BAM file is retrieved. If this is not the case, the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info dictionary with the samples from this query.')
@@ -226,6 +215,7 @@ class GetInformationBamFiles:
 								to_add = [''] * 4
 								to_add[0] = name_bam_file
 								data.append(to_add)
+
 						except KeyError:
 							path = bam_file_path
 							count = 0
@@ -282,14 +272,8 @@ class GetInformationBamFiles:
 					self.bam_files_logger.info('Skipping BAM file : %s. This Bam file has access denied or the path does not exist..', bam_file) 
 
 		else:
-			
-			try:
-				with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'rb') as fp:
-					bam_files_list = pickle.load(fp)
-			except ValueError:
-				import pickle5
-				with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'rb') as fp:
-					bam_files_list = pickle5.load(fp)
+			with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'rb') as fp:
+				bam_files_list = pickle.load(fp)
 
 			# 0: path, 1: number, 2: Tissue, 3: Tissue_type, 4: Shortlist, 5: sequencing, 6: library, 7: user
 			if os.path.exists(self.path_to_output_aux_folder+"bam_files_tissues.csv"):
@@ -309,13 +293,8 @@ class GetInformationBamFiles:
 				self.bam_files_logger.info('Adding tissue information to Bam Files !')
 				path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 			
-				try:
-					with open(path_to_all_counts_file, 'rb') as fp:
-						dictionary_total_reads_bam_files = pickle.load(fp)
-				except ValueError:
-					import pickle5
-					with open(path_to_all_counts_file, 'rb') as fp:
-						dictionary_total_reads_bam_files = pickle5.load(fp)
+				with open(path_to_all_counts_file, 'rb') as fp:
+					dictionary_total_reads_bam_files = pickle.load(fp)
 
 				df = pd.read_csv(self.path_to_output_aux_folder+"bam_files_tissues.csv", header = 0)
 

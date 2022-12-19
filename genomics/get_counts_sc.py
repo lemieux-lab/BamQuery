@@ -1,7 +1,6 @@
 import warnings, os
 warnings.filterwarnings("ignore")
-import os, time, subprocess, pickle, multiprocessing, os, _thread, csv, collections, pysam, copy
-import genomics.get_alignments as get_alig
+import os, time, pickle, multiprocessing, os, pysam
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf

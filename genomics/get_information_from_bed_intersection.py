@@ -1,8 +1,5 @@
 import pickle
 import pandas as pd
-import utils.useful_functions as uf
-import plotting.plots as plots
-from collections import Counter
 from genomics.biotype_genomic_information import BiotypeGenomicSearch
 
 

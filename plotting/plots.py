@@ -1,12 +1,10 @@
-import os, time, subprocess, pickle, multiprocessing, os, _thread, csv, collections
+import os, subprocess, pickle, os
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import matplotlib.style
 import numpy as np
 import random
 import scipy.stats
-from matplotlib import cm
 
 
 __author__ = "Maria Virginia Ruiz Cuevas"

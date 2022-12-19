@@ -1,4 +1,4 @@
-import os, logging, threading, time, subprocess, pickle, sys, getopt, os, pysam, multiprocessing
+import os, logging, time, pickle, sys, getopt, os, pysam
 from os import listdir
 from os.path import isfile, join
 from pathos.multiprocessing import ProcessPool
@@ -55,13 +55,8 @@ class GetPrimaryReadCountBamFiles:
 			file_to_open.close()
 			logging.info('Lock Bam_files_info')
 
-		try:
-			with open(path_to_all_counts_file, 'rb') as fp:
-				dictionary_total_reads_bam_files = pickle.load(fp)
-		except ValueError:
-			import pickle5
-			with open(path_to_all_counts_file, 'rb') as fp:
-				dictionary_total_reads_bam_files = pickle5.load(fp)
+		with open(path_to_all_counts_file, 'rb') as fp:
+			dictionary_total_reads_bam_files = pickle.load(fp)
 
 		for bam_file_info_to_return in results:
 			name_bam_file = bam_file_info_to_return[0]
@@ -107,18 +102,11 @@ def main(argv):
 	logging.basicConfig(filename=nameLog, filemode='w', level=logging.INFO, format='%(asctime)s %(message)s')
 
 	t0 = time.time()
-	bam_files_dic = {}
-	bam_files = path_to_input_folder
 	Get_Read_Count_obj = GetPrimaryReadCountBamFiles()
 	
-	try:
-		with open(path_to_input_folder, 'rb') as fp:
-			bam_files_list = pickle.load(fp)
-	except ValueError:
-		import pickle5
-		with open(path_to_input_folder, 'rb') as fp:
-			bam_files_list = pickle5.load(fp)
-
+	with open(path_to_input_folder, 'rb') as fp:
+		bam_files_list = pickle.load(fp)
+	
 	Get_Read_Count_obj.set_values(path_to_lib, bam_files_list, threads)
 	t2 = time.time()
 	total = t2-t0

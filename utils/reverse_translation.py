@@ -1,4 +1,4 @@
-import warnings, time, os, gc, pickle
+import warnings, time, os, pickle
 warnings.filterwarnings("ignore")
 import billiard as mp
 

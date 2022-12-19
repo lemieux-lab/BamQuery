@@ -190,12 +190,8 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 
 
 			with open(name_path, 'rb') as fp:
-				try:
-					perfect_alignments = pickle.load(fp)
-				except ValueError:
-					import pickle5
-					perfect_alignments = pickle5.load(fp)
-
+				perfect_alignments = pickle.load(fp)
+			
 			super_logger.info('Total perfect alignments : %s ', str(len(perfect_alignments)))
 			
 			try:
