@@ -133,7 +133,7 @@ STAR 2.7.9a: https://github.com/alexdobin/STAR
 bedtools: https://bedtools.readthedocs.io/en/latest/
 R: https://www.r-project.org/
 
-Required R packages: ggplot2, data.tables, ggpubr
+Required R packages: ggplot2, data.table, ggpubr
 
 --------------------------
 
