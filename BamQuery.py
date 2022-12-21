@@ -454,9 +454,9 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	del bam_files_logger
 	del handler_super_logger
 	del handler_bam_files_logger
-
+	
 	try:
-		os.remove(path_to_output_folder+"info_bam_files_tissues.csv")
+		os.remove(path_to_output_folder+"res/info_bam_files_tissues.csv")
 		shutil.rmtree(path_to_output_folder+'genome_alignments', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'alignments', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
@@ -465,7 +465,8 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 		os.system('rmdir /S /Q "{}"'.format(path_to_output_folder+'logs'))
 		os.system('rm -rf "{}"'.format(path_to_output_folder+'logs'))
 		shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)	
-	except FileNotFoundError:
+	except Exception as err:
+		print (err)
 		pass
 	
 	path_to_readme_file = path_to_lib+'README.txt'

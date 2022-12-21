@@ -9,44 +9,34 @@ At the command line::
 
 .. code::
 
-	    usage: BamQuery.py [-h] [--mode MODE] [--genome_version GENOME_VERSION]
-                   [--th_out TH_OUT] [--dbSNP DBSNP] [--strandedness]
-                   [--light] [--c] [--sc] [--var] [--maxmm] [--overlap]
-                   [--plots] [--dev]
-                   path_to_input_folder name_exp
+		usage: BamQuery.py [-h] [--mode MODE] [--th_out TH_OUT] [--dbSNP DBSNP] [--c]
+						[--strandedness] [--light] [--sc] [--var] [--maxmm]
+						[--overlap] [--plots] [--m] [--dev] [--t T]
+						path_to_input_folder name_exp genome_version
 
 		======== BamQuery ========
 
 		positional arguments:
-		  path_to_input_folder  Path to the input folder where to find
-		                        BAM_directories.tsv and peptides.tsv
-		  name_exp              BamQuery search Id
-		  genome_version        Genome human releases : v26_88 / v33_99 / v38_104;
-                        		Genome mouse releases : M24 / M30
+			path_to_input_folder  Path to the input folder where to find BAM_directories.tsv and peptides.tsv
+			name_exp              BamQuery search Id
+			genome_version        Genome human releases : v26_88 / v33_99 / v38_104; Genome mouse releases : M24 / M30
 
 		optional arguments:
-		  -h, --help            show this help message and exit
-		  --mode MODE           BamQuery search mode : normal / translation
-		  --genome_version GENOME_VERSION
-		                        Genome human releases : v26_88 / v33_99 / v38_104;
-		                        Genome mouse releases : M24 / M30
-		  --th_out TH_OUT       Threshold to assess expression comparation with other
-		                        tissues
-		  --dbSNP DBSNP         Human dbSNP : 149 / 151 / 155
-		  --c                   Take into account only common SNPs from the dbSNP
-		                        database chosen
-		  --strandedness        Take into account the strandedness of the samples
-		  --light               Display only the count and norm count for peptides and
-		                        regions
-		  --sc                  Query Single Cell Bam Files
-		  --var                 Keep Variants Alignments
-		  --maxmm               Enable STAR to generate a large number of alignments
-		  --overlap             Count overlapping reads
-		  --plots               Plot biotype pie-charts
-		  --m                   Mouse genome
-		  --dev                 Save all temps files
-		  --t T                 Specify the number of processing threads (CPUs) to use
-                        		for BamQuery. The default is 4.
+			-h, --help            show this help message and exit
+			--mode MODE           BamQuery search mode : normal / translation
+			--th_out TH_OUT       Threshold to assess expression comparation with other tissues
+			--dbSNP DBSNP         Human dbSNP : 149 / 151 / 155
+			--c                   Take into account the only common SNPs from the dbSNP database chosen
+			--strandedness        Take into account strandedness of the samples
+			--light               Display only the count and norm count for peptides and regions
+			--sc                  Query Single Cell Bam Files
+			--var                 Keep Variants Alignments
+			--maxmm               Enable STAR to generate a large number of alignments
+			--overlap             Count overlapping reads
+			--plots               Plot biotype pie-charts
+			--m                   Mouse genome
+			--dev                 Save all temps files
+			--t T                 Specify the number of processing threads (CPUs) to use for BamQuery. The default is 4.
 
 
 ====================

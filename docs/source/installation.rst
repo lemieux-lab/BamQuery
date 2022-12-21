@@ -108,8 +108,9 @@ Python: https://www.python.org/ |br|
         pip install xlsxwriter
         pip install seaborn
         pip install billiard
-        pip install plotnine
-        pip install sklearn
+        pip install numpy
+        pip install scipy
+        
 
 4. Install external dependencies so that their binaries are available in your $PATH:
 ####################################################################################
@@ -118,7 +119,7 @@ STAR 2.7.9a: https://github.com/alexdobin/STAR |br|
 bedtools: https://bedtools.readthedocs.io/en/latest/ |br|
 R: https://www.r-project.org/ |br|
 
-Required R packages: ggplot2, data.tables, ggpubr |br|
+Required R packages: ggplot2, data.table |br|
 
 5. Launch the analysis
 ######################

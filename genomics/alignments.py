@@ -39,9 +39,11 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		inputFilesR1_1 = path_to_output_folder_genome_alignments+name_exp+'.fastq'
 		genomeDirectory = index_genome
 		seed = 20
+		maxMulti = 1000000
+		anchor = 1000
 
 		if maxmm:
-			maxMulti = 100000 
+			anchor = 5000
 			alignTranscriptsPerReadNmax = 100000
 			seedPerWindowNmax = 1000
 			seedNoneLociPerWindow = 1000
@@ -49,7 +51,6 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			alignTranscriptsPerWindowNmax = 1000
 			outFilterMultimapScoreRange = 2
 		else:
-			maxMulti = 10000
 			alignTranscriptsPerReadNmax = 20000
 			seedPerWindowNmax = 1000
 			seedNoneLociPerWindow = 1000
@@ -57,29 +58,12 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			alignTranscriptsPerWindowNmax = 1000
 			outFilterMultimapScoreRange = 1
 
-		anchor = maxMulti 										
 		limitOutSAMoneReadBytes = 2 * ( 33 + 100 ) * maxMulti
-		# https://github.com/alexdobin/STAR/issues/169
-		# https://github.com/mhammell-laboratory/TEtranscripts/issues/69
-		# https://github.com/alexdobin/STAR/issues/506
-		# https://groups.google.com/g/rna-star/c/E2eevlGWFbQ?pli=1
-		# https://github.com/alexdobin/STAR/issues/243
-		# https://groups.google.com/g/rna-star/c/_HUtXoS2hOY
-
-		# command = 'module add star/2.7.1a; ulimit -s 8192; STAR --runThreadN 16'+\
-		# 		' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
-		# 		' --alignEndsType EndToEnd --sjdbOverhang 32 --sjdbScore 2 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20 '+\
-		# 		' --outFilterMismatchNmax 4 --winAnchorMultimapNmax ' +str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
-		# 		' --outFilterMatchNmin '+str(outputFilterMatchInt)+ ' --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD '+\
-		# 		' --limitOutSAMoneReadBytes '+str(limitOutSAMoneReadBytes) +\
-		# 		' --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
-		# 		' --seedNoneLociPerWindow '+ str(seedNoneLociPerWindow) +' --seedPerWindowNmax '+ str(seedPerWindowNmax)  +\
-		# 		' --alignTranscriptsPerReadNmax '+ str(alignTranscriptsPerReadNmax) +' --outFileNamePrefix '+path_to_output_folder_genome_alignments
 
 		command = 'ulimit -s 8192; STAR --runThreadN '+str(threads)+\
 				' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
-				' --alignEndsType EndToEnd --sjdbOverhang 32 --alignSJDBoverhangMin 1 --alignSJoverhangMin 20'+\
-				' --outFilterMismatchNmax 4 --winAnchorMultimapNmax ' +str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
+				' --alignEndsType EndToEnd --sjdbOverhang 32 --alignSJDBoverhangMin 1 --alignSJoverhangMin 10000'+\
+				' --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
 				' --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD --limitOutSJcollapsed 5000000'+\
 				' --limitOutSAMoneReadBytes '+str(limitOutSAMoneReadBytes) +\
 				' --outFilterMultimapScoreRange '+str(outFilterMultimapScoreRange)+' --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
