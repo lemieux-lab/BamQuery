@@ -104,12 +104,49 @@ Finally, you need to:
 -----------------------
 <h3>3. Install python 3 and create a virtual environment</h3>
 
+<h4>Option 1: Installation with Conda </h4>
+
+For users having no administrator priviledges, we recommend installing BamQuery with conda (link: https://docs.conda.io/en/latest/miniconda.html).
+
+First create a conda environment, activate it, and install all non-python dependencies:
+
+        conda create -n BQ python=3
+        conda activate BQ
+        conda install -y -c conda-forge r-ggplot2=3.3.6
+        conda install -y -c conda-forge r-data.table
+        conda install -y -c bioconda bedtools
+        conda install -y -c bioconda star=2.7.9a
+        
+Then create a python virtual environment, activate it, and install all python dependencies:
+
+        cd ${INSTALLDIR}
+        python3 -m venv env
+        source ${$INSTALLDIR}/env/bin/activate
+        pip install --upgrade pip
+        pip install pandas
+        pip install pysam
+        pip install pathos
+        pip install xlsxwriter
+        pip install seaborn
+        pip install billiard
+        pip install scipy
+        
+Launch the analysis:
+
+        conda activate BQ
+        source ${$INSTALLDIR}/env/bin/activate
+        python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
+        
+
+
+<h4>Option 2: Installation from source</h4>
+
 Python: https://www.python.org/
 
         python3 -m venv bamquery-venv
         source $INSTALLDIR/bamquery-venv/bin/activate
         
-<h4>3.a. Install python packages in the virtual environment</h4>
+Install python packages in the virtual environment</h4>
 
         pip install --upgrade pip
         pip install pandas
