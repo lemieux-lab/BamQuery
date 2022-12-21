@@ -108,7 +108,7 @@ Finally, you need to:
 
 For users having no administrator priviledges, we recommend installing BamQuery with conda (link: https://docs.conda.io/en/latest/miniconda.html).
 
-First create a conda environment, activate it, and install all non-python dependencies:
+1. First create a conda environment, activate it, and install all non-python dependencies:
 
         conda create -n BQ python=3
         conda activate BQ
@@ -117,7 +117,7 @@ First create a conda environment, activate it, and install all non-python depend
         conda install -y -c bioconda bedtools
         conda install -y -c bioconda star=2.7.9a
         
-Then create a python virtual environment, activate it, and install all python dependencies:
+2. Then create a python virtual environment, activate it, and install all python dependencies:
 
         cd ${INSTALLDIR}
         python3 -m venv env
@@ -131,7 +131,7 @@ Then create a python virtual environment, activate it, and install all python de
         pip install billiard
         pip install scipy
         
-Launch the analysis:
+3. Launch the analysis:
 
         conda activate BQ
         source ${$INSTALLDIR}/env/bin/activate
@@ -141,12 +141,12 @@ Launch the analysis:
 
 <h4>Option 2: Installation from source</h4>
 
-Python: https://www.python.org/
+1. Download Python 3 and creare a virtual environment. Python: https://www.python.org/
 
         python3 -m venv bamquery-venv
         source $INSTALLDIR/bamquery-venv/bin/activate
         
-Install python packages in the virtual environment</h4>
+2. Install python packages in the virtual environment</h4>
 
         pip install --upgrade pip
         pip install pandas
@@ -158,27 +158,20 @@ Install python packages in the virtual environment</h4>
         pip install numpy
         pip install scipy
         
-        
----------------------
 
-**4. Install external dependencies so that their binaries are available in your $PATH:**
+3. Install external dependencies so that their binaries are available in your $PATH:</h3>
 
-STAR 2.7.9a: https://github.com/alexdobin/STAR
+* STAR 2.7.9a: https://github.com/alexdobin/STAR
 
-bedtools: https://bedtools.readthedocs.io/en/latest/
+* bedtools: https://bedtools.readthedocs.io/en/latest/
 
-R: https://www.r-project.org/
+* R: https://www.r-project.org/ , Required R packages: ggplot2, data.table
 
-Required R packages: ggplot2, data.table
 
---------------------------
-
-**5. Launch the analysis**
+4. Launch the analysis</h3>
 
         python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
         
-
-
 
 
 --------------------------
