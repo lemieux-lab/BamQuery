@@ -21,11 +21,7 @@ BamQuery is developed by Maria Virginia Ruiz Cuevas at the Institute for Researc
 * [numpy](https://pypi.org/project/numpy/)
 * [billiard](https://pypi.org/project/billiard/)
 * [pysam](https://pypi.org/project/pysam/)
-* [multiprocessing](https://pypi.org/project/multiprocessing/)
-* [subprocess](https://pypi.org/project/subprocess/)
-* [math](https://pypi.org/project/math/)
 * [matplotlib](https://pypi.org/project/matplotlib/)
-* [collections](https://pypi.org/project/collections/)
 * [pathos](https://pypi.org/project/pathos/)
 * [seaborn](https://seaborn.pydata.org/installing.html)
 * [scipy](https://scipy.org/install/)
@@ -122,18 +118,21 @@ Python: https://www.python.org/
         pip install xlsxwriter
         pip install seaborn
         pip install billiard
-        pip install plotnine
-        pip install sklearn
+        pip install numpy
+        pip install scipy
+        
         
 ---------------------
 
 **4. Install external dependencies so that their binaries are available in your $PATH:**
 
 STAR 2.7.9a: https://github.com/alexdobin/STAR
+
 bedtools: https://bedtools.readthedocs.io/en/latest/
+
 R: https://www.r-project.org/
 
-Required R packages: ggplot2, data.table, ggpubr
+Required R packages: ggplot2, data.table
 
 --------------------------
 
