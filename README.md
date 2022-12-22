@@ -197,7 +197,7 @@ A docker container is also available to provide a self contained working environ
 ------------------------       
 <h3>3. Install the docker image (requires sudo access):</h3>
         
-        gunzip bamquery-2022-12-14.tar.gz
+        gunzip bamquery-2022-12-12.tar.gz
         sudo docker load --input bamquery-2022-12-22.tar
         
 ------------------------        
