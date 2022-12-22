@@ -104,12 +104,49 @@ Finally, you need to:
 -----------------------
 <h3>3. Install python 3 and create a virtual environment</h3>
 
-Python: https://www.python.org/
+<h4>Option 1: Installation with Conda </h4>
+
+For users having no administrator priviledges, we recommend installing BamQuery with conda (link: https://docs.conda.io/en/latest/miniconda.html).
+
+1. First create a conda environment, activate it, and install all non-python dependencies:
+
+        conda create -n BQ python=3
+        conda activate BQ
+        conda install -y -c conda-forge r-ggplot2=3.3.6
+        conda install -y -c conda-forge r-data.table
+        conda install -y -c bioconda bedtools
+        conda install -y -c bioconda star=2.7.9a
+        
+2. Then create a python virtual environment, activate it, and install all python dependencies:
+
+        cd ${INSTALLDIR}
+        python3 -m venv env
+        source ${$INSTALLDIR}/env/bin/activate
+        pip install --upgrade pip
+        pip install pandas
+        pip install pysam
+        pip install pathos
+        pip install xlsxwriter
+        pip install seaborn
+        pip install billiard
+        pip install scipy
+        
+3. Launch the analysis:
+
+        conda activate BQ
+        source ${$INSTALLDIR}/env/bin/activate
+        python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
+        
+
+
+<h4>Option 2: Installation from source</h4>
+
+1. Download Python 3 and creare a virtual environment. Python: https://www.python.org/
 
         python3 -m venv bamquery-venv
         source $INSTALLDIR/bamquery-venv/bin/activate
         
-<h4>3.a. Install python packages in the virtual environment</h4>
+2. Install python packages in the virtual environment</h4>
 
         pip install --upgrade pip
         pip install pandas
@@ -121,27 +158,20 @@ Python: https://www.python.org/
         pip install numpy
         pip install scipy
         
-        
----------------------
 
-**4. Install external dependencies so that their binaries are available in your $PATH:**
+3. Install external dependencies so that their binaries are available in your $PATH:</h3>
 
-STAR 2.7.9a: https://github.com/alexdobin/STAR
+* STAR 2.7.9a: https://github.com/alexdobin/STAR
 
-bedtools: https://bedtools.readthedocs.io/en/latest/
+* bedtools: https://bedtools.readthedocs.io/en/latest/
 
-R: https://www.r-project.org/
+* R: https://www.r-project.org/ , Required R packages: ggplot2, data.table
 
-Required R packages: ggplot2, data.table
 
---------------------------
-
-**5. Launch the analysis**
+4. Launch the analysis</h3>
 
         python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
         
-
-
 
 
 --------------------------
@@ -162,13 +192,13 @@ A docker container is also available to provide a self contained working environ
 
 <h3>2. Download the docker image:</h3>
 
-        wget https://bamquery.iric.ca/download/bamquery-2022-12-14.tar.gz
+        wget https://bamquery.iric.ca/download/bamquery-2022-12-22.tar.gz
         
 ------------------------       
 <h3>3. Install the docker image (requires sudo access):</h3>
         
-        gunzip bamquery-2022-12-14.tar.gz
-        sudo docker load --input bamquery-2022-12-14.tar
+        gunzip bamquery-2022-12-22.tar.gz
+        sudo docker load --input bamquery-2022-12-22.tar
         
 ------------------------        
 <h3>4. Install required library files within $INSTALLDIR:</h3>
