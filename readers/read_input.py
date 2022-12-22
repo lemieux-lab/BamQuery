@@ -79,18 +79,21 @@ class ReadInputFile:
 					peptide_type = line[1].strip()
 					#if not self.evaluate_cs_ntd(peptide_type):
 					#	raise Exception("You must provide the peptide type for peptide in the peptide mode instead of the Coding sequence. Otherwise, add the peptide type to evaluate the peptide in CS mode. ", peptide)
-					if peptide not in self.all_mode_peptide and (len(peptide)>=8 and len(peptide) <= 11):
-						self.peptide_mode[peptide] = ['','','',peptide_type]
-						self.all_mode_peptide[peptide] = peptide_type
-						get_info_from_peptide_line(peptide_type, peptide)
-					else:
-						peptide_type_aux = self.peptide_mode[peptide][-1]
-						if peptide_type not in peptide_type_aux and (len(peptide)>=8 and len(peptide) <= 11):
-							self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
-							peptide_type = peptide_type_aux+';'+peptide_type
+					if (len(peptide)>=8 and len(peptide) <= 11):
+						if peptide not in self.all_mode_peptide :
+							self.peptide_mode[peptide] = ['','','',peptide_type]
 							self.all_mode_peptide[peptide] = peptide_type
-							self.peptide_mode[peptide][-1] = peptide_type
 							get_info_from_peptide_line(peptide_type, peptide)
+						else:
+							peptide_type_aux = self.peptide_mode[peptide][-1]
+							if peptide_type not in peptide_type_aux :
+								self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
+								peptide_type = peptide_type_aux+';'+peptide_type
+								self.all_mode_peptide[peptide] = peptide_type
+								self.peptide_mode[peptide][-1] = peptide_type
+								get_info_from_peptide_line(peptide_type, peptide)
+					else:
+						self.super_logger.info('Skipping peptide : %d because its length. Peptide should be between 8 and 11 aa.', len(peptide))
 											
 				elif len(line) == 3:
 					if len (line[1].strip()) == 1:
@@ -101,18 +104,21 @@ class ReadInputFile:
 						peptide_type = line[2].strip()
 						cs, peptide = self.get_local_reference(region, strand)
 
-						if peptide not in self.all_mode_peptide and (len(peptide)>=8 and len(peptide) <= 11):
-							self.region_quantification_mode[peptide] = [cs, region, strand, peptide_type]
-							self.all_mode_peptide[peptide] = peptide_type
-							get_info_from_peptide_line(peptide_type, peptide)
-						else:
-							peptide_type_aux = self.region_quantification_mode[peptide][-1]
-							if peptide_type not in peptide_type_aux and (len(peptide)>=8 and len(peptide) <= 11):
-								self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
-								peptide_type = peptide_type_aux+';'+peptide_type
+						if (len(peptide)>=8 and len(peptide) <= 11):
+							if peptide not in self.all_mode_peptide :
+								self.region_quantification_mode[peptide] = [cs, region, strand, peptide_type]
 								self.all_mode_peptide[peptide] = peptide_type
-								self.region_quantification_mode[peptide][-1] = peptide_type
 								get_info_from_peptide_line(peptide_type, peptide)
+							else:
+								peptide_type_aux = self.region_quantification_mode[peptide][-1]
+								if peptide_type not in peptide_type_aux:
+									self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
+									peptide_type = peptide_type_aux+';'+peptide_type
+									self.all_mode_peptide[peptide] = peptide_type
+									self.region_quantification_mode[peptide][-1] = peptide_type
+									get_info_from_peptide_line(peptide_type, peptide)
+						else:
+							self.super_logger.info('Skipping peptide : %d because its length. Peptide should be between 8 and 11 aa.', len(peptide))
 					else:
 						peptide = line[0].strip()
 						cs = line[1].strip()
@@ -153,13 +159,13 @@ class ReadInputFile:
 						raise Exception("Sorry, You must provide an appropriate strand, either + (Forward) or - (Backward) for peptide ", peptide)
 					peptide_type = line[4].strip()
 
-					if peptide not in self.all_mode_peptide and (len(peptide)>=8 and len(peptide) <= 11):
+					if peptide not in self.all_mode_peptide :
 						self.manual_mode[peptide] = [cs, position, strand, peptide_type]
 						self.all_mode_peptide[peptide] = peptide_type
 						get_info_from_peptide_line(peptide_type, peptide)
 					else:
 						peptide_type_aux = self.manual_mode[peptide][-1]
-						if peptide_type not in peptide_type_aux and (len(peptide)>=8 and len(peptide) <= 11):
+						if peptide_type not in peptide_type_aux :
 							self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
 							peptide_type = peptide_type_aux+';'+peptide_type
 							self.all_mode_peptide[peptide] = peptide_type
