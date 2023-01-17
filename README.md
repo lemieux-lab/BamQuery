@@ -121,7 +121,7 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 
         cd ${INSTALLDIR}
         python3 -m venv env
-        source ${$INSTALLDIR}/env/bin/activate
+        source ${INSTALLDIR}/env/bin/activate
         pip install --upgrade pip
         pip install pandas
         pip install pysam
@@ -134,8 +134,8 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 3. Launch the analysis:
 
         conda activate BQ
-        source ${$INSTALLDIR}/env/bin/activate
-        python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
+        source ${INSTALLDIR}/env/bin/activate
+        python3 ${INSTALLDIR}/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
         
 
 
@@ -144,7 +144,7 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 1. Download Python 3 and creare a virtual environment. Python: https://www.python.org/
 
         python3 -m venv bamquery-venv
-        source $INSTALLDIR/bamquery-venv/bin/activate
+        source ${INSTALLDIR}/env/bin/activate
         
 2. Install python packages in the virtual environment</h4>
 
@@ -165,12 +165,12 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 
 * bedtools: https://bedtools.readthedocs.io/en/latest/
 
-* R: https://www.r-project.org/ , Required R packages: ggplot2, data.table
+* R: https://www.r-project.org/, required R packages: ggplot2, data.table
 
 
 4. Launch the analysis</h3>
 
-        python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
+        python3 ${INSTALLDIR}/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
         
 
 
@@ -214,7 +214,7 @@ Please, follow the instructions in step 2 enumerated above.
         -v $INSTALLDIR/lib:/opt/bamquery/lib \
         -v $DATAFOLDER:$DATAFOLDER  \
         -v $PWD:$PWD \
-        iric/bamquery:0.2 python3 /opt/bamquery/BamQuery/BamQuery.py path_to_input_folder name_exp
+        iric/bamquery:0.2 python3 /opt/bamquery/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
         
         
 making sure to map any required folder mentionned in the input files (BAM locations, input folder) so that these paths may be available from within the container. 
