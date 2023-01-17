@@ -63,7 +63,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		command = 'ulimit -s 8192; STAR --runThreadN '+str(threads)+\
 				' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
 				' --alignEndsType EndToEnd --sjdbOverhang 32 --alignSJDBoverhangMin 1 --alignSJoverhangMin 10000'+\
-				' --outFilterMismatchNmax 4 --winAnchorMultimapNmax '+str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
+				' --outFilterMismatchNmax 4 --outFilterIntronMotifs RemoveNoncanonicalUnannotated --scoreGapNoncan -50 --outFilterType BySJout --winAnchorMultimapNmax '+str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
 				' --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD --limitOutSJcollapsed 5000000'+\
 				' --limitOutSAMoneReadBytes '+str(limitOutSAMoneReadBytes) +\
 				' --outFilterMultimapScoreRange '+str(outFilterMultimapScoreRange)+' --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \

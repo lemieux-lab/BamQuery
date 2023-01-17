@@ -8,7 +8,7 @@ __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
-def get_counts_sample(bam, peptide_alignment, sequences, overlap):
+def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 		
 	name_sample = bam[0]
 	bam_file = bam[1][0]
@@ -21,6 +21,7 @@ def get_counts_sample(bam, peptide_alignment, sequences, overlap):
 	strand = peptide_alignment.split('_')[2]
 
 	chr = alignment.split(':')[0]
+	chr = references[chr]
 	
 	region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
 

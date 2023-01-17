@@ -36,10 +36,6 @@ g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
 g = g + scale_color_manual(values=c("FALSE"="grey", "TRUE"="black"))
 g = g + guides(color = guide_legend(override.aes = list(fill = "white"))) 
 
-g = g + scale_color_manual(values=c("FALSE"="grey", "TRUE"="black"))
-g = g + guides(color = guide_legend(override.aes = list(fill = "white"))) 
-
-
 if (grepl('TPM', label)) {
   g = g + scale_fill_gradient(low = 'snow1', high = 'lightcoral', na.value = 'white')
   }else{

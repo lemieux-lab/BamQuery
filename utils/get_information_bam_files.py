@@ -1,6 +1,5 @@
-import os, subprocess, getpass, pickle, os, pysam, csv
-from os import listdir
-from os.path import isfile, join
+import os, subprocess, getpass, pickle, csv
+from os.path import join
 import pandas as pd
 import inspect, sys
 

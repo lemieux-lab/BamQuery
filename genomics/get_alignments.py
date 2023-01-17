@@ -157,6 +157,13 @@ def read_sam_file(sam_file):
 	name_path = sam_file+'.dic'
 	with open(name_path, 'wb') as handle:
 		pickle.dump(alignments_by_chromosome_strand, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	
+	path_to_save_list = '/'.join(sam_file.split('/')[:-1])+'/references_chrs.pkl'
+	bam_file_ref = pysam.AlignmentFile(sam_file, "rb")
+	references = bam_file_ref.header.references
+	bam_file_ref.close()
+	with open(path_to_save_list, "wb") as f:
+		pickle.dump(references, f)
 
 	return alignments_by_chromosome_strand
 
@@ -466,8 +473,17 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	if mouse:
 		if dbSNP == 'mouse_GRCm38':
 			path_to_db = path_to_lib+'/snps/snps_dics_mouse_GRCm38/'
+			exists_db = os.path.exists(path_to_db) 
+			if not exists_db:
+				path_to_db = ''
+				super_logger.info('dbSNPs for the M24 mouse genome is not found in the lib folder. If you want to use snps, follow the instructions at https://bamquery.iric.ca/documentation/installation.html to download snps_mouse_GRCm38.')
 		if dbSNP == 'mouse_GRCm39':
 			path_to_db = path_to_lib+'/snps/snps_dics_mouse_GRCm39/'
+			exists_db = os.path.exists(path_to_db) 
+			if not exists_db:
+				path_to_db = ''
+				super_logger.info('dbSNPs for the M30 mouse genome is not found in the lib folder. If you want to use snps, follow the instructions at https://bamquery.iric.ca/documentation/installation.html to download snps_mouse_GRCm39.')
+		
 	elif dbSNP == 0 :
 		path_to_db = ''
 	elif dbSNP == 149:

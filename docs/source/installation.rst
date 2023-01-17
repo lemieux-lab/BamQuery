@@ -114,7 +114,7 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 
         cd ${INSTALLDIR}
         python3 -m venv env
-        source ${$INSTALLDIR}/env/bin/activate
+        source ${INSTALLDIR}/env/bin/activate
         pip install --upgrade pip
         pip install pandas
         pip install pysam
@@ -129,8 +129,8 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 .. code::
 
         conda activate BQ
-        source ${$INSTALLDIR}/env/bin/activate
-        python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
+        source ${INSTALLDIR}/env/bin/activate
+        python3 ${INSTALLDIR}/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
         
 
 Option 2: Installation from source
@@ -141,7 +141,7 @@ Option 2: Installation from source
 .. code::
 
         python3 -m venv bamquery-venv
-        source $INSTALLDIR/bamquery-venv/bin/activate
+        source ${INSTALLDIR}/bamquery-venv/bin/activate
 
 2. Install python packages in the virtual environment |br|
 
@@ -169,7 +169,7 @@ R: https://www.r-project.org/ , required R packages: ggplot2, data.table |br|
 
 .. code::
 
-        python3 $INSTALLDIR/BamQuery/BamQuery.py path_to_input_folder name_exp
+        python3 ${INSTALLDIR}/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
 
 
 

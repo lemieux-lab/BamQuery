@@ -16,7 +16,7 @@ The light mode of BamQuery was designed to perform a quick search for peptide ex
 
 .. code::
 
-	BamQuery.py ./normal_mode_example/Input normal_mode_example --light
+	BamQuery.py ./normal_mode_example/Input normal_mode_example v38_104 --light
 
 
 As for normal mode, the input folder `path_to_input_folder` must containt the files : **BAM_directories.tsv** and **peptides.tsv**.

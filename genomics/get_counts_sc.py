@@ -15,7 +15,8 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 class GetCountsSC:
 
 	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger, threads):
-		self.path_to_output_folder = path_to_output_folder+'res/'
+		self.path_to_output_folder = path_to_output_folder
+		self.path_to_output_folder_res = path_to_output_folder+'res/'
 		self.name_exp = name_exp
 		self.mode = mode
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
@@ -47,8 +48,8 @@ class GetCountsSC:
 	
 		df_counts = pd.DataFrame()
 		
-		rna_sc_count_path = self.path_to_output_folder+self.name_exp+'_rna_sc_count.csv'
-		rna_sc_count_all_alignments_path = self.path_to_output_folder+self.name_exp+'_rna_sc_count_All_alignments.csv'
+		rna_sc_count_path = self.path_to_output_folder_res+self.name_exp+'_rna_sc_count.csv'
+		rna_sc_count_all_alignments_path = self.path_to_output_folder_res+self.name_exp+'_rna_sc_count_All_alignments.csv'
 		
 		exists_rna_sc = os.path.exists(rna_sc_count_path)
 		
@@ -94,10 +95,6 @@ class GetCountsSC:
 				list_bam_files_order.append(name_sample)
 				index_sample += 1
 
-			def get_index(sample):
-				index = list_bam_files_order.index(sample)
-				return index + 1
-
 			total_samples = len(list_bam_files_order)
 
 			keys = alignment_information_sc.keys()
@@ -124,6 +121,17 @@ class GetCountsSC:
 
 			pool = ProcessPool(nodes=self.threads)
 
+			with open(self.path_to_output_folder+'/genome_alignments/references_chrs.pkl', "rb") as f:
+				references_chrs = pickle.load(f)
+
+			digits_bam_file_BQ_reference = []
+			for chr in references_chrs:
+				l = [x for x in chr if x.isdigit()]
+				key = ''.join(l)
+				if len(l) == 0:
+					key = chr
+				digits_bam_file_BQ_reference.append(key)
+
 			cell_lines = set()
 
 			for idx, bam_file in enumerate(info_bams):
@@ -131,8 +139,29 @@ class GetCountsSC:
 				if idx > last_treated_bam_file:
 
 					t0_bam_file = time.time()
+
+					bam_file_path = bam_file[1][0]
+					try:
+						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb")
+						has_header = True
+					except ValueError as e:
+						has_header = False
+
+					if has_header:
+						reference = self.get_corresponding_references(bam_file_ref.header.references, references_chrs, digits_bam_file_BQ_reference)
+						bam_file_ref.close()
+					else:
+						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb", check_sq=False)
+						references = set()
+						for alignment in bam_file_ref.fetch():
+							references.add(bam_file_ref.getrname(alignment.reference_id))
+						reference = self.get_corresponding_references(list(references))
+						bam_file_ref.close()
+
+					references = [reference] * len(keys)
+
 					bams = [bam_file] * len(keys)
-					results = pool.map(self.get_counts_sample, bams, keys, values)
+					results = pool.map(self.get_counts_sample, bams, keys, values, references)
 					not_permission = False
 
 					for res in results:
@@ -275,7 +304,7 @@ class GetCountsSC:
 		return df_counts, alignment_information_sc, df_alignments
 
 
-	def get_counts_sample(self, bam, peptide_alignment, sequences):
+	def get_counts_sample(self, bam, peptide_alignment, sequences, references):
 		
 		name_sample = bam[0]
 		bam_file = bam[1][0]
@@ -288,12 +317,14 @@ class GetCountsSC:
 		strand = peptide_alignment.split('_')[2]
 
 		chr = alignment.split(':')[0]
+		chr = references[chr]
 		
 		region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
 
 		pos = alignment.split(':')[1].split('|')
 		pos_set = []
 		splice_pos = set()
+
 		for i, chunck in enumerate(pos):
 			ini = int(chunck.split('-')[0])
 			fini = int(chunck.split('-')[1])
@@ -542,4 +573,44 @@ class GetCountsSC:
 		#print ('Total ', total)
 		
 		return contReads_to_return
+	
+	def get_corresponding_references(self, references, references_chrs, digits_bam_file_BQ_reference):
+		reference_correspondence = {}
+		digits_bam_file_search = {}
+		no_digits = []
+		chr_string = 'chr' in references[0]
+		for chr in references:
+			l = [x for x in chr if x.isdigit()]
+			key = ''.join(l)
+			if len(l) == 0:
+				key = chr
+				no_digits.append(chr)
+			digits_bam_file_search[key] = chr
+		
+		for index, digits_reference in enumerate(digits_bam_file_BQ_reference):
+			references_chr = references_chrs[index]
+			try:
+				chr_bam_file = digits_bam_file_search[digits_reference]
+				reference_correspondence[references_chr] = chr_bam_file
+			except:
+				in_ = False
+				if not chr_string:
+					for index_2, i in enumerate(no_digits):
+						chr_name = 'chr'+i
+						if chr_name == references_chr:
+							reference_correspondence[references_chr] = i
+							in_ = True
+							no_digits.pop(index_2)
+							break
+					if not in_:
+						in__ = False
+						for index_2, i in enumerate(no_digits):
+							if i == 'MT' and references_chr == 'chrM':
+								reference_correspondence[references_chr] = i
+								in__ = True
+								break
+						if not in__:
+							self.super_logger.info('Uknown Chromosome %s --> Regions in this chromosome will be associated with a count of zero.', references_chr)
+
+		return reference_correspondence
 

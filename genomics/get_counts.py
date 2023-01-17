@@ -8,6 +8,7 @@ import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
 import numpy as np
+import pysam
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -51,7 +52,6 @@ class GetCounts:
 				self.alignment_information_path = self.path_to_output_folder_alignments+'Alignments_information_ribo.dic'
 
 		
-
 	def get_coverage(self, perfect_alignments, bam_files_list, genome_version):
 
 		times = []
@@ -363,13 +363,43 @@ class GetCounts:
 
 			pool = ProcessPool(nodes=self.threads)
 
+			with open(self.path_to_output_folder+'/genome_alignments/references_chrs.pkl', "rb") as f:
+				references_chrs = pickle.load(f)
+
+			digits_bam_file_BQ_reference = []
+			for chr in references_chrs:
+				l = [x for x in chr if x.isdigit()]
+				key = ''.join(l)
+				if len(l) == 0:
+					key = chr
+				digits_bam_file_BQ_reference.append(key)
+
 			for idx, bam_file in enumerate(info_bams):
 				
 				if idx > last_treated_bam_file:
 
 					t0_bam_file = time.time()
+					bam_file_path = bam_file[1][0]
+					try:
+						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb")
+						has_header = True
+					except ValueError as e:
+						has_header = False
+
+					if has_header:
+						reference = self.get_corresponding_references(bam_file_ref.header.references, references_chrs, digits_bam_file_BQ_reference)
+						bam_file_ref.close()
+					else:
+						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb", check_sq=False)
+						references = set()
+						for alignment in bam_file_ref.fetch():
+							references.add(bam_file_ref.getrname(alignment.reference_id))
+						reference = self.get_corresponding_references(list(references))
+						bam_file_ref.close()
+
+					references = [reference] * len(keys)
 					bams = [bam_file] * len(keys)
-					results = pool.map(get_counts_sample.get_counts_sample, bams, keys, values, [overlap]*len(values))
+					results = pool.map(get_counts_sample.get_counts_sample, bams, keys, values, references, [overlap]*len(values))
 					not_permission = False
 
 					for res in results:
@@ -499,4 +529,44 @@ class GetCounts:
 			pass
 		
 		return df_counts, alignment_information, df_alignments
+
+	def get_corresponding_references(self, references, references_chrs, digits_bam_file_BQ_reference):
+		reference_correspondence = {}
+		digits_bam_file_search = {}
+		no_digits = []
+		chr_string = 'chr' in references[0]
+		for chr in references:
+			l = [x for x in chr if x.isdigit()]
+			key = ''.join(l)
+			if len(l) == 0:
+				key = chr
+				no_digits.append(chr)
+			digits_bam_file_search[key] = chr
+		
+		for index, digits_reference in enumerate(digits_bam_file_BQ_reference):
+			references_chr = references_chrs[index]
+			try:
+				chr_bam_file = digits_bam_file_search[digits_reference]
+				reference_correspondence[references_chr] = chr_bam_file
+			except:
+				in_ = False
+				if not chr_string:
+					for index_2, i in enumerate(no_digits):
+						chr_name = 'chr'+i
+						if chr_name == references_chr:
+							reference_correspondence[references_chr] = i
+							in_ = True
+							no_digits.pop(index_2)
+							break
+					if not in_:
+						in__ = False
+						for index_2, i in enumerate(no_digits):
+							if i == 'MT' and references_chr == 'chrM':
+								reference_correspondence[references_chr] = i
+								in__ = True
+								break
+						if not in__:
+							self.super_logger.info('Uknown Chromosome %s --> Regions in this chromosome will be associated with a count of zero.', references_chr)
+
+		return reference_correspondence
 

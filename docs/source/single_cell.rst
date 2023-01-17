@@ -14,7 +14,7 @@ BamQuery single cell was designed to perform searches in BAM files from single-c
 
 .. code::
 
-	BamQuery.py ./sc_example/Input sc_example --sc
+	BamQuery.py ./sc_example/Input sc_example v38_104 --sc
 
 As for normal mode, the input folder `path_to_input_folder` must containt the files : **BAM_directories.tsv** and **peptides.tsv**.
 

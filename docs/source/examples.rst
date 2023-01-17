@@ -24,7 +24,7 @@ normal mode example
 
 .. code::
 
-	BamQuery.py ./normal_mode_example/Input normal_mode_example 
+	BamQuery.py ./normal_mode_example/Input normal_mode_example v38_104
 
 Input folder `path_to_input_folder` containing the files : **BAM_directories.tsv** and **peptides.tsv**. 
 Please download BAM_directories.tsv and peptides.tsv to access an example of the format of these files.

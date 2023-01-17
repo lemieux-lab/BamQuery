@@ -19,7 +19,7 @@ In this mode, instead of BAM_directories.tsv BamQuery expects a BAM_ribo_directo
 
 .. code::
 
-	BamQuery.py ./translation_example/Input translation_example --mode translation
+	BamQuery.py ./translation_example/Input translation_example v38_104 --mode translation
 
 Input folder `path_to_input_folder` must containt the files : **BAM_ribo_directories.tsv** and **peptides.tsv**.
 

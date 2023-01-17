@@ -56,14 +56,13 @@ class BamQuery:
 			self.run_bam_query_translation_mode(bam_files_logger)
 
 
+
 	def run_bam_query_sc_mode(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
 		
 		name_path_normal = self.path_to_output_folder+'res/'+self.name_exp+'_rna_count.csv'
 		
 		exists_normal = os.path.exists(name_path_normal) 
-		
-		name_path = self.path_to_output_folder+'res/'+self.name_exp+'_rna_count.csv'
 		
 		if not exists_normal :
 			
@@ -184,12 +183,7 @@ class BamQuery:
 					name_path = self.path_to_output_folder +'/alignments/Alignments_information_light_rna.dic'
 			
 			with open(name_path, 'rb') as fp:
-				try:
-					self.perfect_alignments = pickle.load(fp)
-				except ValueError:
-					import pickle5
-					self.perfect_alignments = pickle5.load(fp)
-
+				self.perfect_alignments = pickle.load(fp)
 		
 	def run_bam_query_translation_mode(self, bam_files_logger):
 		self.common_to_modes(bam_files_logger)
@@ -576,14 +570,14 @@ def main(argv):
 
 	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse, t)
 	
-
+	print ('========== BamQuery : Done! ============ ')
 	if not dev:
 		try:
 			os.remove(path_to_output_folder+"alignments/Alignments_information.dic")
+			os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
 		except:
 			pass
 		os.remove(path_to_output_folder+"alignments/alignments_summary_information.pkl")
-		os.remove(path_to_output_folder+"alignments/info_treated_bam_files.pkl")
 		shutil.rmtree(path_to_output_folder+'genome_alignments')
 		
 		if sc:
