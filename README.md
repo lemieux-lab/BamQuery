@@ -8,7 +8,7 @@ BamQuery can be installed as described here or tested with our [online portal](h
 
 The preprint of our article can be found on BioRXiv: https://doi.org/10.1101/2022.10.07.510944
 
-For detailed usage instructions, see our website: https://bamquery.iric.ca/
+For detailed usage instructions, see the documentation on our web page: https://bamquery.iric.ca/
 
 BamQuery was designed and developed by Gregory Ehx (GIGA Institute, University of Liege) and Maria Virginia Ruiz Cuevas (Institute for Research in Immunology and Cancer (IRIC), University of Montreal).
 
