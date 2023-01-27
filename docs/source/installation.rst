@@ -94,42 +94,38 @@ Finally, you need to:
 Option 1: Installation with Conda
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For users having no administrator priviledges, we recommend installing BamQuery with conda (link: https://docs.conda.io/en/latest/miniconda.html). |br|
+For users having no administrator priviledges, we recommend installing BamQuery with conda: https://docs.conda.io/en/latest/miniconda.html |br|
 
-1. First create a conda environment, activate it, and install all non-python dependencies: |br|
+1. First create a conda environment and activate it: |br|
 
 .. code::
 
         conda create -n BQ python=3
         conda activate BQ
-        conda install -y -c conda-forge r-ggplot2=3.3.6
-        conda install -y -c conda-forge r-data.table
-        conda install -y -c bioconda bedtools
-        conda install -y -c bioconda star=2.7.9a
 
 
-2. Then create a python virtual environment, activate it, and install all python dependencies: |br|
+2. Then install all dependencies: |br|
 
 .. code::
 
-        cd ${INSTALLDIR}
-        python3 -m venv env
-        source ${INSTALLDIR}/env/bin/activate
-        pip install --upgrade pip
-        pip install pandas
-        pip install pysam
-        pip install pathos
-        pip install xlsxwriter
-        pip install seaborn
-        pip install billiard
-        pip install scipy
+        conda install -y -c bioconda pysam
+        conda install -y -c anaconda pandas
+        conda install -y -c conda-forge pathos
+        conda install -y -c conda-forge xlsxwriter
+        conda install -y -c anaconda seaborn
+        conda install -y -c conda-forge billiard
+        conda install -y -c anaconda scipy
+        conda install -y -c bioconda bedtools
+        conda install -y -c bioconda star=2.7.9a
+        conda install -y -c conda-forge mamba
+        mamba install -y -c conda-forge r-ggplot2
+        mamba install -y -c conda-forge r-data.table
         
 3. Launch the analysis: |br|
 
 .. code::
 
         conda activate BQ
-        source ${INSTALLDIR}/env/bin/activate
         python3 ${INSTALLDIR}/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
         
 
