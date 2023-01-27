@@ -1,4 +1,4 @@
-# BamQuery: a proteogenomic tool for the exploration of the immunopeptidome and prioritize actionable tumor antigens
+# BamQuery: a proteogenomic tool to explore the immunopeptidome and prioritize actionable tumor antigens
 
 BamQuery is a computational pipeline that counts all RNA-seq reads that can code for a given peptide (8 to 11 residues) in chosen RNA-seq samples (single or bulk). The strength of BamQuery lies in its ability to quantify RNA expression from any genomic region: protein-coding exons or non-coding genomic regions, annotated or not. Briefly, it reverse-translates peptides into all possible coding sequences, aligns these sequences on the genome (human or mouse) with STAR, retains only regions (spliced or not) that have perfect alignments with the coding sequence, and queries (grep) the coding sequences at their respective coding regions in the RNA-seq sample (bam file) of interest. All primary reads (samtools view -F 256) that can code for the peptide are counted, normalized on the total primary read number of the sample, and listed in a detailed report.
 
