@@ -94,7 +94,7 @@ Finally, you need to:
 Option 1: Installation with Conda
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For users having no administrator priviledges, we recommend installing BamQuery with conda (link: https://docs.conda.io/en/latest/miniconda.html). |br|
+For users having no administrator priviledges, we recommend installing BamQuery with conda: https://docs.conda.io/en/latest/miniconda.html |br|
 
 1. First create a conda environment and activate it: |br|
 
@@ -105,8 +105,9 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 
 2. Then install all dependencies:
 
+2. Then install all dependencies: |br|
+
 .. code::
-        
         conda install -y -c bioconda pysam
         conda install -y -c anaconda pandas
         conda install -y -c conda-forge pathos
@@ -126,6 +127,7 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 .. code::
 
         conda activate BQ
+        source ${INSTALLDIR}/env/bin/activate
         python3 ${INSTALLDIR}/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
         
 
