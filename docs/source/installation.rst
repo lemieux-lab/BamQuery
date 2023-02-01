@@ -88,48 +88,44 @@ Finally, you need to:
         tar vxzf SNPS_RELEASE.tar.gz
 
 
-3. Install python 3 and create a virtual environment
-####################################################
+3. Create a virtual environment and install dependencies
+#########################################################
 
 Option 1: Installation with Conda
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For users having no administrator priviledges, we recommend installing BamQuery with conda (link: https://docs.conda.io/en/latest/miniconda.html). |br|
 
-1. First create a conda environment, activate it, and install all non-python dependencies: |br|
+1. First create a conda environment and activate it: |br|
 
 .. code::
 
-        conda create -n BQ python=3
+        conda create -n BQ
         conda activate BQ
-        conda install -y -c conda-forge r-ggplot2=3.3.6
-        conda install -y -c conda-forge r-data.table
+
+2. Then install all dependencies:
+
+.. code::
+        
+        conda install -y -c bioconda pysam
+        conda install -y -c anaconda pandas
+        conda install -y -c conda-forge pathos
+        conda install -y -c conda-forge xlsxwriter
+        conda install -y -c anaconda seaborn
+        conda install -y -c conda-forge billiard
+        conda install -y -c anaconda scipy
         conda install -y -c bioconda bedtools
         conda install -y -c bioconda star=2.7.9a
+        conda install -y -c conda-forge mamba
+        mamba install -y -c conda-forge r-ggplot2
+        mamba install -y -c conda-forge r-data.table
 
-
-2. Then create a python virtual environment, activate it, and install all python dependencies: |br|
-
-.. code::
-
-        cd ${INSTALLDIR}
-        python3 -m venv env
-        source ${INSTALLDIR}/env/bin/activate
-        pip install --upgrade pip
-        pip install pandas
-        pip install pysam
-        pip install pathos
-        pip install xlsxwriter
-        pip install seaborn
-        pip install billiard
-        pip install scipy
         
 3. Launch the analysis: |br|
 
 .. code::
 
         conda activate BQ
-        source ${INSTALLDIR}/env/bin/activate
         python3 ${INSTALLDIR}/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
         
 
@@ -162,7 +158,7 @@ Option 2: Installation from source
 
 STAR 2.7.9a: https://github.com/alexdobin/STAR |br|
 bedtools: https://bedtools.readthedocs.io/en/latest/ |br|
-R: https://www.r-project.org/ , required R packages: ggplot2, data.table |br|
+R: https://www.r-project.org/, required R packages: ggplot2, data.table |br|
 
 
 4. Launch the analysis
