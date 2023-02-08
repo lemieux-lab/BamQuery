@@ -265,11 +265,13 @@ class GetInformationBamFiles:
 
 			os.remove(path_to_lock_file)
 			self.bam_files_logger.info('Unlock Bam_files_info')
-				
+
+			in_ = False	
 			for bam_file in files_with_not_permission:
 				if bam_file in initial_list_paths:
 					self.bam_files_logger.info('Skipping BAM file : %s. This Bam file has access denied or the path does not exist..', bam_file) 
-			if len(files_with_not_permission) > 0:
+					in_ = True
+			if in_:
 				raise NeedMoreInfo("\nBefore proceeding, please verify that you have the access granted to query all BAM files or that the path to these files exists. \nSee the log file Information_BAM_directories.log for more information about BAM files with limited access." )
 		else:
 			with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'rb') as fp:
