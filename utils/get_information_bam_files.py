@@ -269,7 +269,8 @@ class GetInformationBamFiles:
 			for bam_file in files_with_not_permission:
 				if bam_file in initial_list_paths:
 					self.bam_files_logger.info('Skipping BAM file : %s. This Bam file has access denied or the path does not exist..', bam_file) 
-
+			if len(files_with_not_permission) > 0:
+				raise NeedMoreInfo("\nBefore proceeding, please verify that you have the access granted to query all BAM files or that the path to these files exists. \nSee the log file Information_BAM_directories.log for more information about BAM files with limited access." )
 		else:
 			with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'rb') as fp:
 				bam_files_list = pickle.load(fp)
@@ -303,7 +304,7 @@ class GetInformationBamFiles:
 						tissue_name = str(row['Tissue'])
 						tissue_type = str(row['Tissue_type'])
 						short_list = str(row['Short_list']).lower()
-						if sample != 'nan' and tissue_name != 'nan' and tissue_type != 'nan':
+						if sample != 'nan' and tissue_name != 'nan' and tissue_type != 'nan' and (short_list != 'yes' or short_list != 'no'):
 							dictionary_total_reads_bam_files[sample][2] = tissue_name
 							dictionary_total_reads_bam_files[sample][3] = tissue_type
 							dictionary_total_reads_bam_files[sample][4] = short_list
@@ -312,11 +313,11 @@ class GetInformationBamFiles:
 						else:
 							os.remove(path_to_lock_file)
 							self.bam_files_logger.info('Unlock Bam_files_info')
-							raise NeedMoreInfo("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+							raise NeedMoreInfo("\nBefore to continue you must provide all the tissue information for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist (yes/no)." )
 					except Exception :
 						os.remove(path_to_lock_file)
 						self.bam_files_logger.info('Unlock Bam_files_info')
-						raise NeedMoreInfo("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+						raise NeedMoreInfo("\nBefore to continue you must provide all the tissue information for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist (yes/no)." )
 				
 				with open(path_to_all_counts_file, 'wb') as handle:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -354,7 +355,7 @@ class GetInformationBamFiles:
 				writer = csv.writer(csvFile)
 				writer.writerows(data)
 
-			raise NeedMoreInfo("\nBefore to continue you must provide the tissue type for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist." )
+			raise NeedMoreInfo("\nBefore to continue you must provide all tissue information for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist (yes/no)." )
 
 		return bam_files_list
 	

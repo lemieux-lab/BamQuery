@@ -19,10 +19,16 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 	peptide = peptide_alignment.split('_')[0]
 	alignment = peptide_alignment.split('_')[1]
 	strand = peptide_alignment.split('_')[2]
+	to_return = [[peptide, alignment, name_sample, strand]]
 
 	chr = alignment.split(':')[0]
-	chr = references[chr]
-	
+	try:
+		chr = references[chr]
+	except:
+		for sequence in sequences:
+			to_return.append([0, sequence])
+		return to_return
+
 	region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
 
 	pos = alignment.split(':')[1].split('|')
@@ -42,8 +48,6 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 	
 	#counts = get_depth_with_view_1(region_to_query, bam_file, library, sens, strand, sequences)
 
-	to_return = [[peptide, alignment, name_sample, strand]]
-	
 	for index, sequence in enumerate(sequences):
 		try:
 			count = counts[index]

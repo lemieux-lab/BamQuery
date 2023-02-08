@@ -9,6 +9,7 @@ from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
 import numpy as np
 import pysam
+import re
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -382,21 +383,16 @@ class GetCounts:
 					bam_file_path = bam_file[1][0]
 					try:
 						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb")
-						has_header = True
-					except ValueError as e:
-						has_header = False
-
-					if has_header:
-						reference = self.get_corresponding_references(bam_file_ref.header.references, references_chrs, digits_bam_file_BQ_reference)
+						references = bam_file_ref.header.references
 						bam_file_ref.close()
-					else:
+					except ValueError as e:
 						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb", check_sq=False)
 						references = set()
 						for alignment in bam_file_ref.fetch():
 							references.add(bam_file_ref.getrname(alignment.reference_id))
-						reference = self.get_corresponding_references(list(references))
 						bam_file_ref.close()
 
+					reference = self.get_corresponding_references(list(references), references_chrs, digits_bam_file_BQ_reference, bam_file_path)
 					references = [reference] * len(keys)
 					bams = [bam_file] * len(keys)
 					results = pool.map(get_counts_sample.get_counts_sample, bams, keys, values, references, [overlap]*len(values))
@@ -530,43 +526,95 @@ class GetCounts:
 		
 		return df_counts, alignment_information, df_alignments
 
-	def get_corresponding_references(self, references, references_chrs, digits_bam_file_BQ_reference):
+
+	def select_not_digits_no_special_chars(self, input_string):
+		return "".join(re.findall(r'[^\d\W]', input_string))
+
+	def is_contained(self, word, text):
+		return bool(re.search(f'(?<=\w){word}(?=\w)', text))
+	
+	def has_digits(self, input_string):
+		return bool(re.search(r'\d', input_string))
+
+	def get_corresponding_references(self, references, references_chrs, digits_bam_file_BQ_reference, bam_file_path):
 		reference_correspondence = {}
 		digits_bam_file_search = {}
 		no_digits = []
 		chr_string = 'chr' in references[0]
+		not_associated_chr_ref_bam_file = []
+		
 		for chr in references:
 			l = [x for x in chr if x.isdigit()]
 			key = ''.join(l)
 			if len(l) == 0:
 				key = chr
 				no_digits.append(chr)
-			digits_bam_file_search[key] = chr
-		
+			try:
+				digits_bam_file_search[key].append(chr)
+			except KeyError:
+				digits_bam_file_search[key] = [chr]
+				
 		for index, digits_reference in enumerate(digits_bam_file_BQ_reference):
 			references_chr = references_chrs[index]
 			try:
 				chr_bam_file = digits_bam_file_search[digits_reference]
-				reference_correspondence[references_chr] = chr_bam_file
+				if len(chr_bam_file) > 1:
+					intersection = set([references_chr]).intersection(set(chr_bam_file))
+					if intersection:
+						reference_correspondence[references_chr] = list(intersection)[0]
+					else:
+						for chr in chr_bam_file:
+							if self.is_contained_ignore_case(self.select_not_digits_no_special_chars(references_chr), self.select_not_digits_no_special_chars(chr)):
+								reference_correspondence[references_chr] = chr
+								break
+						not_associated_chr_ref_bam_file.append(references_chr)
+				else:
+					reference_correspondence[references_chr] = chr_bam_file[0]
+				
 			except:
 				in_ = False
-				if not chr_string:
-					for index_2, i in enumerate(no_digits):
-						chr_name = 'chr'+i
-						if chr_name == references_chr:
-							reference_correspondence[references_chr] = i
-							in_ = True
-							no_digits.pop(index_2)
-							break
-					if not in_:
-						in__ = False
-						for index_2, i in enumerate(no_digits):
+				if not self.has_digits(digits_reference):
+					if not chr_string:
+						for index, i in enumerate(no_digits):
 							if i == 'MT' and references_chr == 'chrM':
 								reference_correspondence[references_chr] = i
-								in__ = True
+								in_ = True
+								no_digits.pop(index)
+							else:
+								chr_name = 'chr'+i
+								if chr_name == references_chr:
+									reference_correspondence[references_chr] = i
+									in_ = True
+									no_digits.pop(index)
+							if in_:
 								break
-						if not in__:
-							self.super_logger.info('Uknown Chromosome %s --> Regions in this chromosome will be associated with a count of zero.', references_chr)
+								
+					else:
+						for index, i in enumerate(no_digits):
+							if ('MT' in i or 'M' in i) and references_chr == 'chrM':
+								reference_correspondence[references_chr] = i
+								in_ = True
+								no_digits.pop(index)
+							else: 
+								if i.lower() == references_chr.lower():
+									reference_correspondence[references_chr] = i
+									in_ = True
+									no_digits.pop(index)
+							if in_:
+								break
+
+				if not in_:
+					for digits_bam_file, list_chrs in digits_bam_file_search.items():
+						if digits_reference in digits_bam_file:
+							reference_correspondence[references_chr] = list_chrs[0]
+							in_ = True
+							break
+				if not in_:
+					not_associated_chr_ref_bam_file.append(references_chr)
+
+		if len(not_associated_chr_ref_bam_file):
+			chrs_not_asso = ','.join(not_associated_chr_ref_bam_file)
+			self.super_logger.info('It was not possible to associate these chromosomes in the genome annotations reference: %s to any chr in the bam file investigated: %s. \nRegions in these chromosomes will be associated with a count of zero.', chrs_not_asso, bam_file_path)
 
 		return reference_correspondence
 

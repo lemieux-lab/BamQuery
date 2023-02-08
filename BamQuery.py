@@ -597,7 +597,6 @@ def main(argv):
 
 		if light :
 			shutil.rmtree(path_to_output_folder+'res_light/temps_files')
-			shutil.rmtree(path_to_output_folder+'res_light/BED_files')
 			shutil.rmtree(path_to_output_folder+'res_light/AUX_files')
 			os.remove(path_to_output_folder+"alignments/Alignments_information_light_rna.dic")
 			os.remove(path_to_output_folder+"alignments/Alignments_information_light.dic")

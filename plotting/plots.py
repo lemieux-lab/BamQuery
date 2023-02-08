@@ -51,28 +51,6 @@ def get_heat_map(df, path_to_output_folder, mode, path_temps_file, name_exp, nam
 
 	if peptides_total < 400 and bam_files < 200:
 		
-		width = 10
-		heigth = 10
-		fontsize = 12
-		annot = True
-
-		if peptides_total > 60 :
-			heigth = 20
-			fontsize = 8
-			annot = False
-
-		if peptides_total > 120 :
-			fontsize = 5
-			
-		if bam_files > 30 :
-			width = 20
-			fontsize = 8
-			annot = False
-
-		if bam_files > 100 :
-			width = 50
-			sns.set(font_scale=0.5)
-
 		data = []
 		df.reset_index()
 		columns_names_bam_files = list(df.columns)[2:]
@@ -147,28 +125,6 @@ def get_heat_map_coverage(df, path_to_output_folder, path_temps_file, name_exp, 
 	
 	if peptides_total < 400 and bam_files < 200:
 		
-		width = 10
-		heigth = 10
-		fontsize = 12
-		annot = True
-
-		if peptides_total > 60 :
-			heigth = 20
-			fontsize = 8
-			annot = False
-
-		if peptides_total > 120 :
-			fontsize = 5
-			
-		if bam_files > 30 :
-			width = 20
-			fontsize = 8
-			annot = False
-
-		if bam_files > 100 :
-			width = 50
-			sns.set(font_scale=0.5)
-
 		data = []
 		df.reset_index()
 		columns_names_bam_files = list(df.columns)[2:]
