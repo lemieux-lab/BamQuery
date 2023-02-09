@@ -55,20 +55,19 @@ class GetInformationBamFiles:
 			self.path_to_output_bed_files_folder = path_to_output_folder+'res_translation/BED_files/'
 			self.path_to_output_aux_folder = path_to_output_folder+'res_translation/AUX_files/'
 
-			try:
-				bam_files = path_to_input_folder+'BAM_Ribo_directories.tsv'
+			bam_files = path_to_input_folder+'BAM_Ribo_directories.tsv'
+			exists = os.path.exists(bam_files)
+			if exists:
 				self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
-				#self.bam_ribo_files_list = self.get_info_ribo_bamfiles(bam_files)
-				
-			except FileNotFoundError:
-				self.bam_files_logger.info('If running translation mode you must include a list of Ribo Bam Files. The bam directories : %s doesn\'t exist ', path_to_input_folder+'BAM_Ribo_directories.tsv')
+			else:
+				self.bam_files_logger.info('If running translation mode you must include a list of Ribo Bam Files. The bam directories : %s doesn\'t exist ', bam_files)
 		else:
-			try:
-				bam_files = path_to_input_folder+'BAM_directories.tsv'
+			bam_files = path_to_input_folder+'BAM_directories.tsv'
+			exists = os.path.exists(bam_files)
+			if exists:
 				self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
-			
-			except FileNotFoundError:
-				self.bam_files_logger.info('The bam directories : %s doesn\'t exist ', path_to_input_folder+'BAM_directories.tsv')
+			else:
+				self.bam_files_logger.info('The bam directories : %s doesn\'t exist ', bam_files)
 
 			
 	def get_info_ribo_bamfiles(self, bam_files):
