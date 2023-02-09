@@ -323,7 +323,7 @@ class GetCounts:
 			else:
 				with open(self.alignment_information_path, 'rb') as fp:
 			 		alignment_information = pickle.load(fp)
-
+			
 			info_bams = []
 			bams = []
 

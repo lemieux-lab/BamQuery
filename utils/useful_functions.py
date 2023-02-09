@@ -4,10 +4,8 @@
 # [version 1; peer review: awaiting peer review]. 
 # F1000Research 2016, 5:381 (https://doi.org/10.12688/f1000research.8251.1)
 
+import types, copy
 
-
-# Translation tables
-# Ref: https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
 translTable = dict()
 
 # Standard Code (NCBI transl_table=1)
@@ -60,6 +58,13 @@ translTable['mt'] = {
 'GAT' : 'D', 'GAC' : 'D', 'GAA' : 'E', 'GAG' : 'E',
 'GGT' : 'G', 'GGC' : 'G', 'GGA' : 'G', 'GGG' : 'G'
 }
+
+polymorphicNucleotides = {
+			'R' : ['A','G'], 'Y' : ['C','T'], 'M': ['A','C'],
+			'K' : ['T','G'], 'W' : ['A','T'], 'S' : ['C','G'], 'B': ['C','G','T'],
+			'D' : ['A','G','T'], 'H' : ['A','C','T'], 'V' : ['A','C','G'], 'N': ['A','C','G','T']
+			}
+nucleotides = ['A', 'T', 'C', 'G']
 
 def complementTab(seq=[]):
 	"""returns a list of complementary sequence without inversing it"""

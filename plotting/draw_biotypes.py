@@ -1,5 +1,6 @@
 import plotting.plots as plots
 import gc
+import pandas as pd
 
 def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 

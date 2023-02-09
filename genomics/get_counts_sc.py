@@ -7,6 +7,7 @@ import utils.useful_functions as uf
 from itertools import repeat
 from operator import itemgetter
 import re
+from functools import reduce
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"

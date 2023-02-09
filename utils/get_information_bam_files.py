@@ -1,7 +1,7 @@
 import os, subprocess, getpass, pickle, csv
 from os.path import join
 import pandas as pd
-import inspect, sys
+import inspect, sys, pysam
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -193,7 +193,9 @@ class GetInformationBamFiles:
 						bam_files_found = [path]
 					else:
 						bam_files_found = self.search_bam_files(path)
-					
+
+					self.bam_files_logger.info('Total number of accessible bam files in the path %s  : %s ', path, str(len(bam_files_found)))
+
 					for bam_file_path in bam_files_found:
 
 						name_bam_file = "_".join(bam_file_path.split('/')[:-1][-2:])
@@ -254,7 +256,7 @@ class GetInformationBamFiles:
 							mod = True
 						else :
 							self.bam_files_logger.info('%s total reads : %s ', bam_file_path, str(count))
-
+					self.bam_files_logger.info('-----------')
 
 			with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'wb') as handle:
 				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)

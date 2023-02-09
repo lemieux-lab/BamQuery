@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import scipy.stats
-
+import matplotlib.colors as mcolors
+	
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -216,10 +217,7 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 def plot_pie_ere(title, outer_labels, outer_sizes, path_to_output_folder, name_exp, name, fontsize=12):
 	
 	number = len(outer_labels)
-	#a = np.random.random(number)
-	#cs = cm.Set1(np.arange(number)/(number * 1.0))
 	
-	import matplotlib.colors as mcolors
 	colors = random.choices(list(mcolors.CSS4_COLORS.values()),k = number)
 
 	fig, ax = plt.subplots(figsize=(11, 7)) #dpi=300) 
