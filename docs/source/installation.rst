@@ -108,6 +108,7 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 2. Then install all dependencies: |br|
 
 .. code::
+        
         conda install -y -c bioconda pysam
         conda install -y -c anaconda pandas
         conda install -y -c conda-forge pathos

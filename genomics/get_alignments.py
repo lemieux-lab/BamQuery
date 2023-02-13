@@ -8,6 +8,7 @@ import utils.useful_functions as uf
 import pickle
 from pathos.multiprocessing import ProcessPool
 import collections
+import pandas as pd
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -95,7 +96,7 @@ def get_local_reference(start, lenSeq, chr, strand, faFile):
 	return rang, seqReference
 
 
-def find_ranges(iterable):
+def find_ranges(chr, iterable, strand):
 	ranges = []
 	ordered = sorted(iterable)
 	toReturn = ''
@@ -108,7 +109,22 @@ def find_ranges(iterable):
 			toReturn += str(pos[0])+'-'+str(pos[1])+'|'
 
 	toReturn = toReturn[:-1]
-	return toReturn
+	in_ = False
+	return chr+':'+toReturn
+	# if '|' in toReturn:
+	# 	result = re.findall(r"\d+", toReturn)[1:-1]
+	# 	tuples = [(int(result[i]), int(result[i+1])) for i in range(0, len(result), 2)]
+			
+	# 	for tuple in tuples:
+	# 		annotated_sj = splice_junctions_annotated[(splice_junctions_annotated[0]==chr) & (splice_junctions_annotated[1]==tuple[0]+1)& (splice_junctions_annotated[2]==tuple[1]-1)] #& (splice_junctions_annotated[3]==strand)]
+	# 		if not annotated_sj.empty:
+	# 			in_ = True
+	# else:
+	# 	in_ = True
+	# if in_: 
+	# 	return chr+':'+toReturn
+	# else:
+	# 	return chr
 
 def read_sam_file(sam_file):
 	time0 = time.time()
@@ -158,12 +174,12 @@ def read_sam_file(sam_file):
 	with open(name_path, 'wb') as handle:
 		pickle.dump(alignments_by_chromosome_strand, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	
-	path_to_save_list = '/'.join(sam_file.split('/')[:-1])+'/references_chrs.pkl'
-	bam_file_ref = pysam.AlignmentFile(sam_file, "rb")
-	references = bam_file_ref.header.references
-	bam_file_ref.close()
-	with open(path_to_save_list, "wb") as f:
-		pickle.dump(references, f)
+	# path_to_save_list = '/'.join(sam_file.split('/')[:-1])+'/references_chrs.pkl'
+	# bam_file_ref = pysam.AlignmentFile(sam_file, "rb")
+	# references = bam_file_ref.header.references
+	# bam_file_ref.close()
+	# with open(path_to_save_list, "wb") as f:
+	# 	pickle.dump(references, f)
 
 	return alignments_by_chromosome_strand
 
@@ -199,13 +215,13 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 		lenSeq = len(MCS)
 
 		end = readStart+lenSeq-1
-		positions_trans = find_ranges(range(readStart, end+1))
-		range_trans_local = chr+':'+positions_trans
+		range_trans_local = find_ranges(chr, range(readStart, end+1), strand)
 		key_local = peptide+'_'+range_trans_local
 		
 		rang, operators, seq_reference_align = get_ranges(cigar, readStart, lenSeq, strand, chr, faFile)
-		positions_trans = find_ranges(rang)
-		range_trans = chr+':'+positions_trans
+		range_trans = find_ranges(chr, rang, strand)
+		if range_trans == chr:
+			continue
 		key = peptide+'_'+range_trans
 		
 		if key_local not in local_visited:
@@ -326,12 +342,9 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 			else:
 				pass
 
-	#if var:
 	new_sequence = "".join(list_seq_reference_local)
 	local_translation_peptide_aux = translation_seq(chr, new_sequence)
 	differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
-	#else:
-	#	differences_pep = []
 	
 	if len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
@@ -441,6 +454,7 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	global genomePathFai
 	global genomePath
 	global mode_translation
+	global splice_junctions_annotated
 
 	super_logger = super_logger_aux
 	var = var_aux
@@ -448,20 +462,27 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	if genome_version == 'v26_88': 
 		genomePathFai = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa.fai'
 		genomePath = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa'
+		splice_junctions = path_to_lib + 'genome_versions/genome_v26_88/Index_STAR_2.7.9a/sjdbList.fromGTF.out.tab'
 	elif genome_version == 'v33_99':
 		genomePathFai = path_to_lib + 'genome_versions/genome_v33_99/GRCh38.primary_assembly.genome.fa.fai'
 		genomePath = path_to_lib + 'genome_versions/genome_v33_99/GRCh38.primary_assembly.genome.fa'
+		splice_junctions = path_to_lib + 'genome_versions/genome_v33_99/Index_STAR_2.7.9a/sjdbList.fromGTF.out.tab'
 	else:
 		genomePathFai = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa.fai'
 		genomePath = path_to_lib + 'genome_versions/genome_v38_104/GRCh38.primary_assembly.genome.fa'
+		splice_junctions = path_to_lib + 'genome_versions/genome_v38_104/Index_STAR_2.7.9a/sjdbList.fromGTF.out.tab'
 
 	if mouse:
 		if genome_version == 'M24':
 			genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm38.primary_assembly.genome.fa.fai'
 			genomePath = path_to_lib + 'genome_versions/genome_mouse_m24/GRCm38.primary_assembly.genome.fa'
+			splice_junctions = path_to_lib + 'genome_versions/genome_mouse_m24/Index_STAR_2.7.9a/sjdbList.fromGTF.out.tab'
 		if genome_version == 'M30':
 			genomePathFai = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa.fai'
 			genomePath = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
+			splice_junctions = path_to_lib + 'genome_versions/genome_mouse_m30/Index_STAR_2.7.9a/sjdbList.fromGTF.out.tab'
+
+	splice_junctions_annotated = pd.read_csv(splice_junctions, header=None, sep='\t')
 
 	if mode == 'translation':
 		mode_translation = True

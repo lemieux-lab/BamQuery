@@ -60,14 +60,17 @@ class GetInformationBamFiles:
 			if exists:
 				self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
 			else:
-				self.bam_files_logger.info('If running translation mode you must include a list of Ribo Bam Files. The bam directories : %s doesn\'t exist ', bam_files)
+				self.bam_files_logger.info('If running translation mode you must include a list of Ribo Bam Files. The BAM_directories.tsv file %s doesn\'t exist, please provide this file and relaunch the query.', bam_files)
 		else:
 			bam_files = path_to_input_folder+'BAM_directories.tsv'
 			exists = os.path.exists(bam_files)
 			if exists:
 				self.bam_files_list = self.get_info_bamfiles(bam_files, strandedness, path_to_output_folder)
 			else:
-				self.bam_files_logger.info('The bam directories : %s doesn\'t exist ', bam_files)
+				self.bam_files_logger.info('The BAM_directories.tsv file %s doesn\'t exist, please provide this file and relaunch the query.', bam_files)
+				message = '\nThe BAM_directories.tsv file '+ bam_files+' doesn\'t exist, please provide this file and relaunch the query.'
+				raise NeedMoreInfo(message)
+
 
 			
 	def get_info_ribo_bamfiles(self, bam_files):
@@ -328,8 +331,8 @@ class GetInformationBamFiles:
 				os.remove(path_to_lock_file)
 				self.bam_files_logger.info('Unlock Bam_files_info')
 
-			with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'wb') as handle:
-				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
+				with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'wb') as handle:
+					pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			for sample, info_sample in bam_files_list.items():
 				bam_file_path = info_sample[0]

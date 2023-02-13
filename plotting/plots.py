@@ -192,7 +192,6 @@ def plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_t
 	kw = dict(arrowprops=dict(arrowstyle="-", color='black', linewidth=2),zorder=2, va="center")
 	plt.axis('equal')
 
-	
 	try:
 		for i, p in enumerate(wedges1):
 			ang = (p.theta2 - p.theta1)/2. + p.theta1 

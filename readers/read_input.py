@@ -50,7 +50,8 @@ class ReadInputFile:
 		self.peptides_by_type = {}
 		self.peptides_by_type_user = {}
 		peptide_cs = set()
-		
+		manual_mode_repeat_peptides = set()
+
 		peptides_list = self.path_to_input_folder+'peptides.tsv'
 		cont = 0
 
@@ -96,53 +97,29 @@ class ReadInputFile:
 						self.super_logger.info('Skipping peptide : %d because its length. Peptide should be between 8 and 11 aa.', peptide)
 											
 				elif len(line) == 3:
-					if len (line[1].strip()) == 1:
-						region = line[0].strip()
-						if 'chr' not in region or ':' not in region or '-' not in region:
-							raise Exception("Sorry, You must provide an appropriate Genomic Position --> (chr:x-y|z-a) for peptide ", peptide)
-						strand = line[1].strip()
-						peptide_type = line[2].strip()
-						cs, peptide = self.get_local_reference(region, strand)
+					peptide = line[0].strip()
+					cs = line[1].strip()
+					if self.evaluate_cs_ntd(cs):
+						raise Exception("Sorry, You must provide an appropriate Coding Sequence for peptide ", peptide)
+					if len(cs)/3 != len(peptide):
+						raise Exception("Sorry, Nucleotide sequence doesn\'t correspond to the peptide. ' ", peptide, cs)
+					peptide_type = line[2].strip()
 
-						if (len(peptide)>=8 and len(peptide) <= 11):
-							if peptide not in self.all_mode_peptide :
-								self.region_quantification_mode[peptide] = [cs, region, strand, peptide_type]
-								self.all_mode_peptide[peptide] = peptide_type
-								get_info_from_peptide_line(peptide_type, peptide)
-							else:
-								peptide_type_aux = self.region_quantification_mode[peptide][-1]
-								if peptide_type not in peptide_type_aux:
-									self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
-									peptide_type = peptide_type_aux+';'+peptide_type
-									self.all_mode_peptide[peptide] = peptide_type
-									self.region_quantification_mode[peptide][-1] = peptide_type
-									get_info_from_peptide_line(peptide_type, peptide)
-						else:
-							self.super_logger.info('Skipping peptide : %d because its length. Peptide should be between 8 and 11 aa.', peptide)
+					key = peptide+'_'+cs
+
+					if key not in peptide_cs:
+						peptide_cs.add(key)
+						self.CS_mode[peptide] = [cs,'','',peptide_type]
+						self.all_mode_peptide[peptide] = peptide_type
+						get_info_from_peptide_line(peptide_type, peptide)
 					else:
-						peptide = line[0].strip()
-						cs = line[1].strip()
-						if self.evaluate_cs_ntd(cs):
-							raise Exception("Sorry, You must provide an appropriate Coding Sequence for peptide ", peptide)
-						if len(cs)/3 != len(peptide):
-							raise Exception("Sorry, Nucleotide sequence doesn\'t correspond to the peptide. ' ", peptide, cs)
-						peptide_type = line[2].strip()
-
-						key = peptide+'_'+cs
-
-						if key not in peptide_cs:
-							peptide_cs.add(key)
-							self.CS_mode[peptide] = [cs,'','',peptide_type]
+						peptide_type_aux = self.CS_mode[peptide][-1]
+						if peptide_type not in peptide_type_aux:
+							self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
+							peptide_type = peptide_type_aux+';'+peptide_type
 							self.all_mode_peptide[peptide] = peptide_type
+							self.CS_mode[peptide][-1] = peptide_type
 							get_info_from_peptide_line(peptide_type, peptide)
-						else:
-							peptide_type_aux = self.CS_mode[peptide][-1]
-							if peptide_type not in peptide_type_aux:
-								self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
-								peptide_type = peptide_type_aux+';'+peptide_type
-								self.all_mode_peptide[peptide] = peptide_type
-								self.CS_mode[peptide][-1] = peptide_type
-								get_info_from_peptide_line(peptide_type, peptide)
 
 				elif len(line) == 5:
 					peptide = line[0].strip()
@@ -152,24 +129,27 @@ class ReadInputFile:
 					if len(cs)/3 != len(peptide):
 						raise Exception("Sorry, Nucleotide sequence doesn\'t correspond to the peptide. ' ", peptide, cs)
 					position = line[2].strip()
-					if 'chr' not in position or ':' not in position or '-' not in position:
-						raise Exception("Sorry, You must provide an appropriate Genomic Position --> (chr:x-y|z-a) for peptide ", peptide)
+					if ':' not in position or '-' not in position:
+						raise Exception("Sorry, You must provide an appropriate Genomic Position in the format chr:x-y|z-a. The position %s is not in appropriate format for the peptide %s", position, peptide)
 					strand = line[3].strip()
 					if '+' not in strand and '-' not in strand:
 						raise Exception("Sorry, You must provide an appropriate strand, either + (Forward) or - (Backward) for peptide ", peptide)
 					peptide_type = line[4].strip()
 
 					if peptide not in self.all_mode_peptide :
-						self.manual_mode[peptide] = [cs, position, strand, peptide_type]
+						self.manual_mode[peptide] = [[cs, position, strand, peptide_type]]
+						manual_mode_repeat_peptides.add(peptide+cs+position+strand)
 						self.all_mode_peptide[peptide] = peptide_type
 						get_info_from_peptide_line(peptide_type, peptide)
 					else:
 						peptide_type_aux = self.manual_mode[peptide][-1]
+						key = peptide+cs+position+strand
 						if peptide_type not in peptide_type_aux :
 							self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
 							peptide_type = peptide_type_aux+';'+peptide_type
 							self.all_mode_peptide[peptide] = peptide_type
-							self.manual_mode[peptide][-1] = peptide_type
+						if key not in manual_mode_repeat_peptides:
+							self.manual_mode[peptide].append([cs, position, strand, peptide_type])
 							get_info_from_peptide_line(peptide_type, peptide)
 				else:
 					raise Exception("Sorry, You must provide peptides in the appropriate format mode : peptide/CS/manual ")

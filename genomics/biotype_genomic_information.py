@@ -47,8 +47,6 @@ class BiotypeGenomicSearch:
 
 	def get_biotype_from_intersected_transcripts(self):
 		
-		t_0 = time.time()
-
 		self.information_biotypes_peptides = {}
 
 		with open(self.annotations_file, 'rb') as fp:
@@ -73,7 +71,7 @@ class BiotypeGenomicSearch:
 						tsl = info_transcript['Info'][9]
 						#if tsl != '4' and tsl != '5' : # Only well supported transcripts are taken into account for biotype calculation. https://m.ensembl.org/info/genome/genebuild/transcript_quality_tags.html
 						transcripts_to_search[transcript] = [info_transcript, [key_peptide]]
-		
+					
 		pool_ = ProcessPool(nodes=self.threads)
 		results = pool_.map(self.biotype_gene_and_transcript_level, list(transcripts_to_search.values()))
 		pool_.close()
@@ -106,8 +104,6 @@ class BiotypeGenomicSearch:
 				transcripts_information[transcript] = info_transcript
 
 		information_final_biotypes_peptides = self.set_final_transcript_level_biotype(transcripts_information)
-		t_2 = time.time()
-		total = t_2-t_0
 		return information_final_biotypes_peptides
 
 
@@ -125,11 +121,9 @@ class BiotypeGenomicSearch:
 		for key_peptide in key_peptides:
 			peptide = key_peptide.split('_')[0]
 			position = key_peptide.split('_')[1]
-			mcs = key_peptide.split('_')[2]
 			main_key = key_peptide.split(':')[1].split('_')[0]
-			chr = main_key.split(':')[0]
 			keys = main_key.split('|')
-
+			
 			for index, key in enumerate(keys):
 				
 				start = int(key.split('-')[0])
@@ -143,7 +137,7 @@ class BiotypeGenomicSearch:
 					keys_bio = ['5UTR', '3UTR', 'Introns', 'CDS']
 
 				presence = ['Intergenic','Intergenic']
-
+				
 				for index, point in enumerate([start, end]):
 					
 					for key_ in keys_bio:
@@ -157,7 +151,7 @@ class BiotypeGenomicSearch:
 
 							presence[index] = key_
 							break
-
+				
 				to_return.append([key_peptide, key, transcript, gene_type, transcript_type, presence])
 
 		return to_return
@@ -228,7 +222,6 @@ class BiotypeGenomicSearch:
 						transcript_level_biotype = list(set(biotype[2]))
 						info_transcript = transcripts_information[transcript]
 
-						info_transcripts_in_other_positions = []
 						for key_2, transcripts_intersected_2 in positions.items():
 							if key != key_2:
 								try:
@@ -278,7 +271,7 @@ class BiotypeGenomicSearch:
 		except KeyError:
 			protein = self.get_transcript_and_protein(chr, regions, strand, len_prot)
 			self.translated_prots[transcript] = protein
-			
+
 		if peptide in protein:
 			transcript_level = 'In_frame'
 		else:
@@ -292,8 +285,7 @@ class BiotypeGenomicSearch:
 		faFile = pysam.FastaFile(self.genome, self.genome_index)
 
 		sequence_transcript = ''
-		check_int = len_prot.is_integer()
-
+		
 		for cds in regions:
 			start_exon = cds[0]
 			end_exon = cds[1]
@@ -305,27 +297,11 @@ class BiotypeGenomicSearch:
 				
 			elif strand == '+':
 				sequence_transcript =  sequence_transcript + sequence
-
+		
 		if chr == 'chrM':
 			proteine = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='mt')
 		else:
 			proteine = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='default')
-
-		if check_int and  '*' not in proteine:
-			return proteine
-		else:
-			if '*' not in proteine:
-				return proteine
-
-			if chr == 'chrM':
-				proteine = uf.translateDNA(sequence_transcript[1:], frame = 'f1', translTable_id='mt')
-			else:
-				proteine = uf.translateDNA(sequence_transcript[1:], frame = 'f1', translTable_id='default')
-			if '*' in proteine:
-				if chr == 'chrM':
-					proteine = uf.translateDNA(sequence_transcript[2:], frame = 'f1', translTable_id='mt')
-				else:
-					proteine = uf.translateDNA(sequence_transcript[2:], frame = 'f1', translTable_id='default')
 
 		return proteine
 

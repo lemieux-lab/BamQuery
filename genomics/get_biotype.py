@@ -37,6 +37,8 @@ class BiotypeAssignation:
 			self.peptides_intersected_ere = self.get_info_bed_files.peptides_intersected_ere
 			self.information_final_biotypes_peptides = self.get_info_bed_files.information_final_biotypes_peptides
 			
+		path = self.path_to_output_folder +'/alignments/alignments_summary_information.pkl'
+		self.alignments_summary_information = pd.read_pickle(path)
 
 		if not self.mouse:
 			with open(path_to_lib+'ERE_info.dic', 'rb') as handle:
@@ -86,6 +88,8 @@ class BiotypeAssignation:
 							strand = info_alignment[0]
 							rna_bam_files = info_alignment[1]
 							
+							known_sj = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position)]['Known Splice Junction'].values[0]
+				
 							to_add_gen_ere = []
 
 							repName = ''
@@ -104,7 +108,14 @@ class BiotypeAssignation:
 									repFamily = self.ere_info[repName_aux][1]
 									repFamily = 'antisense_'+repFamily
 								else:
-									repClass = self.biotypes_names.index(self.ere_info[repName][0])
+									try:
+										repClass = self.biotypes_names.index(self.ere_info[repName][0])
+									except ValueError:
+										if repName == 'Other':
+											repName = 'SINE'
+											repClass = self.biotypes_names.index(self.ere_info[repName][0])
+										else:
+											continue
 									repFamily = self.ere_info[repName][1]
 								
 								self.biotype_type.add(repClass)
@@ -121,7 +132,7 @@ class BiotypeAssignation:
 									transcript_level_biotype = peptide_genomic_biotypes[1]
 									genomic_position_biotype = self.biotypes_names.index(self.mod_type(peptide_genomic_biotypes[2]))
 										
-									to_add_gen_ere = [type_peptide, peptide, position, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
+									to_add_gen_ere = [type_peptide, peptide, position, known_sj, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
 									
 									to_add_gen_ere.extend(rna_bam_files)
 									to_add_gen_ere.append(sum(rna_bam_files))
@@ -142,7 +153,7 @@ class BiotypeAssignation:
 								else:
 									self.biotype_type.add(genomic_position_biotype)
 								
-								to_add_gen_ere = [type_peptide, peptide, position, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
+								to_add_gen_ere = [type_peptide, peptide, position, known_sj, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
 									
 								to_add_gen_ere.extend(rna_bam_files)
 								to_add_gen_ere.append(sum(rna_bam_files))
@@ -151,7 +162,7 @@ class BiotypeAssignation:
 					except KeyError:
 						info_alignments_peptide = []
 
-		columns_gen_ere = ['Peptide Type', 'Peptide','Alignment', 'MCS', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
+		columns_gen_ere = ['Peptide Type', 'Peptide','Alignment', 'Known Splice Junction', 'MCS', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
 		
 		columns_gen_ere.extend(self.bam_files_list_rna)
 		columns_gen_ere.extend(['Total reads count RNA'])
@@ -176,13 +187,12 @@ class BiotypeAssignation:
 		self.bam_files_columns.extend(['Total reads count RNA'])
 		
 		# Genomic and ERE Annotation Full - without MCS
-		groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
+		groupby_columns = ['Peptide Type', 'Peptide','Alignment', 'Known Splice Junction', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
 		
 		self.df_total_by_position_gen_ere = self.data_gen_ere.groupby(groupby_columns)[self.bam_files_columns].sum().reset_index()
 		self.df_total_by_position_gen_ere = pd.DataFrame(self.df_total_by_position_gen_ere, columns = groupby_columns+self.bam_files_columns)
 		if self.dev:
 			self.df_total_by_position_gen_ere.to_pickle(self.path_to_output_folder+'/res/biotype_classification/full_info_biotypes/df_total_by_position_gen_ere.pkl')
-			
 			
 		def biotypes_translation(row):
 			if row['genomic_position_biotype'] != '':
@@ -215,7 +225,7 @@ class BiotypeAssignation:
 
 	def get_genomic_and_transcription_based_biotype(self):
 
-		groupby_columns = ['Peptide Type',	'Peptide',	'Alignment', 'Strand']
+		groupby_columns = ['Peptide Type',	'Peptide',	'Alignment', 'Known Splice Junction', 'Strand']
 		df_position = self.df_total_by_position_gen_ere.groupby(groupby_columns).count().reset_index()
 		df_position = df_position.iloc[:, :len(groupby_columns)]
 		self.df_position = pd.DataFrame(df_position, columns = groupby_columns)
@@ -225,10 +235,10 @@ class BiotypeAssignation:
 		df_position = df_position.iloc[:, :len(groupby_columns)]
 		self.df_peptide = pd.DataFrame(df_position, columns = groupby_columns)
 		
-		groupby_columns = ['Peptide Type',	'Peptide',	'Alignment', 'Strand']
+		groupby_columns = ['Peptide Type',	'Peptide',	'Alignment', 'Known Splice Junction', 'Strand']
 		df_position_genomic_position_ere_class = self.df_total_by_position_gen_ere.groupby(groupby_columns)
 		
-		groupby_columns = ['Peptide Type',	'Peptide',	'Alignment', 'Strand']+self.bam_files_columns
+		groupby_columns = ['Peptide Type',	'Peptide',	'Alignment', 'Known Splice Junction','Strand']+self.bam_files_columns
 		counts = self.df_total_by_position_gen_ere.groupby(groupby_columns).count().reset_index()
 		counts = counts.iloc[:, :len(groupby_columns)]
 		self.counts = pd.DataFrame(counts, columns = groupby_columns)
@@ -275,21 +285,18 @@ class BiotypeAssignation:
 
 		df_position_biotypes_summary_genome['Best Guess'] = ''
 
-		columns_biotypes = df_position_biotypes_summary_genome.columns[2:-1]
-
-	
+		columns_biotypes = df_position_biotypes_summary_genome.columns[5:-1]
 		for index, row in self.df_position.iterrows():
 			peptide_type = row[0]
 			peptide = row[1]
 			alignment = row[2]
-			strand = row[3]
-
-			group = df_position_genomic_position_ere_class.get_group((peptide_type, peptide, alignment, strand))
-
+			known_sj = row[3]
+			strand = row[4]
+			
+			group = df_position_genomic_position_ere_class.get_group((peptide_type, peptide, alignment, known_sj, strand))
 			genomic_biotypes = list(group['genomic_position_biotype'])
 			ere_biotypes = list(filter(lambda a: a != '', group['ERE class']))
 			total_biotypes = list(genomic_biotypes+ere_biotypes)
-
 
 			if '' in total_biotypes:
 				total_biotypes = list(filter(('').__ne__, total_biotypes))
@@ -305,11 +312,9 @@ class BiotypeAssignation:
 				
 				coeff = self.coefficients[bio]
 				df_position_biotypes_info_counts.at[index, bio] = coeff
-				
 				ratio = value/(total_biotypes_types*1.0)
 				percentage = round(ratio*100,2)
 				string_biotype += self.biotypes_names[bio]+': '+str(percentage)+'% - '
-				
 				df_position_biotypes_summary_genome.at[index, str(bio)] = ratio
 				if self.biotypes_names[bio] == 'In_frame':
 					best_guess = 'In_frame'
@@ -320,16 +325,14 @@ class BiotypeAssignation:
 
 			df_position_biotypes_info.at[index, 'Annotation Frequencies'] = string_biotype
 			df_position_biotypes_info.at[index, 'Best Guess'] = best_guess
-
+			
 		groupby_columns = ['Peptide Type',	'Peptide']
 		df_position_biotypes_summary_genome = df_position_biotypes_summary_genome.groupby(groupby_columns)[columns_biotypes].sum().reset_index()
 		df_position_biotypes_summary_genome = pd.DataFrame(df_position_biotypes_summary_genome)
-
 		path = self.path_to_output_folder+'/res/biotype_classification/full_info_biotypes/3_Genomic_and_ERE_Anno_by_Region_Full.csv'
 		df_position_biotypes_info.to_csv(path, index=False)
 
 		df_position_biotypes_info_counts = df_position_biotypes_info_counts.div(df_position_biotypes_info_counts.sum(axis=1), axis=0)
-		
 		return df_position_biotypes_info_counts, df_position_biotypes_summary_genome
 
 
@@ -351,9 +354,9 @@ class BiotypeAssignation:
 			peptide = row_input['Peptide']
 			
 			row_summary = df_position_biotypes_summary_genome[(df_position_biotypes_summary_genome['Peptide Type'] == peptide_type) & (df_position_biotypes_summary_genome['Peptide'] == peptide)].values[0][2:-1]
-			sum_alignments = sum(row_summary)
-			
-			final_values = (row_summary/sum_alignments)
+			#sum_alignments = sum(row_summary)
+			#final_values = (row_summary/sum_alignments)
+			final_values = row_summary
 			nonzeroind = np.nonzero(final_values)[0]
 			b = sorted(enumerate(final_values), reverse=True, key=lambda i: i[1])[:len(nonzeroind)]
 			
@@ -399,7 +402,7 @@ class BiotypeAssignation:
 			
 			return row_input
 
-
+			
 		def get_biotype_without_transcription_summary(row_input):
 			sum_alignments = sum(row_input[2:-1])
 			row_input[2:-1] = (row_input[2:-1]/sum_alignments)
@@ -410,7 +413,7 @@ class BiotypeAssignation:
 		df_position_biotypes_info.to_csv(path, index=False)
 
 		if self.dev:
-			df_position_biotypes_summary_genome = df_position_biotypes_summary_genome.apply(lambda row : get_biotype_without_transcription_summary(row), axis = 1)
+			#df_position_biotypes_summary_genome = df_position_biotypes_summary_genome.apply(lambda row : get_biotype_without_transcription_summary(row), axis = 1)
 			df_position_biotypes_summary_genome.columns = ['Peptide Type', 'Peptide']+self.biotypes_names+['Best Guess']
 		
 			path = self.path_to_output_folder+'/res/biotype_classification/summary_info_biotypes/biotypes_by_peptide_genome_explained.csv'
@@ -423,11 +426,10 @@ class BiotypeAssignation:
 			plots.draw_biotypes(biotypes_by_peptide_type_genomic_ere_annot, self.path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/by_peptide_type/', False, False, self.name_exp)
 			self.super_logger.info('========== biotypes_by_peptide_type_genomic_ere_annot : Genome & ERE annotations : Done! ============ ')
 			biotypes_by_peptide_type_genomic_ere_annot = []
-
+			
 			plots.draw_biotypes(biotypes_all_peptides_genomic_ere_annot, self.path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/all_peptides/', True, False, self.name_exp)
 			self.super_logger.info('========== biotypes_all_peptides_genomic_ere_annot : Genome & ERE annotations : Done! ============ ')
 			biotypes_all_peptides_genomic_ere_annot = []
-
 			self.super_logger.info('========== Plots : Done! ============ ')
 
 	
@@ -437,11 +439,12 @@ class BiotypeAssignation:
 			biotypes_by_peptide_type_group_samples = {}
 			biotypes_all_peptides_type_group_samples_all = {}
 
-		df_biotype_by_peptide_by_sample = copy.deepcopy(self.df_peptide) 
+		df_biotype_by_peptide_by_sample = copy.deepcopy(self.total_count_by_peptide) 
+		df_biotype_by_peptide_by_sample.insert(2, 'Weighted Biotype All Samples', '', allow_duplicates=False)
+		df_biotype_by_peptide_by_sample.insert(3, 'Best Guess', '', allow_duplicates=False)
 		columns_biotypes = df_position_biotypes_info_counts.columns
-
+		
 		def get_biotype_with_transcription_by_sample(row_input):
-
 			peptide = row_input['Peptide']
 			
 			try:
@@ -451,9 +454,9 @@ class BiotypeAssignation:
 				exit()
 
 			if total_count != 0:
-				row_input[4:] = (row_input[4:]/total_count)
+				row_input[5:] = (row_input[5:]/total_count)
 			else:
-				row_input[4:] = 0
+				row_input[5:] = 0
 
 			return row_input
 
@@ -483,71 +486,60 @@ class BiotypeAssignation:
 						types = peptide_type.split(';')
 						
 
-					if bam_file == 'Total reads count RNA':
-						for type_ in types:
-							try:
-								all_samples = biotypes_by_peptide_type_group_samples['All_samples']
-								try:
-									peptides_types = all_samples[type_]
-									try:
-										peptides_types[biotype_name] += ratio
-									except KeyError:
-										peptides_types[biotype_name] = ratio
-								except KeyError:
-									all_samples[type_] = {biotype_name : ratio}
-							except KeyError:
-								dic_aux = {}
-								dic_aux[type_] = {biotype_name : ratio}
-								biotypes_by_peptide_type_group_samples['All_samples'] = dic_aux
-						
+					for type_ in types:
 						try:
-							biotypes_all_peptides_type_group_samples_all[biotype_name] += ratio
+							all_samples = biotypes_by_peptide_type_group_samples['All_samples']
+							try:
+								peptides_types = all_samples[type_]
+								try:
+									peptides_types[biotype_name] += ratio
+								except KeyError:
+									peptides_types[biotype_name] = ratio
+							except KeyError:
+								all_samples[type_] = {biotype_name : ratio}
 						except KeyError:
-							biotypes_all_peptides_type_group_samples_all[biotype_name] = ratio
+							dic_aux = {}
+							dic_aux[type_] = {biotype_name : ratio}
+							biotypes_by_peptide_type_group_samples['All_samples'] = dic_aux
+					
+					try:
+						biotypes_all_peptides_type_group_samples_all[biotype_name] += ratio
+					except KeyError:
+						biotypes_all_peptides_type_group_samples_all[biotype_name] = ratio
 
 
 			string_biotype = string_biotype[:-2]
-			row_input[bam_file] = string_biotype
+			row_input['Weighted Biotype All Samples'] = string_biotype
 			
-			if bam_file == 'Total reads count RNA':
-				
-				if best_guess == '' and len(b) > 0:
-					best_guess = self.biotypes_names[b[0][0]]
+			if best_guess == '' and len(b) > 0:
+				best_guess = self.biotypes_names[b[0][0]]
 
-				df_position_biotypes_info_2.loc[(df_position_biotypes_info_2['Peptide Type'] == peptide_type) & (df_position_biotypes_info_2['Peptide'] == peptide), 'Best Guess'] = best_guess
-				
-				if bam_file == 'Total reads count RNA' :
-					row_input['Best Guess'] = best_guess
+			df_position_biotypes_info_2.loc[(df_position_biotypes_info_2['Peptide Type'] == peptide_type) & (df_position_biotypes_info_2['Peptide'] == peptide), 'Best Guess'] = best_guess
+			
+			row_input['Best Guess'] = best_guess
 				
 			return row_input
 
 		for bam_file in ['Total reads count RNA']: #in self.bam_files_columns:
-			df_biotype_by_peptide_by_sample[bam_file] = ''
-
 			result = df_position_biotypes_info_counts.multiply(self.counts[bam_file], axis="index")
 			result = pd.concat([self.df_position, result], axis=1)
 			result = result.apply(lambda row : get_biotype_with_transcription_by_sample(row), axis = 1)
-			
 			groupby_columns = ['Peptide Type',	'Peptide']
 			df_position_biotypes_info_2 = result.groupby(groupby_columns)[columns_biotypes].sum().reset_index()
 			df_position_biotypes_info_2 = pd.DataFrame(df_position_biotypes_info_2)
 			
-			if bam_file == 'Total reads count RNA' :
-				df_position_biotypes_info_2['Best Guess'] = ''
-				df_biotype_by_peptide_by_sample['Best Guess'] = ''
-			
+			df_position_biotypes_info_2['Best Guess'] = ''
 			df_biotype_by_peptide_by_sample = df_biotype_by_peptide_by_sample.apply(lambda row : set_string_biotype_by_sample(row), axis = 1)
 			
 			if self.dev:
-				if bam_file == 'Total reads count RNA':
-					df_position_biotypes_info_2.columns = ['Peptide Type', 'Peptide']+self.biotypes_names+['Best Guess']
-					path = self.path_to_output_folder+'/res/biotype_classification/summary_info_biotypes/biotypes_by_peptide_sample_explained_RNA.csv'
-					df_position_biotypes_info_2.to_csv(path, index=False)
+				df_position_biotypes_info_2.columns = ['Peptide Type', 'Peptide']+self.biotypes_names+['Best Guess']
+				path = self.path_to_output_folder+'/res/biotype_classification/summary_info_biotypes/biotypes_by_peptide_sample_explained_RNA.csv'
+				df_position_biotypes_info_2.to_csv(path, index=False)
 
-					peptide_alignment_sample = pd.concat([self.df_position, df_position_biotypes_info_counts, self.counts[bam_file]], axis=1)
-					peptide_alignment_sample.drop(peptide_alignment_sample.index[peptide_alignment_sample['Total reads count RNA'] == 0], inplace = True)
-					path = self.path_to_output_folder+'/res/biotype_classification/summary_info_biotypes/biotypes_by_peptide_alignment_and_sample_explained_RNA.csv'
-					peptide_alignment_sample.to_csv(path, index=False)
+				peptide_alignment_sample = pd.concat([self.df_position, df_position_biotypes_info_counts, self.counts[bam_file]], axis=1)
+				peptide_alignment_sample.drop(peptide_alignment_sample.index[peptide_alignment_sample['Total reads count RNA'] == 0], inplace = True)
+				path = self.path_to_output_folder+'/res/biotype_classification/summary_info_biotypes/biotypes_by_peptide_alignment_and_sample_explained_RNA.csv'
+				peptide_alignment_sample.to_csv(path, index=False)
 
 		if self.plots:
 			self.super_logger.info('========== Plots ============ ')
@@ -565,7 +557,7 @@ class BiotypeAssignation:
 
 		path = self.path_to_output_folder+'/res/biotype_classification/summary_info_biotypes/2_Sample_Gen_and_ERE_Biotype_Consensus.csv'
 		df_biotype_by_peptide_by_sample.to_csv(path, index=False)
-		extracted_cols = df_biotype_by_peptide_by_sample[['Total reads count RNA', 'Best Guess']]
+		extracted_cols = df_biotype_by_peptide_by_sample[['Total reads count RNA', 'Weighted Biotype All Samples', 'Best Guess']]
 
 		return extracted_cols
 	
@@ -574,7 +566,6 @@ class BiotypeAssignation:
 
 		df_biotype_by_peptide_by_group_sample = copy.deepcopy(self.df_peptide) 
 		columns_biotypes = df_position_biotypes_info_counts.columns
-
 		total_count_by_peptide_by_group = copy.deepcopy(self.df_peptide)
 
 		new_cols = ['Peptide Type', 'Peptide']+list(self.order_sample_bam_files_rna.keys())+['All']
@@ -603,14 +594,12 @@ class BiotypeAssignation:
 		total_count_by_peptide_by_group = total_count_by_peptide_by_group.apply(lambda row : get_total_reads_by_group(row), axis = 1)
 		
 		def get_biotype_with_transcription_by_sample(row_input):
-
 			peptide = row_input['Peptide']
 			count_peptide_group = int(total_count_by_peptide_by_group.loc[(total_count_by_peptide_by_group['Peptide'] == peptide)][group])
-			
 			if count_peptide_group != 0:
-				row_input[4:] = (row_input[4:]/count_peptide_group)	
+				row_input[5:] = (row_input[5:]/count_peptide_group)	
 			else:
-				row_input[4:] = 0
+				row_input[5:] = 0
 			return row_input
 
 		def set_string_biotype_by_group(row_input):
@@ -645,7 +634,7 @@ class BiotypeAssignation:
 
 			for bam_file in bam_files:
 				result += df_position_biotypes_info_counts.multiply(self.counts[bam_file], axis="index")
-			
+				
 			result = pd.concat([self.df_position, result], axis=1)
 			result = result.apply(lambda row : get_biotype_with_transcription_by_sample(row), axis = 1)
 			
@@ -654,9 +643,8 @@ class BiotypeAssignation:
 			df_position_biotypes_info_2 = pd.DataFrame(df_position_biotypes_info_2)
 			df_biotype_by_peptide_by_group_sample = df_biotype_by_peptide_by_group_sample.apply(lambda row : set_string_biotype_by_group(row), axis = 1)
 			
-		
-		df_biotype_by_peptide_by_group_sample = df_biotype_by_peptide_by_group_sample.join(extracted_col)
-		df_biotype_by_peptide_by_group_sample.rename(columns={"Total reads count RNA": "All"})
+		df_biotype_by_peptide_by_group_sample = df_biotype_by_peptide_by_group_sample.join(extracted_col[['Weighted Biotype All Samples', 'Best Guess']])
+		df_biotype_by_peptide_by_group_sample = df_biotype_by_peptide_by_group_sample.rename(columns={"Weighted Biotype All Samples": "All Samples"})
 		
 		path = self.path_to_output_folder+'/res/biotype_classification/summary_info_biotypes/3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv'
 		df_biotype_by_peptide_by_group_sample.to_csv(path, index=False)

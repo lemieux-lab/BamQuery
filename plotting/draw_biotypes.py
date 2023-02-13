@@ -69,7 +69,7 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 					else:
 						print ('Problem with assignation biotype : ', biotype, name)
 						
-		
+		total_peptides = 0
 		for outer_label_type, intra_labels_type in organisation_labels.items():
 			values_in = 0
 			for intra_label in intra_labels_type:
@@ -78,12 +78,12 @@ def draw_biotypes(biotypes_peptides, path_to_save, global_, samples, name_exp):
 					intra_labels.append(intra_label)
 					intra_sizes.append(value)
 					values_in += value
+					total_peptides += value
 				except:
 					pass
 			if values_in > 0:
 				outer_labels.append(outer_label_type)
 				outer_sizes.append(values_in)
-			
 		plots.plot_pie(title, outer_labels, intra_labels, intra_sizes, outer_sizes, path_to_save, name_exp, name)
 		gc.collect()
 

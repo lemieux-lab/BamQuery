@@ -3,31 +3,41 @@ import genomics.get_alignments as get_alig
 import collections
 import pandas as pd
 import billiard as mp
+import re
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
-def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode, mouse, threads):
 
+def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode, mouse, threads):
+	global splice_junctions_annotated
 	path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 	path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 
 	if mouse:
 		if genome_version == 'M24':
 			index_genome = path_to_lib+'genome_versions/genome_mouse_m24/Index_STAR_2.7.9a/'
+			splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
 
 		if genome_version == 'M30':
 			index_genome = path_to_lib+'genome_versions/genome_mouse_m30/Index_STAR_2.7.9a/'
+			splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
 	else:
 		if genome_version == 'v26_88': 
 			index_genome = path_to_lib+'genome_versions/genome_v26_88/Index_STAR_2.7.9a/'
+			splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
+
 		elif genome_version == 'v33_99':
 			index_genome = path_to_lib+'genome_versions/genome_v33_99/Index_STAR_2.7.9a/'
+			splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
+
 		else:
 			index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_STAR_2.7.9a/'
+			splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
 
+	splice_junctions_annotated = pd.read_csv(splice_junctions, header=None, sep='\t')
 	exist = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 	exist_sam_dic = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam.dic')
 	exists_light = os.path.exists(path_to_output_folder_alignments+'/Alignments_information_light.dic')
@@ -116,7 +126,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 			
 			peptides_with_alignments = res_star[2]
 			
-			columns = ["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference", "Diff AA", "Diff ntd", "SNVs"]
+			columns = ["Peptide", "Strand", "Alignment", "Known Splice Junction", "MCS", "Peptide in Reference", "Diff AA", "Diff ntd", "SNVs"]
 			columns_cosmic = ["Peptide", "Strand", "Alignment", "SNV", 'Mutation genome position', 'GRCh', 'Gene', 'SNP', 'Mutation Id', 
 							'Mutation CDS', 'Mutation AA', 'Description',
 							'Mutation Strand', 'Resistance', 'Score', 'Prediction', 'Status' ]
@@ -157,9 +167,9 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 
 			super_logger.info('Alignments Information save to : %s ', name_path)
 			
-			cols = columns[5:]
+			cols = columns[6:]
 			df = df1.drop(cols, axis=1)
-			df_to_keep = df.groupby(['Peptide', 'Strand', 'Alignment', 'MCS', 'Peptide in Reference']).count().reset_index()
+			df_to_keep = df.groupby(['Peptide', 'Strand', 'Alignment',  'Known Splice Junction', 'MCS', 'Peptide in Reference']).count().reset_index()
 
 			path = path_to_output_folder_alignments+'/alignments_summary_information.pkl'
 			df_to_keep.to_pickle(path)
@@ -222,18 +232,35 @@ def generer_alignments_information(alignments_input):
 	for peptide_info, info_alignment in alignments.items():
 		alignment = peptide_info.split('_')[1]
 		peptide = peptide_info.split('_')[0]
+
 		try:
 			MCS = peptide_info.split('_')[2]
 		except IndexError:
 			MCS = ''
-		
 		strand = info_alignment[0]
 		peptide_with_snps_local_reference = info_alignment[1]
 		
 		dif_aas = info_alignment[2]
 		snvs = info_alignment[3]
 		dif_ntds = info_alignment[4]
-		
+
+		chr = alignment.split(':')[0]
+		known_splice_junction = []
+
+		if '|' in alignment:
+			result = re.findall(r"\d+", alignment.split(':')[1])[1:-1]
+			tuples = [(int(result[i]), int(result[i+1])) for i in range(0, len(result), 2)]
+				
+			for tuple in tuples:
+				annotated_sj = splice_junctions_annotated[(splice_junctions_annotated[0]==chr) & (splice_junctions_annotated[1]==tuple[0]+1)& (splice_junctions_annotated[2]==tuple[1]-1) & (splice_junctions_annotated[3]==strand)]
+				if not annotated_sj.empty:
+					known_splice_junction.append('yes')
+				else:
+					known_splice_junction.append('no')
+		else:
+			known_splice_junction.append('NA')
+			
+		known_splice_junction = '/'.join(known_splice_junction)
 		snvs_write = ''
 		dif_aa_write = ''
 		mutations_write = ''
@@ -255,7 +282,7 @@ def generer_alignments_information(alignments_input):
 		for dif_ntd in dif_ntds:
 			dif_ntd_write += '['+dif_ntd+']'
 
-		row_list.append([peptide, strand, alignment, MCS, peptide_with_snps_local_reference, dif_aa_write, dif_ntd_write, snvs_write ])
+		row_list.append([peptide, strand, alignment, known_splice_junction, MCS, peptide_with_snps_local_reference, dif_aa_write, dif_ntd_write, snvs_write ])
 
 	if len(row_list) == 1048575 :
 		return row_list, info_cosmic

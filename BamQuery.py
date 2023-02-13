@@ -263,6 +263,39 @@ class BamQuery:
 		
 		self.set_peptides = set(list(self.input_file_treatment.all_mode_peptide.keys()))
 
+		if self.mouse:
+			if self.genome_version == 'M24':
+				index_genome = path_to_lib+'genome_versions/genome_mouse_m24/Index_STAR_2.7.9a/'
+				chrs_info = index_genome+'/chrName.txt'
+				splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
+
+			if self.genome_version == 'M30':
+				index_genome = path_to_lib+'genome_versions/genome_mouse_m30/Index_STAR_2.7.9a/'
+				chrs_info = index_genome+'/chrName.txt'
+				splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
+		else:
+			if self.genome_version == 'v26_88': 
+				index_genome = path_to_lib+'genome_versions/genome_v26_88/Index_STAR_2.7.9a/'
+				chrs_info = index_genome+'/chrName.txt'
+				splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
+
+			elif self.genome_version == 'v33_99':
+				index_genome = path_to_lib+'genome_versions/genome_v33_99/Index_STAR_2.7.9a/'
+				chrs_info = index_genome+'/chrName.txt'
+				splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
+
+			else:
+				index_genome = path_to_lib+'genome_versions/genome_v38_104/Index_STAR_2.7.9a/'
+				chrs_info = index_genome+'/chrName.txt'
+				splice_junctions  = index_genome + 'sjdbList.fromGTF.out.tab'
+
+		chrs_info = pd.read_csv(chrs_info, header=None)
+		references = list(chrs_info[0])
+		path_to_save_list = self.path_to_output_folder+'/genome_alignments/references_chrs.pkl'
+		
+		with open(path_to_save_list, "wb") as f:
+			pickle.dump(references, f)
+
 		if len(self.input_file_treatment.peptide_mode) > 0 or len(self.input_file_treatment.CS_mode) > 0 :
 
 			self.reverse_translation = ReverseTranslation()
@@ -281,33 +314,48 @@ class BamQuery:
 			if len(self.perfect_alignments) == 0:
 				self.super_logger.info('========== No genomic locations were found for the peptides queried. ============')
 				self.super_logger.info('========== BamQuery status: finished! ============')
-				exit()
+				sys.exit(2)
 
 		if len(self.input_file_treatment.manual_mode) > 0 :
 
-			not_in = False
+			splice_junctions_annotated = pd.read_csv(splice_junctions, header=None, sep='\t')
+			perfect_alignments_exists = isinstance(self.perfect_alignments, dict)
+			if not perfect_alignments_exists:
+				self.perfect_alignments = {}
+				peptides_with_alignments = set()
 			info_to_add = []
-			for peptide, info_peptide in self.input_file_treatment.manual_mode.items() :
-				coding_sequence = info_peptide[0]
-				position = info_peptide[1]
-				strand = info_peptide[2]
-				key = peptide+'_'+position+'_'+coding_sequence
-				try:
-					if key not in self.perfect_alignments.keys():
-						not_in = True
-						peptides_with_alignments.add(peptide)
-						self.perfect_alignments[key] = [strand, peptide, ['NA'], ['NA'], ['NA'], [], []]
-				except AttributeError:
-					self.perfect_alignments = {}
-					peptides_with_alignments = set()
-					not_in = True
-					peptides_with_alignments.add(peptide)
-					self.perfect_alignments[key] = [strand, peptide, ['NA'], ['NA'], ['NA'], [], []]
-				info_to_add.append([peptide, strand, position, coding_sequence, peptide])
 
-			columns = ["Peptide", "Strand", "Alignment", "MCS", "Peptide in Reference"]
-			
-			if not_in:
+			for peptide, info_peptide in self.input_file_treatment.manual_mode.items() :
+				for info in info_peptide:
+					coding_sequence = info[0]
+					position = info[1]
+					strand = info[2]
+					key = peptide+'_'+position+'_'+coding_sequence
+					known_splice_junction = []
+					chr = position.split(':')[0]
+
+					if '|' in position:
+						result = re.findall(r"\d+", position.split(':')[1])[1:-1]
+						tuples = [(int(result[i]), int(result[i+1])) for i in range(0, len(result), 2)]
+							
+						for tuple in tuples:
+							annotated_sj = splice_junctions_annotated[(splice_junctions_annotated[0]==chr) & (splice_junctions_annotated[1]==tuple[0]+1)& (splice_junctions_annotated[2]==tuple[1]-1) & (splice_junctions_annotated[3]==strand)]
+							if not annotated_sj.empty:
+								known_splice_junction.append('yes')
+							else:
+								known_splice_junction.append('no')
+					else:
+						known_splice_junction.append('NA')
+
+					known_splice_junction = '/'.join(known_splice_junction)
+					
+					if key not in self.perfect_alignments.keys():
+						peptides_with_alignments.add(peptide)
+						self.perfect_alignments[key] = [strand, peptide, ['NA'], ['NA'], ['NA'], []]
+					
+					info_to_add.append([peptide, strand, position, known_splice_junction, coding_sequence, peptide])
+
+			if not perfect_alignments_exists:
 				if not self.light:
 					name_path = self.path_to_output_folder+'alignments/Alignments_information.dic'
 				else :
@@ -316,17 +364,17 @@ class BamQuery:
 				with open(name_path, 'wb') as handle:
 					pickle.dump(self.perfect_alignments, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+			columns = ["Peptide", "Strand", "Alignment", 'Known Splice Junction', "MCS", "Peptide in Reference"]
 			path = self.path_to_output_folder+'alignments/alignments_summary_information.pkl'
 			try:
-				alignments_summary_information = pd.read_pickle(path)
+				df1 = pd.read_pickle(path)
 				df_aux = pd.DataFrame(info_to_add, columns=columns)
-				alignments_summary_information.append(df_aux)
+				alignments_summary_information = pd.concat([df1, df_aux])
 			except FileNotFoundError:
 				alignments_summary_information = pd.DataFrame(info_to_add, columns=columns)
 				
 			alignments_summary_information.to_pickle(path)
 
-		# positions_mcs_peptides_variants_alignment[key] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, [],[]]
 		exists = os.path.exists(self.path_to_output_folder+'alignments/missed_peptides.info')
 
 		if not exists:
@@ -507,7 +555,7 @@ def main(argv):
 	maxmm = args.maxmm
 	overlap = args.overlap
 	mouse = args.m
-	t=args.t
+	t = args.t
 
 	if sc and mouse:
 		sys.stderr.write('error: %s\n' % 'Some arguments are not valid! Please verify the use of a single BamQuery method to perform the search. (sc or mouse)')

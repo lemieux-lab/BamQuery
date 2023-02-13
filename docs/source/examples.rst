@@ -309,7 +309,7 @@ Heat maps representing the mean transcription expression and total number of RNA
 
 	.. thumbnail:: _images/genomic_ere_annotation.png
       		         
-
+-----------
 
 **full_info_biotypes**
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -317,32 +317,70 @@ Heat maps representing the mean transcription expression and total number of RNA
 .. _Genomic_and_ERE_Annotations_Full:
 
 `1_Genomic_and_ERE_Annotations_Full.csv`: 
-Reports for each peptide, each MCS at each location and for each BAM/CRAM included in **BAM_directories.tsv**:
-	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
-	(g) also, the total count of RNA-seq reads bearing the given MCS at the given location.
+For a given peptide carrying an MCS mapped to a given location, BamQuery reports the biotype according to the overlap within the annotation files.
+
+Overlap information:
+
+	(a) gene 
+	(b) transcript
+	(c) genomic location
+	(d) ERE name
+	(e) ERE class
+	(f) ERE family 
+	(g) also, the total count of RNA-seq reads bearing the given MCS at the given location in each BAM/CRAM included in **BAM_directories.tsv**.
 
 .. thumbnail:: _images/genomic_and_ERE_Annotations_Full.jpg
 
+-----------
 
 .. _Genomic_and_ERE_Annotations_Summary_Full:
 
 `2_Genomic_and_ERE_Annotations_Summary_Full.csv`: 
-Reports for each peptide, each location and for each BAM/CRAM included in **BAM_directories.tsv**:
-	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
-	(g)also, the total count of RNA-seq reads bearing MCS at the given location.
+For a given peptide at a given location, BamQuery reports the biotype according to the overlap within the annotation files.
+
+Overlap information:
+
+	(a) gene 
+	(b) transcript
+	(c) genomic location
+	(d) ERE name
+	(e) ERE class
+	(f) ERE family 
+	(g) also, the total count of RNA-seq reads bearing the given MCS at the given location in each BAM/CRAM included in **BAM_directories.tsv**.
 
 .. thumbnail:: _images/genomic_and_ERE_Annotations_Summary_Full.jpg
 
+-----------
 
 .. _Genomic_and_ERE_Anno_by_Region_Full:
 
 `3_Genomic_and_ERE_Anno_by_Region_Full.csv`: 
-Reports for each peptide, each location and for each BAM/CRAM included in **BAM_directories.tsv**:
-	(a) gene, (b) transcript, (c) genomic location, (d) ERE name, (e) ERE class, and (f) ERE family biotypes.
-	(g)also, the total count of RNA-seq reads bearing MCS at the given location.
+
+For a given peptide at a given location, BamQuery reports the percentage representation of the biotype according to the biotype at the genomic position level in genome annotations and ERE annotations. 
+
+Thus, for each peptide at a given location, it reports the consensus of the biotype based on all intercepted transcripts at the location. |br|
+So the percentage is computed from the frequencies of occurrence of biotypes according to the genomic position level in genome and the ERE class. 
+
+For example: 
+
+One location was collected for a given peptide.
+	(a) In the same location the peptide overlaps in frame two transcripts of a canonical protein (Peptide in_frame to the protein). 
+	(b) In the same location the peptide overlaps the 3'UTR of one transcript of the same canonical protein (Peptide in the 3'UTR region). 
+	(c) In the same location the peptide overlaps the intronic region of one transcript of the same canonical protein (Peptide in the intronic region).
+
+(first two transcripts: in_frame, second transcript: 3'UTR, third transcript: intron). 
+
+The final biotype for the peptide at the given location corresponds to: |br|
+In_frame : 50%, 3'UTR : 25%, Introns : 25%. i.e, Computaiton doesn't take into consideration the transcription expression!.
+
+Best guess : 
+			1. 'In_Frame' if it is among the genomic position biotypes.
+			2. Otherwise, the biotype with the highest percentage representation in Annotation Freqeuncies.
+
 
 .. thumbnail:: _images/genomic_and_ERE_Anno_by_Region_Full.jpg
 
+-----------
 
 **summary_info_biotypes**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -350,27 +388,58 @@ Reports for each peptide, each location and for each BAM/CRAM included in **BAM_
 .. _General_Gen_and_ERE_Biotype_Consensus:
 
 `1_General_Gen_and_ERE_Biotype_Consensus.csv`: 
-It reports for each peptide the consensus biotype based on all locations in the genome, so the percentage is computed from the frequencies of occurrence of the biotypes. For example, 3 locations were collected for a given peptide.
-Location 1 intersects one transcript of a canonical protein (in_frame), location 2 intersects two transcripts of a different canonical protein (first transcript: in_frame, second transcript: 3'UTR), location 3 intersects the intronic region of a different transcript. The final biotype corresponds to: In_frame : 50%, 3'UTR : 25%, Introns : 25%. i.e, no takes into consideration the transcription expression).
+It reports for each peptide the consensus biotype based on all locations in the genome, so the percentage is computed from the frequencies of occurrence of the biotypes. 
+
+For example: 
+
+Three locations were collected for a given peptide.
+	(a) In location 1 the peptide overlaps in frame two transcripts of a canonical protein (Peptide in_frame to the protein). 
+	(b) In location 2 the peptide overlaps in the 3'UTR of one transcript of a different canonical protein (Peptide in the 3'UTR region). 
+	(c) In location 3 the peptide overlaps the intronic region of one transcript of a different canonical protein (Peptide in the intronic region).
+
+(first two transcripts: in_frame, second transcript: 3'UTR, third transcript: intron). 
+
+The final biotype for the peptide corresponds to: |br|
+In_frame : 50%, 3'UTR : 25%, Introns : 25%. i.e, Computaiton doesn't take into consideration the transcription expression!.
+
+Best guess : 
+			1. 'In_Frame' if it is among the genomic position biotypes.
+			2. Otherwise, the biotype with the highest percentage representation in Annotation Freqeuncies.
+
 
 .. thumbnail:: _images/general_Gen_and_ERE_Biotype_Consensus.jpg
 
+-----------
 
 .. _Sample_Gen_and_ERE_Biotype_Consensus:
 
 `2_Sample_Gen_and_ERE_Biotype_Consensus.csv`: 
-It reports for each peptide the consensus biotype based on all expressed locations in the genome. Hence the percentage is computed from the count of RNA-seq reads attributed to each biotype according to the coefficients estimated using the EM algorithm as a function of the total reads for the given peptide (only expressed locations are taken into account to calculate the percentage) in all the samples.
+It reports for each peptide the consensus biotype based on all expressed locations in the genome. 
+
+The biotype representation (percentage) is computed from the count of RNA-seq reads attributed to each biotype according to the coefficients estimated using the EM algorithm as a function of the total reads for the given peptide in all the samples, (only expressed locations are taken into account to calculate the percentage) .
+
+Best guess : 
+			1. 'In_Frame' if it is among the genomic position biotypes.
+			2. Otherwise, the biotype with the highest percentage representation in Annotation Freqeuncies.
 
 .. thumbnail:: _images/sample_Gen_and_ERE_Biotype_Consensus.jpg
 
+-----------
 
 .. _Group_Samples_Gen_and_ERE_Biotype_Consensus:
 
 `3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv`: 
-It reports for each peptide the consensus biotype based on all expressed locations in the genome. Hence the percentage is computed from the count of RNA-seq reads attributed to each biotype according to the coefficients estimated using the EM algorithm as a function of the total reads for the given peptide in every group of samples as well as for all the samples (only expressed locations are taken into account to calculate the percentage) for each group of samples and all the samples.
+It reports for each peptide the consensus biotype based on all expressed locations in the genome. 
+
+The biotype representation (percentage) is computed from the count of RNA-seq reads attributed to each biotype according to the coefficients estimated using the EM algorithm as a function of the total reads for the given peptide in every group of samples as well as for all the samples, (only expressed locations are taken into account to calculate the percentage).
+
+Best guess : 
+			1. 'In_Frame' if it is among the genomic position biotypes.
+			2. Otherwise, the biotype with the highest percentage representation in Annotation Freqeuncies.
 
 .. thumbnail:: _images/group_Samples_Gen_and_ERE_Biotype_Consensus.jpg
 
+-----------
 
 .. _normal_mode_count_norm_info:
 

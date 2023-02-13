@@ -37,9 +37,7 @@ class GetInformationBEDIntersection:
 				end = splitLine[2]
 				peptide = splitLine[3].split('_')[0]
 				position = splitLine[3].split('_')[1]
-
 				mcss = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position)]['MCS'].values
-
 				for mcs in mcss:
 					key_peptide = splitLine[3]+'_'+mcs
 					key_peptide_position = chr+':'+start+'-'+end
@@ -50,10 +48,7 @@ class GetInformationBEDIntersection:
 					if strand_peptide == strand_transcript :
 						split_key = key_peptide.split('_')[1].split('|')
 						transcript = ''
-						transcript_support_level = ''
 						
-						intersection_number = int(splitLine[-1])
-
 						try:
 							transcript = line.split(' transcript_id ')[1].split('\"')[1]
 						except IndexError:
@@ -73,8 +68,8 @@ class GetInformationBEDIntersection:
 								else:
 									dic[key] = transctipt_set
 							self.peptides_intersected[key_peptide] = dic
-
-					
+							
+						
 		self.biotype_genomic_annotation_search = BiotypeGenomicSearch(self.peptides_intersected, genome_version, self.path_to_output_folder, self.mouse, self.threads)
 		self.information_final_biotypes_peptides = self.biotype_genomic_annotation_search.get_biotype_from_intersected_transcripts()
 		
