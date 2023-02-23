@@ -319,8 +319,10 @@ class BamQuery:
 		if len(self.input_file_treatment.manual_mode) > 0 :
 
 			splice_junctions_annotated = pd.read_csv(splice_junctions, header=None, sep='\t')
-			perfect_alignments_exists = isinstance(self.perfect_alignments, dict)
-			if not perfect_alignments_exists:
+			try:
+				perfect_alignments_exists = isinstance(self.perfect_alignments, dict)
+			except AttributeError:
+				perfect_alignments_exists = False
 				self.perfect_alignments = {}
 				peptides_with_alignments = set()
 			info_to_add = []
