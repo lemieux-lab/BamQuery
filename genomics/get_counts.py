@@ -153,7 +153,6 @@ class GetCounts:
 				digits_bam_file_BQ_reference.append(key)
 
 			for idx, bam_file in enumerate(info_bams):
-				
 				if idx > last_treated_bam_file:
 
 					t0_bam_file = time.time()

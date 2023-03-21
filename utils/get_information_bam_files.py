@@ -2,6 +2,7 @@ import os, subprocess, getpass, pickle, csv
 from os.path import join
 import pandas as pd
 import inspect, sys, pysam
+import time
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -34,6 +35,9 @@ class GetInformationBamFiles:
 		self.sc = sc
 		self.mouse = mouse
 		self.threads = threads
+		self.path_to_input_folder = path_to_input_folder
+		self.path_to_lock_file = path_to_lib+"lock_dic"
+			
 
 		if genome_version == 'v26_88': 
 			self.genome_version_gtf= path_to_lib+'genome_versions/genome_v26_88/gencode.v26.primary_assembly.annotation.gtf'
@@ -72,7 +76,6 @@ class GetInformationBamFiles:
 				raise NeedMoreInfo(message)
 
 
-			
 	def get_info_ribo_bamfiles(self, bam_files):
 		
 		ribo_bam_files_info_query = self.path_to_output_temps_folder+"ribo_bam_files_info_query.dic"
@@ -140,6 +143,37 @@ class GetInformationBamFiles:
 		return bam_files_list
 
 
+	def remove_lock_to_bam_files_info_dic(self):
+		with open(self.path_to_lock_file, 'r') as file:
+			first_line = file.readline().strip()
+		if first_line == self.path_to_input_folder:
+			first_line = ''
+			with open(self.path_to_lock_file, 'w') as file:
+				file.writelines(first_line) 
+			file.close()
+		else:
+			print ('Error in the path_to_lock_file: contents ', first_line, ' and the ', self.path_to_input_folder, ' not the same.')
+		
+
+	def grant_access_to_bam_files_info_dic(self, timeout=300):
+		start_time = time.time()
+		with open(self.path_to_lock_file, 'r') as file:
+			first_line = file.readline().strip()
+		while (time.time() - start_time < timeout) and first_line != self.path_to_input_folder:
+			try:
+				with open(self.path_to_lock_file, 'r') as file:
+					first_line = file.readline().strip()
+				if first_line == '':
+					with open(self.path_to_lock_file, 'w') as file:
+						file.write(self.path_to_input_folder)
+					file.close()
+					return True
+				time.sleep(1)
+			except IOError:
+				pass
+		raise NeedMoreInfo("\nTimeout to grant access to Bam_files_info.dic. Another BamQuery process may be using the dictionary." )
+
+
 	def get_info_bamfiles(self, bam_files, strandedness, path_to_output_folder):
 
 		data = [['Sample', 'Tissue', 'Tissue_type', 'Short_list']]
@@ -147,6 +181,14 @@ class GetInformationBamFiles:
 		bam_files_list = {}
 		exists = os.path.exists(self.path_to_output_temps_folder+"bam_files_info_query.dic")
 		initial_list_paths = []
+		exists_lock_file = os.path.exists(self.path_to_lock_file)
+
+		# First time creating the file lock_dic file
+		if not exists_lock_file:
+			file_to_open = open(self.path_to_lock_file, 'w')
+			file_to_open.write('')
+			file_to_open.close()
+			self.bam_files_logger.info('Creating a lock file for managed access to Bam_files_info')
 
 		mod = False
 		bam_files_to_get_primary_read_count = []
@@ -156,18 +198,12 @@ class GetInformationBamFiles:
 			path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 			exist = os.path.exists(path_to_all_counts_file)
 			
-			path_to_lock_file = path_to_lib+"lock_dic"
-			exists = os.path.exists(path_to_lock_file)
-
-			while exists:
-				exists = os.path.exists(path_to_lock_file)
-
-			if not exists:
-				file_to_open = open(path_to_lock_file, 'w')
-				file_to_open.write('')
-				file_to_open.close()
-				self.bam_files_logger.info('Lock Bam_files_info')
-
+			if self.grant_access_to_bam_files_info_dic():
+				self.bam_files_logger.info('Lock access to Bam_files_info.dic')
+				pass
+			else:
+				raise NeedMoreInfo("\nCould not acquire the lock to consult the Bam_files_info.dic. Check if there is another run of BamQuery that you wrote to the lock file and it is still running." )
+			
 			if exist :
 				with open(path_to_all_counts_file, 'rb') as fp:
 					dictionary_total_reads_bam_files = pickle.load(fp)
@@ -187,8 +223,9 @@ class GetInformationBamFiles:
 						path = line[1]
 						initial_list_paths.append(path)
 					except IndexError:
-						os.remove(path_to_lock_file)
+						self.remove_lock_to_bam_files_info_dic()
 						self.bam_files_logger.info('Unlock Bam_files_info')
+
 						raise Exception("Your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
 
 					if '.bam' in path or '.cram' in path:
@@ -267,7 +304,7 @@ class GetInformationBamFiles:
 				with open(path_to_all_counts_file, 'wb') as handle:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			os.remove(path_to_lock_file)
+			self.remove_lock_to_bam_files_info_dic()
 			self.bam_files_logger.info('Unlock Bam_files_info')
 
 			in_ = False	
@@ -284,18 +321,12 @@ class GetInformationBamFiles:
 			# 0: path, 1: number, 2: Tissue, 3: Tissue_type, 4: Shortlist, 5: sequencing, 6: library, 7: user
 			if os.path.exists(self.path_to_output_aux_folder+"bam_files_tissues.csv"):
 				
-				path_to_lock_file = path_to_lib+"lock_dic"
-				exists = os.path.exists(path_to_lock_file)
-
-				while exists:
-					exists = os.path.exists(path_to_lock_file)
-
-				if not exists:
-					file_to_open = open(path_to_lock_file, 'w')
-					file_to_open.write('')
-					file_to_open.close()
-					self.bam_files_logger.info('Lock Bam_files_info')
-
+				if self.grant_access_to_bam_files_info_dic():
+					self.bam_files_logger.info('Lock access to Bam_files_info.dic')
+					pass
+				else:
+					raise NeedMoreInfo("\nCould not acquire the lock to consult the Bam_files_info.dic. Check if there is another run of BamQuery that you wrote to the lock file and it is still running." )
+			
 				self.bam_files_logger.info('Adding tissue information to Bam Files !')
 				path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 			
@@ -317,18 +348,18 @@ class GetInformationBamFiles:
 							bam_files_list[sample].append(tissue_name)
 							bam_files_list[sample].append(tissue_type)
 						else:
-							os.remove(path_to_lock_file)
+							self.remove_lock_to_bam_files_info_dic()
 							self.bam_files_logger.info('Unlock Bam_files_info')
 							raise NeedMoreInfo("\nBefore to continue you must provide all the tissue information for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist (yes/no)." )
 					except Exception :
-						os.remove(path_to_lock_file)
+						self.remove_lock_to_bam_files_info_dic()
 						self.bam_files_logger.info('Unlock Bam_files_info')
 						raise NeedMoreInfo("\nBefore to continue you must provide all the tissue information for the bam files annotated in the file : "+ self.path_to_output_aux_folder+"bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist (yes/no)." )
 				
 				with open(path_to_all_counts_file, 'wb') as handle:
 					pickle.dump(dictionary_total_reads_bam_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-				os.remove(path_to_lock_file)
+				self.remove_lock_to_bam_files_info_dic()
 				self.bam_files_logger.info('Unlock Bam_files_info')
 
 				with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'wb') as handle:

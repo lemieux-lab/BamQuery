@@ -219,24 +219,6 @@ class BamQuery:
 			
 			writer.save()
 			self.super_logger.info('========== Get Norm Ribo : Done! ============ ')
-
-		# name_path = self.path_to_output_folder+'/res_translation/'+self.name_exp+'_ribo_coverage_info.xlsx'
-		# exists = os.path.exists(name_path) 
-
-		# if not exists:
-		# 	get_counts = GetCounts(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger)
-		# 	res = get_counts.get_coverage(self.perfect_alignments, self.bam_files_info.bam_ribo_files_list, self.genome_version)
-		# 	df_counts = res[0]
-		# 	self.perfect_alignments = res[1]
-		# 	df_all_alignments = res[2] 
-
-		# 	plots.get_heat_map_coverage(df_counts, self.path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/coverage_translation_heatmap/', path_temps_file, self.name_exp, '_TPM_transcripts_coverage')
-
-		# 	writer = pd.ExcelWriter(name_path, engine='xlsxwriter')
-		# 	writer.book.use_zip64()
-		# 	df_all_alignments.to_excel(writer, sheet_name='Alignments covered Ribo-reads',index=False)
-		# 	df_counts.to_excel(writer, sheet_name='log10(TPM) trans by peptide',index=False)
-		# 	writer.save()
 			
 
 	def common_to_modes(self, bam_files_logger):

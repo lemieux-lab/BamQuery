@@ -53,20 +53,20 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		anchor = 1000
 
 		if maxmm:
-			anchor = 5000
+			anchor = 20000
 			alignTranscriptsPerReadNmax = 100000
-			seedPerWindowNmax = 1000
-			seedNoneLociPerWindow = 1000
+			seedPerWindowNmax = 1500
+			seedNoneLociPerWindow = 1500
 			alignWindowsPerReadNmax = 20000
-			alignTranscriptsPerWindowNmax = 1000
-			outFilterMultimapScoreRange = 2
+			alignTranscriptsPerWindowNmax = 1500
+			outFilterMultimapScoreRange = 4
 		else:
 			alignTranscriptsPerReadNmax = 20000
 			seedPerWindowNmax = 1000
 			seedNoneLociPerWindow = 1000
 			alignWindowsPerReadNmax = 15000
 			alignTranscriptsPerWindowNmax = 1000
-			outFilterMultimapScoreRange = 1
+			outFilterMultimapScoreRange = 3
 
 		limitOutSAMoneReadBytes = 2 * ( 33 + 100 ) * maxMulti
 
@@ -122,21 +122,18 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 			super_logger.info('Total perfect alignments : %s ', str(len(res_star[0])))
 			
 			perfect_alignments = res_star[0]
-			variants_alignments = res_star[1]
-			
-			peptides_with_alignments = res_star[2]
+			peptides_with_alignments = res_star[1]
 			
 			columns = ["Peptide", "Strand", "Alignment", "Known Splice Junction", "MCS", "Peptide in Reference", "Diff AA", "Diff ntd", "SNVs"]
 			columns_cosmic = ["Peptide", "Strand", "Alignment", "SNV", 'Mutation genome position', 'GRCh', 'Gene', 'SNP', 'Mutation Id', 
 							'Mutation CDS', 'Mutation AA', 'Description',
 							'Mutation Strand', 'Resistance', 'Score', 'Prediction', 'Status' ]
 
-			alignments = [perfect_alignments, variants_alignments]
+			alignments = [perfect_alignments]
 			pool = mp.Pool(threads)
 			results = pool.map(generer_alignments_information, alignments)
 			
 			perfect_alignments_to_print = results[0][0]
-			variants_alignments_to_print = results[1][0]
 			pool.close()
 			pool.join()
 			
@@ -152,10 +149,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 				df3 = pd.DataFrame()   
 
 			df1 = pd.DataFrame(perfect_alignments_to_print, columns = columns)
-			df2 = pd.DataFrame(variants_alignments_to_print, columns = columns)
-			
-
-			write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, df1, df2, df3)
+			write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, df1, df3)
 			
 			if not light:
 				name_path = path_to_output_folder_alignments+'Alignments_information.dic'
@@ -312,13 +306,11 @@ def get_info_cosmic(snv_alignments):
 	return info_cosmic
 
 
-def write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, df1, df2, df3):
+def write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, df1, df3):
 	if len(df1) < 1048576:
 		writer = pd.ExcelWriter(path_to_output_folder_alignments+name_exp+'_info_alignments.xlsx', engine='xlsxwriter')
 		writer.book.use_zip64()
 		df1.to_excel(writer, sheet_name='Perfect Alignments')
-		if len(df2) > 0:
-			df2.to_excel(writer, sheet_name='Variants Alignments')
 		df3.to_excel(writer, sheet_name='COSMIC Information')
 		writer.save()
 	else:
