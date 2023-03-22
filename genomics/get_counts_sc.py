@@ -144,23 +144,17 @@ class GetCountsSC:
 					bam_file_path = bam_file[1][0]
 					try:
 						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb")
-						has_header = True
-					except ValueError as e:
-						has_header = False
-
-					if has_header:
-						reference = self.get_corresponding_references(bam_file_ref.header.references, references_chrs, digits_bam_file_BQ_reference)
+						references = bam_file_ref.header.references
 						bam_file_ref.close()
-					else:
+					except ValueError as e:
 						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb", check_sq=False)
 						references = set()
 						for alignment in bam_file_ref.fetch():
 							references.add(bam_file_ref.getrname(alignment.reference_id))
-						reference = self.get_corresponding_references(list(references))
 						bam_file_ref.close()
 
+					reference = self.get_corresponding_references(list(references), references_chrs, digits_bam_file_BQ_reference, bam_file_path)
 					references = [reference] * len(keys)
-
 					bams = [bam_file] * len(keys)
 					results = pool.map(self.get_counts_sample, bams, keys, values, references)
 					not_permission = False
@@ -185,17 +179,17 @@ class GetCountsSC:
 
 							else:
 								count_info = count_align[0]
-								
+								sequence = count_align[1]
+
 								if count_info == -1:
 									not_permission = True
 								
-								sequence = count_align[1]
+								info_alignment = peptides_info[peptide][key]
 								
-								if len(count_info) > 0:
+								if len(count_info) > 0: # cell names
 									cells = set(count_info.keys())
 									cell_lines = cell_lines.union(cells)
 
-								info_alignment = peptides_info[peptide][key]
 								try:
 									info_sequence = info_alignment[sequence]
 
@@ -205,7 +199,7 @@ class GetCountsSC:
 								
 								except KeyError:
 									info_alignment[sequence] = count_info
-
+									
 								count = sum(count_info.values())
 								new_key = peptide+'_'+alignment+'_'+sequence
 								if len(alignment_information_sc[new_key][-1]) == 0:
@@ -263,7 +257,7 @@ class GetCountsSC:
 					strand = key_splited[1]
 					
 					for sequence, value_sequence in info_sequences.items():
-						if len(value_sequence)>0 :
+						if len(value_sequence)>=0 :  # remove the = if only want to show the peptides that have some counting
 							aux = [peptide_type, peptide, alignment, sequence, strand]
 							zeros = [0]*len(cell_lines)
 							for cell, count in value_sequence.items():
@@ -316,9 +310,15 @@ class GetCountsSC:
 		peptide = peptide_alignment.split('_')[0]
 		alignment = peptide_alignment.split('_')[1]
 		strand = peptide_alignment.split('_')[2]
+		to_return = [[peptide, alignment, name_sample, strand]]
 
 		chr = alignment.split(':')[0]
-		chr = references[chr]
+		try:
+			chr = references[chr]
+		except:
+			for sequence in sequences:
+				to_return.append([0, sequence])
+			return to_return
 		
 		region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
 
@@ -338,8 +338,6 @@ class GetCountsSC:
 			
 		counts = self.get_depth_with_view(region_to_query, bam_file, name_sample, library, sens, strand, sequences, pos_set, splice_pos)
 
-		to_return = [[peptide, alignment, name_sample, strand]]
-		
 		for index, sequence in enumerate(sequences):
 			try:
 				count = counts[sequence]
@@ -360,31 +358,38 @@ class GetCountsSC:
 		else:
 			return '+'
 
-	def get_ranges(self, cigar, start, strand):
-		rang = []
+	def get_ranges(self, cigar, start, len_seq):
+		rang = [0]*len_seq
 		splices_sites = set()
 		rx = re.findall('(\d+)([MISDNX=])?', cigar)
 		indels = []
+		lastIndex = 0
+
 		for index in rx:
 			operation = index[1]
 			length = int(index[0])
 			
 			if ('S' in operation):
 				end = length
-				start += end
+				lastIndex += end
 				
 			elif ('M' in index) or ('=' in index) or ('X' in index) :
-				end = start + length
-				rang.extend(range(start, end))
-				start += length
+				end = length
+
+				for i in range(0,end):
+					rang[lastIndex+i] = start
+					start = start + 1
+
+				lastIndex = lastIndex + end
 				
 			elif ('N' in index) or ('D' in index):
-				splices_sites.add(end)
+				splices_sites.add(start)
 				start = start + length
 				splices_sites.add(start)
 
 			elif ('I' in index):
 				indels.append(len(rang)+1)
+
 		return rang, splices_sites, indels
 
 	def get_indexes(self, overlap, rang_):
@@ -403,10 +408,11 @@ class GetCountsSC:
 			seq = split_read[9]
 			cigar = split_read[5]
 			strand = self.set_strand_read(strand)
-			rang_, splices_sites, indels = self.get_ranges(cigar, start, strand)
+			rang_, splices_sites, indels = self.get_ranges(cigar, start, len(seq))
 			splices_sites = splices_sites - splice_pos
 			overlap = set(rang_).intersection(pos_set)
-
+			percentage_overlap = len(overlap)/len(pos_set)
+			
 			try:
 				cell = read.split('CB:Z:')[1].split('-')[0]
 			except:
@@ -416,11 +422,9 @@ class GetCountsSC:
 				for indel in indels:
 					seq = self.remove_at(indel, seq)
 
-			if len(splices_sites.intersection(pos_set[1:-1])) == 0 and len(overlap) > 0:
-				percentage_overlap = len(overlap)/len(pos_set)
-				indexes = self.get_indexes(overlap, rang_)
-				index_ini = min(indexes)
-				index_fin = max(indexes) + 1
+			if len(splices_sites.intersection(sorted(pos_set)[1:-1])) == 0 and percentage_overlap >= 0.6:
+				index_ini = rang_.index(min(overlap))
+				index_fin = rang_.index(max(overlap)) + 1
 				seq_overlap = seq[index_ini :index_fin]
 				if percentage_overlap == 1 :
 					return name, cell, strand, seq_overlap, percentage_overlap
@@ -537,7 +541,6 @@ class GetCountsSC:
 			reads_overlaping_area_count_2.sort(key=itemgetter(-1), reverse=True)
 
 			for seq in sequences:
-				contReads = 0
 				set_names_reads = set()
 				cells_names_reads = set()
 				rcmcs_aux = uf.reverseComplement(seq)
@@ -575,43 +578,85 @@ class GetCountsSC:
 		
 		return contReads_to_return
 	
-	def get_corresponding_references(self, references, references_chrs, digits_bam_file_BQ_reference):
+	def get_corresponding_references(self, references, references_chrs, digits_bam_file_BQ_reference, bam_file_path):
 		reference_correspondence = {}
 		digits_bam_file_search = {}
 		no_digits = []
 		chr_string = 'chr' in references[0]
+		not_associated_chr_ref_bam_file = []
+		
 		for chr in references:
 			l = [x for x in chr if x.isdigit()]
 			key = ''.join(l)
 			if len(l) == 0:
 				key = chr
 				no_digits.append(chr)
-			digits_bam_file_search[key] = chr
-		
+			try:
+				digits_bam_file_search[key].append(chr)
+			except KeyError:
+				digits_bam_file_search[key] = [chr]
+				
 		for index, digits_reference in enumerate(digits_bam_file_BQ_reference):
 			references_chr = references_chrs[index]
 			try:
 				chr_bam_file = digits_bam_file_search[digits_reference]
-				reference_correspondence[references_chr] = chr_bam_file
+				if len(chr_bam_file) > 1:
+					intersection = set([references_chr]).intersection(set(chr_bam_file))
+					if intersection:
+						reference_correspondence[references_chr] = list(intersection)[0]
+					else:
+						for chr in chr_bam_file:
+							if self.is_contained_ignore_case(self.select_not_digits_no_special_chars(references_chr), self.select_not_digits_no_special_chars(chr)):
+								reference_correspondence[references_chr] = chr
+								break
+						not_associated_chr_ref_bam_file.append(references_chr)
+				else:
+					reference_correspondence[references_chr] = chr_bam_file[0]
+				
 			except:
 				in_ = False
-				if not chr_string:
-					for index_2, i in enumerate(no_digits):
-						chr_name = 'chr'+i
-						if chr_name == references_chr:
-							reference_correspondence[references_chr] = i
-							in_ = True
-							no_digits.pop(index_2)
-							break
-					if not in_:
-						in__ = False
-						for index_2, i in enumerate(no_digits):
+				if not self.has_digits(digits_reference):
+					if not chr_string:
+						for index, i in enumerate(no_digits):
 							if i == 'MT' and references_chr == 'chrM':
 								reference_correspondence[references_chr] = i
-								in__ = True
+								in_ = True
+								no_digits.pop(index)
+							else:
+								chr_name = 'chr'+i
+								if chr_name == references_chr:
+									reference_correspondence[references_chr] = i
+									in_ = True
+									no_digits.pop(index)
+							if in_:
 								break
-						if not in__:
-							self.super_logger.info('Uknown Chromosome %s --> Regions in this chromosome will be associated with a count of zero.', references_chr)
+								
+					else:
+						for index, i in enumerate(no_digits):
+							if ('MT' in i or 'M' in i) and references_chr == 'chrM':
+								reference_correspondence[references_chr] = i
+								in_ = True
+								no_digits.pop(index)
+							else: 
+								if i.lower() == references_chr.lower():
+									reference_correspondence[references_chr] = i
+									in_ = True
+									no_digits.pop(index)
+							if in_:
+								break
+
+				if not in_:
+					for digits_bam_file, list_chrs in digits_bam_file_search.items():
+						if digits_reference in digits_bam_file:
+							reference_correspondence[references_chr] = list_chrs[0]
+							in_ = True
+							break
+				if not in_:
+					not_associated_chr_ref_bam_file.append(references_chr)
+
+		if len(not_associated_chr_ref_bam_file):
+			chrs_not_asso = ','.join(not_associated_chr_ref_bam_file)
+			self.super_logger.info('It was not possible to associate these chromosomes in the genome annotations reference: %s to any chr in the bam file investigated: %s. \nRegions in these chromosomes will be associated with a count of zero.', chrs_not_asso, bam_file_path)
 
 		return reference_correspondence
 

@@ -148,7 +148,6 @@ def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequen
 		name, strand, seq_overlap, percentage_overlap = info_read
 		
 		if seq_overlap in cs and name not in set_names_reads:
-			print (name)
 			set_names_reads.add(name)
 			return percentage_overlap 
 
