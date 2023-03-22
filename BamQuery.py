@@ -613,6 +613,7 @@ def main(argv):
 		shutil.rmtree(path_to_output_folder+'genome_alignments')
 		
 		if sc:
+			shutil.rmtree(path_to_output_folder+'res/temps_files')
 			os.remove(path_to_output_folder+"alignments/Alignments_information_sc.dic")
 			
 		if mode == 'translation':
@@ -621,12 +622,12 @@ def main(argv):
 			shutil.rmtree(path_to_output_folder+'res_translation/AUX_files')
 			os.remove(path_to_output_folder+"alignments/Alignments_information_ribo.dic")
 		
-		if mode == 'normal' and not light:
+		if mode == 'normal' and not light and not sc:
 			shutil.rmtree(path_to_output_folder+'res/BED_files')
 			shutil.rmtree(path_to_output_folder+'res/AUX_files')
 			shutil.rmtree(path_to_output_folder+'res/temps_files')
 			os.remove(path_to_output_folder+"alignments/Alignments_information_rna.dic")
-
+		
 		if light :
 			shutil.rmtree(path_to_output_folder+'res_light/temps_files')
 			shutil.rmtree(path_to_output_folder+'res_light/AUX_files')

@@ -234,6 +234,12 @@ class GetInformationBamFiles:
 						bam_files_found = self.search_bam_files(path)
 
 					self.bam_files_logger.info('Total number of accessible bam files in the path %s  : %s ', path, str(len(bam_files_found)))
+					
+					if len(bam_files_found) == 0:
+						self.bam_files_logger.info('Not acces granted or the path %s does not exists.', path)
+						self.remove_lock_to_bam_files_info_dic()
+						self.bam_files_logger.info('Unlock Bam_files_info')
+						raise NeedMoreInfo("\nBefore proceeding, please verify that you have the access granted to query all BAM files or that the path to these files exists. \nSee the log file Information_BAM_directories.log for more information about BAM files with limited access." )
 
 					for bam_file_path in bam_files_found:
 
