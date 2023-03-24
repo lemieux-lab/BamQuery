@@ -115,6 +115,7 @@ class GetCounts:
 
 			total_samples = len(list_bam_files_order)
 			print ('Getting counts for ',str(total_samples), ' samples')
+			
 			keys = alignment_information.keys()
 			self.super_logger.info('Total MCS mapped : %s ', str(len(keys)))
 

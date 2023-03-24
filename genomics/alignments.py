@@ -3,13 +3,25 @@ import genomics.get_alignments as get_alig
 import collections
 import pandas as pd
 import billiard as mp
-import re
+import re, sys, inspect
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
+
+class NoTraceBackWithLineNumber(Exception):
+    def __init__(self, msg):
+        try:
+            ln = sys.exc_info()[-1].tb_lineno
+        except AttributeError:
+            ln = inspect.currentframe().f_back.f_lineno
+        self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
+        sys.exit(self)
+
+class NeedMoreInfo(NoTraceBackWithLineNumber):
+    pass
 
 def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode, mouse, threads):
 	global splice_junctions_annotated
@@ -83,6 +95,10 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		super_logger.info('Command to Align using STAR : %s ', command)
 		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 		out, err = p_1.communicate()
+		if 'sucessfully' not in out:
+			super_logger.info('A problem occurred while running STAR. Please check if there is enough memory for the %f number of threads.', threads)
+			message = '\nA problem occurred while running STAR. Please check if there is enough memory for the '+ str(threads)+' number of threads.'
+			raise NeedMoreInfo(message)
 		t_2 = time.time()
 		total = t_2-t_0
 

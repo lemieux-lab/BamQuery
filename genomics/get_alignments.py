@@ -195,7 +195,37 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 			continue
 		key_pos = peptide+'_'+range_trans
 		
-		if key_local not in local_visited:
+		
+		MCS_perfect_alignments_align, MCS_variant_alignments_align = get_sequences_at_position(peptide, seq_reference_align, MCS, rang, strand, chromosome, chr)
+		
+		if len(MCS_perfect_alignments_align) > 0:
+			peptides_in.add(peptide)
+
+			MCS_in =  MCS_perfect_alignments_align[0]
+			key_p = key_pos+'_'+MCS_in
+
+			local_translation_peptide = MCS_perfect_alignments_align[1][0]
+			differences_pep = MCS_perfect_alignments_align[1][1]
+			info_snps = MCS_perfect_alignments_align[1][2]
+			differences_ntds = MCS_perfect_alignments_align[1][3]
+
+			positions_mcs_peptides_perfect_alignment[key_p] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
+			
+
+		if len(MCS_variant_alignments_align) > 0:
+			peptides_in.add(peptide)
+			MCS_in_var =  MCS_variant_alignments_align[0]
+			key_v = key_pos+'_'+MCS_in_var
+
+			local_translation_peptide = MCS_variant_alignments_align[1][0]
+			differences_pep = MCS_variant_alignments_align[1][1]
+			info_snps = MCS_variant_alignments_align[1][2]
+			differences_ntds = MCS_variant_alignments_align[1][3]
+
+			positions_mcs_peptides_perfect_alignment[key_v] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
+			
+
+		if key_local not in local_visited and key_pos != key_local:
 			local_visited.add(key_local)
 			rang_local_ref, seq_reference_local = get_local_reference(readStart, lenSeq, chr, strand, faFile)
 			MCS_perfect_alignments_local, MCS_variant_alignments_local = get_sequences_at_position_local(peptide, seq_reference_local, MCS, list(rang_local_ref), strand, chromosome, chr)
@@ -211,7 +241,8 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 				info_snps = MCS_perfect_alignments_local[1][2]
 				differences_ntds = MCS_perfect_alignments_local[1][3]
 
-				positions_mcs_peptides_perfect_alignment[key_local_p] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
+				if key_local_p not in positions_mcs_peptides_perfect_alignment.keys():
+					positions_mcs_peptides_perfect_alignment[key_local_p] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
 				
 			if len(MCS_variant_alignments_local) > 0:
 				peptides_in.add(peptide)
@@ -224,36 +255,8 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 				info_snps = MCS_variant_alignments_local[1][2]
 				differences_ntds = MCS_variant_alignments_local[1][3]
 
-				positions_mcs_peptides_perfect_alignment[key_local_v] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
-
-		 
-		MCS_perfect_alignments_align, MCS_variant_alignments_align = get_sequences_at_position(peptide, seq_reference_align, MCS, rang, strand, chromosome, chr)
-		
-		if len(MCS_perfect_alignments_align) > 0:
-			peptides_in.add(peptide)
-
-			MCS_in =  MCS_perfect_alignments_align[0]
-			key_p = key_pos+'_'+MCS_in
-
-			local_translation_peptide = MCS_perfect_alignments_align[1][0]
-			differences_pep = MCS_perfect_alignments_align[1][1]
-			info_snps = MCS_perfect_alignments_align[1][2]
-			differences_ntds = MCS_perfect_alignments_align[1][3]
-
-			positions_mcs_peptides_perfect_alignment[key_p] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
-		
-
-		if len(MCS_variant_alignments_align) > 0:
-			peptides_in.add(peptide)
-			MCS_in_var =  MCS_variant_alignments_align[0]
-			key_v = key_pos+'_'+MCS_in_var
-
-			local_translation_peptide = MCS_variant_alignments_align[1][0]
-			differences_pep = MCS_variant_alignments_align[1][1]
-			info_snps = MCS_variant_alignments_align[1][2]
-			differences_ntds = MCS_variant_alignments_align[1][3]
-
-			positions_mcs_peptides_perfect_alignment[key_v] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
+				if key_local_v not in positions_mcs_peptides_perfect_alignment.keys():
+					positions_mcs_peptides_perfect_alignment[key_local_v] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
 
 	chromosome = {}
 	return positions_mcs_peptides_perfect_alignment, peptides_in
@@ -322,8 +325,13 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 	
 	if len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+	
 	elif var and local_translation_peptide_aux == peptide:
-		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+		if len(info_snps) == 0 :
+			MCS_perfect_alignments = [new_sequence, [local_translation_peptide, [], [], []]]
+		else:
+			MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+
 		MCS_variant_alignments = [MCS, [local_translation_peptide, [], [], differences_ntds]]
 	
 	return MCS_perfect_alignments, MCS_variant_alignments
@@ -394,6 +402,7 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 	
 	if peptide == local_translation_peptide_aux and len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+	
 	elif var and local_translation_peptide_aux == peptide :
 		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 		
@@ -528,7 +537,7 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 				del values[index]
 			except ValueError:
 				pass
-			
+		
 		nodes = 5
 		cont = 0
 		for i in range(0,len(keys),nodes):
@@ -543,6 +552,6 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 			pool.close()
 			pool.join()
 			pool.clear()
-
+			
 	return positions_mcs_peptides_perfect_alignment, total_peptides_in
 

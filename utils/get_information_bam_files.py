@@ -257,7 +257,7 @@ class GetInformationBamFiles:
 							sequencing = info_bam_file[5]
 							library = info_bam_file[6]
 							user = info_bam_file[7]
-							if tissue == '' or tissue_type == '' or shortlist == '':
+							if tissue == '' or tissue_type == '' or shortlist == '' or count == 0:
 								to_add = [''] * 4
 								to_add[0] = name_bam_file
 								data.append(to_add)

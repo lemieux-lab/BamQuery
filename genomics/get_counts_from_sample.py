@@ -34,6 +34,7 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 	pos = alignment.split(':')[1].split('|')
 	pos_set = []
 	splice_pos = set()
+	
 	for i, chunck in enumerate(pos):
 		ini = int(chunck.split('-')[0])
 		fini = int(chunck.split('-')[1])

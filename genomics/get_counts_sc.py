@@ -86,6 +86,7 @@ class GetCountsSC:
 			 		alignment_information_sc = pickle.load(fp)
 
 			info_bams = []
+			info_bams_path = []
 			bams = []
 			
 			list_bam_files_order = []
@@ -93,9 +94,13 @@ class GetCountsSC:
 			index_sample = 0
 			for name_sample, info_bam in sorted(bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 				info_bams.append((index_sample,info_bam))
+				info_bams_path.append((index_sample, name_sample, info_bam[0]))
 				list_bam_files_order.append(name_sample)
 				index_sample += 1
-
+				
+			df_info_bams = pd.DataFrame(info_bams_path, columns=['Index','Name Sample', 'Bam path'])
+			df_info_bams.to_csv(self.path_to_output_folder_res+self.name_exp+'_index_bam_files.csv', index=None)
+			
 			total_samples = len(list_bam_files_order)
 
 			keys = alignment_information_sc.keys()
@@ -180,7 +185,7 @@ class GetCountsSC:
 							else:
 								count_info = count_align[0]
 								sequence = count_align[1]
-
+								
 								if count_info == -1:
 									not_permission = True
 								
@@ -194,9 +199,8 @@ class GetCountsSC:
 									info_sequence = info_alignment[sequence]
 
 									if len(count_info) > 0:
-										dict1 = [info_sequence, count_info]
-										info_alignment[sequence] = reduce(sum_dict, dict1)
-								
+										info_alignment[sequence].update(count_info)
+										
 								except KeyError:
 									info_alignment[sequence] = count_info
 									
@@ -248,6 +252,9 @@ class GetCountsSC:
 				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']+cell_lines
 			data = []
 			
+			with open(self.path_to_output_folder_alignments+'peptides_info.pkl', 'wb') as handle:
+				pickle.dump(peptides_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
+			
 			for peptide, info_peptide in peptides_info.items():
 				to_add = []
 				peptide_type = self.peptides_by_type[peptide]
@@ -270,8 +277,17 @@ class GetCountsSC:
 						data.append(aux)
 
 			df_alignments = pd.DataFrame(data, columns = header)
+			if len(cell_lines) > 0:
+				cell_lines = sorted(cell_lines, key=lambda x: (int(x.split('_')[0]), x))
+				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']+cell_lines
+				df_alignments = df_alignments.reindex(columns=header)
+
 			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum().reset_index()
 			df_counts.sort_values(by=['Peptide Type'])
+
+			if len(cell_lines) > 0:
+				header = ['Peptide Type', 'Peptide']+cell_lines
+				df_counts = df_counts.reindex(columns=header)
 
 			df_counts.to_csv(rna_sc_count_path,  header=True, index=False)
 			df_alignments.to_csv(rna_sc_count_all_alignments_path, index=False, header=True)
@@ -290,11 +306,6 @@ class GetCountsSC:
 				alignment_information_sc = pickle.load(fp)
 
 			df_alignments = pd.read_csv(rna_sc_count_all_alignments_path)
-
-		try:
-			os.remove(self.path_to_output_folder_alignments+'peptides_info.pkl')
-		except FileNotFoundError:
-			pass
 
 		return df_counts, alignment_information_sc, df_alignments
 
