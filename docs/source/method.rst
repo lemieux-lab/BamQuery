@@ -105,6 +105,7 @@ Format Input Files
 BamQuery requires two input file paths to search for RNA expression:
 
 **A) BAM_directories:** list of Bam files in which the search is performed
+
 **B) peptides.tsv:** list of peptides to be searched
 
 
@@ -117,7 +118,9 @@ BamQuery requires two input file paths to search for RNA expression:
 	   :alt: Format BAM_directories.tsv
 	   :align: left
 
-	BamQuery collects all BAM/CRAM files in each path included in the list. For instance from the path /home/gtex/, BamQuery collects all the bam files for every tissue in gtex.
+	BamQuery collects all BAM/CRAM files in each path included in the list. 
+	
+	For instance from the path /home/gtex/, BamQuery collects all the bam files for every tissue in gtex.
 
 	Note that:
 

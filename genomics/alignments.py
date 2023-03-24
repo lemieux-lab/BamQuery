@@ -95,7 +95,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		super_logger.info('Command to Align using STAR : %s ', command)
 		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 		out, err = p_1.communicate()
-		if 'sucessfully' not in out:
+		if 'successfully' not in out.decode():
 			super_logger.info('A problem occurred while running STAR. Please check if there is enough memory for the %f number of threads.', threads)
 			message = '\nA problem occurred while running STAR. Please check if there is enough memory for the '+ str(threads)+' number of threads.'
 			raise NeedMoreInfo(message)
