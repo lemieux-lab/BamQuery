@@ -3,6 +3,7 @@ from os.path import join
 import pandas as pd
 import inspect, sys, pysam
 import time
+import fcntl
 
 __author__ = "Maria Virginia Ruiz"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -76,101 +77,43 @@ class GetInformationBamFiles:
 				raise NeedMoreInfo(message)
 
 
-	def get_info_ribo_bamfiles(self, bam_files):
-		
-		ribo_bam_files_info_query = self.path_to_output_temps_folder+"ribo_bam_files_info_query.dic"
-		exists = os.path.exists(ribo_bam_files_info_query)
-		
-		if not exists:
-			bam_files_list = {}
-			command = 'module load stringtie/1.3.6; ulimit -s 8192;'
-
-			with open(bam_files) as f:
-
-				for index, line in enumerate(f):
-					line = line.strip().split('\t')
-					name = line[0]
-
-					try:
-						path = line[1]
-					except IndexError:
-						raise Exception("Your BAM_directories.tsv file does not follow the correct format. Remember that the columns must be tab separated.")
-
-					if '.bam' in path or '.cram' in path:
-						bam_files_found = [path]
-					else:
-						bam_files_found = self.search_bam_files(path)
-					
-					assemblage = 0
-					for bam_file_path in bam_files_found:
-
-						name_bam_file = "_".join(bam_file_path.split('/')[:-1][-2:])
-						output_assembled_gtf = self.path_to_output_temps_folder+name_bam_file+'.gtf'
-						output_assembled_bed = self.path_to_output_bed_files_folder+name_bam_file+'.bed'
-						bam_files_list[name_bam_file] = [bam_file_path, output_assembled_gtf, output_assembled_bed]
-
-						exists_gtf = os.path.exists(output_assembled_gtf)
-						
-						if not exists_gtf:
-							assemblage += 1 
-							command += 'stringtie '+bam_file_path+' -G '+self.genome_version_gtf+' -o '+output_assembled_gtf+' -c 1 -p 32 --fr -m 30 -g 28 ;'
-			
-			with open(ribo_bam_files_info_query, 'wb') as handle:
-				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-			if assemblage > 0:
-				subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True).wait()
-				self.bam_files_logger.info('Total Bam Files to get transcriptome assembly : %d ', assemblage)
-
-		else:
-			with open(ribo_bam_files_info_query, 'rb') as fp:
-				bam_files_list = pickle.load(fp)
-
-			assemblage = 0
-			command = 'module load stringtie/1.3.6; ulimit -s 8192;'
-			for name_bam_file, bam_file_info in bam_files_list.items():
-				output_assembled_gtf = bam_file_info[1]
-				bam_file_path = bam_file_info[0]
-				exists = os.path.exists(output_assembled_gtf)
-				if not exists:
-					command += 'stringtie '+bam_file_path+' -G '+self.genome_version_gtf+' -o '+output_assembled_gtf+' -c 1 -p 32 --fr -m 30 -g 28;'
-					assemblage += 1 
-
-			if assemblage > 0:
-				subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, close_fds=True).wait()
-				self.bam_files_logger.info('Total Bam Files to get transcriptome assembly : %d ', assemblage)
-
-		return bam_files_list
-
 
 	def remove_lock_to_bam_files_info_dic(self):
-		with open(self.path_to_lock_file, 'r') as file:
-			first_line = file.readline().strip()
-		if first_line == self.path_to_input_folder:
-			first_line = ''
-			with open(self.path_to_lock_file, 'w') as file:
-				file.writelines(first_line) 
-			file.close()
-		else:
-			print ('Error in the path_to_lock_file: contents ', first_line, ' and the ', self.path_to_input_folder, ' not the same.')
-		
+		with open(self.path_to_lock_file, 'r+') as file:
+			fcntl.flock(file.fileno(), fcntl.LOCK_EX)
+			first_line = file.readline()
+			
+			if first_line == self.path_to_input_folder:
+				first_line = first_line.replace(self.path_to_input_folder, '')
+				file.seek(0)
+				file.write(first_line)
+				file.truncate()
+				fcntl.flock(file.fileno(), fcntl.LOCK_UN)
+			else:
+				print ('Error in the path_to_lock_file: contents ', first_line, ' and the ', self.path_to_input_folder, ' not the same.')
+				
 
 	def grant_access_to_bam_files_info_dic(self, timeout=300):
 		start_time = time.time()
-		with open(self.path_to_lock_file, 'r') as file:
-			first_line = file.readline().strip()
-		while (time.time() - start_time < timeout) and first_line != self.path_to_input_folder:
-			try:
-				with open(self.path_to_lock_file, 'r') as file:
-					first_line = file.readline().strip()
+
+		while (time.time() - start_time < timeout) :
+			permission_granted = False
+
+			with open(self.path_to_lock_file, 'r+') as file:
+				fcntl.flock(file.fileno(), fcntl.LOCK_EX)
+				first_line = file.readline()
+			
 				if first_line == '':
-					with open(self.path_to_lock_file, 'w') as file:
-						file.write(self.path_to_input_folder)
-					file.close()
+					first_line = first_line.replace('', self.path_to_input_folder)
+					file.seek(0)
+					file.write(first_line)
+					file.truncate()
+					fcntl.flock(file.fileno(), fcntl.LOCK_UN)
+					permission_granted = True
+				if permission_granted:
 					return True
-				time.sleep(1)
-			except IOError:
-				pass
+			time.sleep(1)
+			
 		raise NeedMoreInfo("\nTimeout to grant access to Bam_files_info.dic. Another BamQuery process may be using the dictionary." )
 
 
