@@ -39,7 +39,6 @@ ________________________________________________________________________________
 <h1>  Installation </h1>
 
 
-
 <h2>  Installation From source </h2>
 
 
@@ -220,4 +219,40 @@ making sure to map any required folder mentionned in the input files (BAM locati
 This is done with multiple arguments `-v $DATAFOLDER:$DATAFOLDER` (where `$DATAFOLDER` is to be replaced by an actual folder name) and `-v $PWD:$PWD` if needed.
 Note also that we force the application to run with user permissions instead of root using the `--user $(id -u):$(id -g)` argument.
 
-For more information on configuration, see : https://bamquery.iric.ca/documentation/installation.html
+For more information on configuration, see : https://bamquery.iric.ca/documentation/configuration.html
+
+**Note:** BamQuery requires a specific folder structure to work.
+
+Once BamQuery is installed, check that the structure looks as follows:
+
+        .
+        ├── BamQuery
+        │   ├── BamQuery.py
+        │   ├── genomics
+        │   ├── plotting
+        │   ├── readers
+        │   ├── README.md
+        │   └── utils
+        └── lib
+            ├── coefficients.dic
+            ├── Cosmic_info.dic
+            ├── ERE_info.dic
+            ├── ERE_info_mouse.dic
+            ├── EREs_souris.bed
+            ├── genome_versions
+            │   ├── genome_mouse_m24
+            │   ├── genome_mouse_m30
+            │   ├── genome_v26_88
+            │   ├── genome_v33_99
+            │   └── genome_v38_104
+            ├── hg38_ucsc_repeatmasker.gtf
+            ├── README.txt
+            └── snps
+                ├── snps_dics_149
+                ├── snps_dics_149_common
+                ├── snps_dics_151
+                ├── snps_dics_151_common
+                ├── snps_dics_155
+                └── snps_dics_155_common
+                        
+
