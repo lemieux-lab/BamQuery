@@ -5,9 +5,14 @@ translation mode example
 *************************
 
 
-The BamQuery translation mode was designed to search BAM files from Ribo-seq data. In this mode, BamQuery can be used as a means to verify the presence of ribosomal profile reads that overlap with peptide MCSs. 
-to verify the presence of ribosomal profile reads that overlap with the MCS of the peptides of interest. Aware that the length of Ribo-seq reads varies between ~24-32 ntd, BamQuery counts an overlapping read according to its percentage overlap with the MCS. 
-For example, if a Ribo-seq read overlaps with 70% of the MCS in a given region, BamQuery counts this read as 0.7 instead of 1.
+The BamQuery translation mode was designed to search BAM files from Ribo-seq data. 
+In this mode, BamQuery can be used as a means to verify the presence of ribosome profiling reads that overlap with peptide MCSs. 
+
+Aware that the length of Ribo-seq reads varies between ~24-32 nucletotides, BamQuery counts reads according to their percentage overlapping with the MCS. 
+For example, if a Ribo-seq read overlaps with 70% of the MCS in a given region, BamQuery counts this read as 0.7 instead of 1. 
+
+.. note::	
+	BamQuery counts all reads for which the overlap with the MCSs is equal or higher to 60%.
 
 
 **Input**

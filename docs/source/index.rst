@@ -47,5 +47,5 @@ BamQuery was designed and developed by Gregory Ehx (GIGA Institute, University o
    examples.rst
    biotype_classification.rst
    installation.rst
-
+   configuration.rst
 

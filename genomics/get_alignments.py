@@ -331,7 +331,8 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 			MCS_perfect_alignments = [new_sequence, [local_translation_peptide, [], [], []]]
 		else:
 			MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
-
+		
+		#if len(differences_ntds) <= 4:
 		MCS_variant_alignments = [MCS, [local_translation_peptide, [], [], differences_ntds]]
 	
 	return MCS_perfect_alignments, MCS_variant_alignments

@@ -10,10 +10,9 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 	
 	try:
 		os.mkdir(path_to_output_folder)
+		print ("Successfully created the directory ", path_to_output_folder)
 	except OSError:
 		print ("The output directory already exists in this path. \nBamQuery analysis will continue where it left." )
-	else:
-		print ("Successfully created the directory ", path_to_output_folder)
 	
 	path_to_logs_folder = path_to_output_folder+'logs/'
 	try:

@@ -77,7 +77,6 @@ class GetInformationBamFiles:
 				raise NeedMoreInfo(message)
 
 
-
 	def remove_lock_to_bam_files_info_dic(self):
 		with open(self.path_to_lock_file, 'r+') as file:
 			fcntl.flock(file.fileno(), fcntl.LOCK_EX)
@@ -155,6 +154,7 @@ class GetInformationBamFiles:
 				print ('The Bam_files_info dictionary is not in the library path. If this is the first time you are running BamQuery or you are querying new samples, this will take a little time while the primary read count for each BAM file is retrieved. If this is not the case, the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info dictionary with the samples from this query.')
 				self.bam_files_logger.info('The Bam_files_info dictionary is not in the library path. If this is the first time you are running BamQuery or you are querying new samples, this will take a little time while the primary read count for each BAM file is retrieved. If this is not the case, the Bam_files_info dictionary has been lost and BamQuery is now generating a new Bam_files_info dictionary with the samples from this query.')
 
+			bam_files_to_report = []
 			
 			with open(bam_files) as f:
 
@@ -179,11 +179,9 @@ class GetInformationBamFiles:
 					self.bam_files_logger.info('Total number of accessible bam files in the path %s  : %s ', path, str(len(bam_files_found)))
 					
 					if len(bam_files_found) == 0:
-						self.bam_files_logger.info('Not acces granted or the path %s does not exists.', path)
-						self.remove_lock_to_bam_files_info_dic()
-						self.bam_files_logger.info('Unlock Bam_files_info')
-						raise NeedMoreInfo("\nBefore proceeding, please verify that you have the access granted to query all BAM files or that the path to these files exists. \nSee the log file Information_BAM_directories.log for more information about BAM files with limited access." )
-
+						bam_files_to_report.append(path)
+						self.bam_files_logger.info('Not acces granted or the path %s does not exists. In addition, you should check that you have .bai indexes for all bam files in the path. If you have a bam file without a corresponding index, you can generate one using "samtools index bamfile.bam".', path)
+					
 					for bam_file_path in bam_files_found:
 
 						name_bam_file = "_".join(bam_file_path.split('/')[:-1][-2:])
@@ -242,9 +240,16 @@ class GetInformationBamFiles:
 							self.bam_files_logger.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. Path in BAM_directories.tsv: %s, Path already assigned %s. Total reads : %s', path, bam_file_path, str(count))
 							dictionary_total_reads_bam_files[name_bam_file][0] = bam_file_path
 							mod = True
-						else :
+						elif self.sc :
 							self.bam_files_logger.info('%s total reads : %s ', bam_file_path, str(count))
+						else:
+							self.bam_files_logger.info('%s single cell bam file. ', bam_file_path)
 					self.bam_files_logger.info('-----------')
+
+			if len(bam_files_to_report) > 0:
+				self.remove_lock_to_bam_files_info_dic()
+				self.bam_files_logger.info('Unlock Bam_files_info')
+				raise NeedMoreInfo("\nBefore proceeding, please verify that you have the access granted to query all BAM files or that the path to these files exists. In addition, you should check that you have .bai indexes for all bam files. If you have a bam file without a corresponding index, you can generate one using \"samtools index bamfile.bam\".\nSee the log file Information_BAM_directories.log for more information about the BAM files with limited access." )
 
 			with open(self.path_to_output_temps_folder+"bam_files_info_query.dic", 'wb') as handle:
 				pickle.dump(bam_files_list, handle, protocol=pickle.HIGHEST_PROTOCOL)

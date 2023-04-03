@@ -155,8 +155,7 @@ For more information, see :ref:`single_cell_example`.
 
 **-\-var**
 ----------
-This option sets BamQuery to keep variant alignments where the genome reference translates exactly for the peptide even if the aligned MCS contains mismatches and are not supported by any annotated SNPs. |br| 
-For more information, see :ref:`variant_aligments`.
+This option sets BamQuery to keep alignments where the genome reference and the aligned MCS differ by a maximum of 4 nucletotides. |br| 
 
 **-\-maxmm**
 ------------
@@ -165,12 +164,15 @@ The new values for the modified STAR parameters are: |br|
 
 .. code::
 
-	--winAnchorMultimapNmax 100000
+	--winAnchorMultimapNmax 20000
 	--outFilterMultimapNmax 100000
 	--limitOutSAMoneReadBytes 26600000
-	--outFilterMultimapScoreRange 2
+	--outFilterMultimapScoreRange 4
 	--alignTranscriptsPerReadNmax 100000
-
+	--seedPerWindowNmax 1500
+	--seedNoneLociPerWindow 1500
+	--alignWindowsPerReadNmax 20000
+	--alignTranscriptsPerWindowNmax 1500
 
 .. warning::
 	With this option the STAR aligner will take longer to align the MCS with the genome.

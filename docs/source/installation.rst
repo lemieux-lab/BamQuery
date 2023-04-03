@@ -1,10 +1,10 @@
 .. _installation:
 
-##############################
-Installation and configuration
-##############################
+#############
+Installation
+#############
 
-
+                
 
 A. Installation From source
 ****************************
@@ -224,39 +224,44 @@ Please, follow the instructions in step 2 enumerated above. See :ref:`Install_re
 making sure to map any required folder mentionned in the input files (BAM locations, input folder) so that these paths may be available from within the container.  This is done with multiple arguments :code:`-v $DATAFOLDER:$DATAFOLDER` (where :code:`$DATAFOLDER` is to be replaced by an actual folder name) and :code:`-v $PWD:$PWD` if needed. |br|
 Note also that we force the application to run with user permissions instead of root using the :code:`--user $(id -u):$(id -g)` argument.
 
+For more information on configuration, see :ref:`configuration`.
 
-=======================
+.. note::
 
+        BamQuery requires a specific folder structure to work. |br|
+        Once BamQuery is installed, check that the structure looks as follows:
 
-Configuration
-*************
+        .. code-block::
 
-Every time a BAM file is going to be queried for the first time, BamQuery is going to need information about its origin. |br| 
-This is why the following exception will appear when running BamQuery:
-
-.. py:exception:: fill in the `bam_files_tissues.csv` file with the requested information:
-
-    Before to continue you must provide the tissue type for the bam files annotated in the file : .../output/res/AUX_files/bam_files_tissues.csv. Please enter for each sample : tissue, tissue_type, shortlist.
-
-To resolve this, you must fill in the :code:`bam_files_tissues.csv` file with the requested information. |br| 
-BamQuery stores the information, so this is a one-time operation for each BAM file. |br| 
-
-Columns in :code:`bam_files_tissues.csv` : |br| 
-
-For each BAM file, you must provide tissue, tissue_type, shortlist. |br| 
-This classification is used by BamQuery for the elaboration of the heatmaps. See :ref:`heat maps folder`
-
-**tissue:**
-Refers to the tissue of the sample. For example: prostate
-
-**tissue_type:**
-It refers to a specific feauture of the tissue. For example: prostate tissue, can be classified as a type of SexSpecific tissue
-
-**shortlist:**
-Yes or No. This sets the BAM file as part of the selected samples to calculate the average level of transcript expression associated with the tissue type.
-
-
-Once the file :code:`bam_files_tissues.csv` has been filled, you can relaunch BamQuery.
+                .
+                ├── BamQuery
+                │   ├── BamQuery.py
+                │   ├── genomics
+                │   ├── plotting
+                │   ├── readers
+                │   ├── README.md
+                │   └── utils
+                └── lib
+                    ├── coefficients.dic
+                    ├── Cosmic_info.dic
+                    ├── ERE_info.dic
+                    ├── ERE_info_mouse.dic
+                    ├── EREs_souris.bed
+                    ├── genome_versions
+                    │   ├── genome_mouse_m24
+                    │   ├── genome_mouse_m30
+                    │   ├── genome_v26_88
+                    │   ├── genome_v33_99
+                    │   └── genome_v38_104
+                    ├── hg38_ucsc_repeatmasker.gtf
+                    ├── README.txt
+                    └── snps
+                        ├── snps_dics_149
+                        ├── snps_dics_149_common
+                        ├── snps_dics_151
+                        ├── snps_dics_151_common
+                        ├── snps_dics_155
+                        └── snps_dics_155_common
 
 .. |br| raw:: html
 

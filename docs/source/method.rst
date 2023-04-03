@@ -108,9 +108,14 @@ BamQuery requires two input file paths to search for RNA expression:
 
 **B) peptides.tsv:** list of peptides to be searched
 
+-------------
+
 
 **A) BAM_directories.tsv**
 --------------------------
+
+	Please take precautions to store the bam/cram files under informative folder names as these are used by BamQuery to differentiate them. 
+	For more details see :ref:`configuration`.
 
 	This file should look like follows:
 
