@@ -515,12 +515,12 @@ def main(argv):
 	parser.add_argument('--light', action='store_true', help='Display only the count and norm count for peptides and regions')
 	parser.add_argument('--sc', action='store_true', help='Query Single Cell Bam Files')
 	parser.add_argument('--var', action='store_true', help='Keep Variants Alignments')
-	parser.add_argument('--maxmm', action='store_true', help='Enable STAR to generate a large number of alignments')
+	parser.add_argument('--maxmm', action='store_true', help='Enable STAR to generate a larger number of alignments')
 	parser.add_argument('--overlap', action='store_true', help='Count overlapping reads')
 	parser.add_argument('--plots', action='store_true', help='Plot biotype pie-charts')
 	parser.add_argument('--m', action='store_true', help='Mouse genome')
 	parser.add_argument('--dev', action='store_true', help='Save all temps files')
-	parser.add_argument('--t', type=int, default = 4, help='Specify the number of processing threads (CPUs) to use for BamQuery. The default is 4.')
+	parser.add_argument('--t', type=int, default = 4, help='Specify the number of processing threads to run BamQuery. The default is 4')
 	
 	args = parser.parse_args()
 	path_to_input_folder = args.path_to_input_folder

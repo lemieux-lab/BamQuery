@@ -135,7 +135,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 
 			print ("Total time run function get_alignments End : %s " % (total/60.0))
 			super_logger.info('Total time run function get_alignments to end : %f min', (total/60.0))
-			super_logger.info('Total perfect alignments : %s ', str(len(res_star[0])))
+			super_logger.info('Total alignments : %s ', str(len(res_star[0])))
 			
 			perfect_alignments = res_star[0]
 			peptides_with_alignments = res_star[1]
@@ -196,7 +196,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 			with open(name_path, 'rb') as fp:
 				perfect_alignments = pickle.load(fp)
 			
-			super_logger.info('Total perfect alignments : %s ', str(len(perfect_alignments)))
+			super_logger.info('Total alignments : %s ', str(len(perfect_alignments)))
 			
 			try:
 				with open(path_to_output_folder_alignments+'alignments/missed_peptides.info') as f:

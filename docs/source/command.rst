@@ -31,12 +31,12 @@ At the command line::
 			--light               Display only the count and norm count for peptides and regions
 			--sc                  Query Single Cell Bam Files
 			--var                 Keep Variants Alignments
-			--maxmm               Enable STAR to generate a large number of alignments
+			--maxmm               Enable STAR to generate a larger number of alignments
 			--overlap             Count overlapping reads
 			--plots               Plot biotype pie-charts
 			--m                   Mouse genome
 			--dev                 Save all temps files
-			--t T                 Specify the number of processing threads (CPUs) to use for BamQuery. The default is 4.
+			--t T                 Specify the number of processing threads to run BamQuery. The default is 4
 
 
 ====================
@@ -155,18 +155,22 @@ For more information, see :ref:`single_cell_example`.
 
 **-\-var**
 ----------
-This option sets BamQuery to keep alignments where the genome reference and the aligned MCS differ by a maximum of 4 nucletotides. |br| 
+A variant alignment refers to an alignment where the mapped MCS may deviate from the reference genome sequence by a maximum of 4 nucleotides. |br| 
+In these cases, single nucleotide variants are taken into account even though they are not included in the selected dbSNP.  
+
+.. note::
+	Allowing BamQuery to maintain variant alignments could facilitate the evaluation of the expression of mutated MAPs. 
+	However, using this option generates a large number of alignments that would impact execution time.
 
 **-\-maxmm**
 ------------
-This option changes some of the STAR parameters (in the MCS alignment process, see :ref:`collect locations`) to allow STAR to generate a large number of alignments. |br|
+This option changes some of the STAR parameters (in the MCS alignment process, see :ref:`collect locations`) to allow STAR to generate a larger number of alignments. |br|
 The new values for the modified STAR parameters are: |br|
 
 .. code::
 
 	--winAnchorMultimapNmax 20000
 	--outFilterMultimapNmax 100000
-	--limitOutSAMoneReadBytes 26600000
 	--outFilterMultimapScoreRange 4
 	--alignTranscriptsPerReadNmax 100000
 	--seedPerWindowNmax 1500
@@ -204,7 +208,7 @@ This option allows you to save all intermediate files.
 
 **-\-t**
 ----------
-Specify the number of processing threads (CPUs) to use for BamQuery. The default is 4
+Specify the number of processing threads to run BamQuery. By default, BamQuery runs in 4 threads.
 
 
 .. |br| raw:: html

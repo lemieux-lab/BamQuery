@@ -232,7 +232,7 @@ class GetCounts:
 					else:
 						self.super_logger.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
 
-					if (idx % 100 == 0) and (idx != 0):
+					if (idx % 50 == 0) and (idx != 0):
 						self.super_logger.info('Saving information for Bam Files processed')
 						print (str(idx), 'Bam Files processed')
 

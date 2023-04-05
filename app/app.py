@@ -24,7 +24,7 @@ def search():
 	image_file = url_for('static', filename='favicon.png')
 	
 	if form.validate_on_submit():
-		name_exp = form.name_query.data.strip()
+		name_exp = form.name_query.data.strip().replace(" ", "_")
 		name_exp_aux = name_exp
 		adding_random_name = str(random.getrandbits(16))
 		name_exp = name_exp+'_'+adding_random_name
