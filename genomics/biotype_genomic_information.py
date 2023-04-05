@@ -269,23 +269,21 @@ class BiotypeGenomicSearch:
 		try:
 			protein = self.translated_prots[transcript]
 		except KeyError:
-			protein = self.get_transcript_and_protein(chr, regions, strand, len_prot)
+			protein = self.get_transcript_and_protein(chr, regions, strand)
 			self.translated_prots[transcript] = protein
 
 		if peptide in protein:
 			transcript_level = 'In_frame'
 		else:
 			transcript_level = 'Frameshift'
-
+	
 		return [transcript_level]
 
 
-	def get_transcript_and_protein(self, chr, regions, strand, len_prot):
+	def get_transcript_and_protein(self, chr, regions, strand):
 
 		faFile = pysam.FastaFile(self.genome, self.genome_index)
-
 		sequence_transcript = ''
-		
 		for cds in regions:
 			start_exon = cds[0]
 			end_exon = cds[1]
@@ -299,10 +297,10 @@ class BiotypeGenomicSearch:
 				sequence_transcript =  sequence_transcript + sequence
 		
 		if chr == 'chrM':
-			proteine = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='mt')
+			protein = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='mt')
 		else:
-			proteine = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='default')
+			protein = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='default')
 
-		return proteine
+		return protein
 
 

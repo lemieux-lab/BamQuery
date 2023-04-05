@@ -67,7 +67,7 @@ Refers to the tissue of the sample. For example: prostate
 It refers to a specific feauture of the tissue. For example: prostate tissue, can be classified as a type of SexSpecific tissue
 
 **shortlist:**
-Yes or No. This sets the BAM file as part of the selected samples to calculate the average level of transcript expression associated with the tissue type.
+Yes or No. This sets the BAM file as part of a selected group of samples within a tissue type to calculate the average level of transcript expression.
 
 
 Once the file :code:`bam_files_tissues.csv` has been filled, you can relaunch BamQuery.
