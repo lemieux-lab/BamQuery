@@ -323,17 +323,17 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 	local_translation_peptide_aux = translation_seq(chr, new_sequence)
 	differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
 	
-	if len(info_snps) == len(differences_ntds):
+	if MCS == new_sequence:
 		MCS_perfect_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	
-	elif local_translation_peptide_aux == peptide:
+	if var and local_translation_peptide_aux == peptide:
 		if len(info_snps) == 0 :
 			MCS_perfect_alignments = [new_sequence, [local_translation_peptide, [], [], []]]
 		else:
 			MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
-
-	elif var and len(differences_ntds) <= 4:
-			MCS_variant_alignments = [MCS, [local_translation_peptide, [], [], differences_ntds]]
+	
+	if var and local_translation_peptide_aux != peptide and (len(differences_ntds) + len(info_snps) ) <= 4:
+		MCS_variant_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	
 	return MCS_perfect_alignments, MCS_variant_alignments
 
@@ -401,10 +401,7 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 	local_translation_peptide_aux = translation_seq(chr, new_sequence)
 	differences_ntds = [new_sequence[i]+':'+str(i) for i in range(len(new_sequence)) if new_sequence[i]!= seq_reference_local[i]]
 	
-	if peptide == local_translation_peptide_aux and len(info_snps) == len(differences_ntds):
-		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
-	
-	elif local_translation_peptide_aux == peptide :
+	if peptide == local_translation_peptide_aux or len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 		
 	return MCS_perfect_alignments, MCS_variant_alignments

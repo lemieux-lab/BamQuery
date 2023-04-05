@@ -240,7 +240,7 @@ class GetInformationBamFiles:
 							self.bam_files_logger.info('Information Change: BAM file is already in the dictionary, however the path for the BAM file is not the same. Path in BAM_directories.tsv: %s, Path already assigned %s. Total reads : %s', path, bam_file_path, str(count))
 							dictionary_total_reads_bam_files[name_bam_file][0] = bam_file_path
 							mod = True
-						elif self.sc :
+						if not self.sc :
 							self.bam_files_logger.info('%s total reads : %s ', bam_file_path, str(count))
 						else:
 							self.bam_files_logger.info('%s single cell bam file. ', bam_file_path)

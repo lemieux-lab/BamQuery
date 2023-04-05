@@ -94,7 +94,7 @@ class ReadInputFile:
 								self.peptide_mode[peptide][-1] = peptide_type
 								get_info_from_peptide_line(peptide_type, peptide)
 					else:
-						self.super_logger.info('Skipping peptide : %d because its length. Peptide should be between 8 and 11 aa.', peptide)
+						self.super_logger.info('Skipping peptide : %s because its length. Peptide should be between 8 and 11 aa.', peptide)
 											
 				elif len(line) == 3:
 					peptide = line[0].strip()
