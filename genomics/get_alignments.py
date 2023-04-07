@@ -332,8 +332,8 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 		else:
 			MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	
-	if var and local_translation_peptide_aux != peptide and (len(differences_ntds) + len(info_snps) ) <= 4:
-		MCS_variant_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+		if (len(differences_ntds) + len(info_snps) ) <= 4:
+			MCS_variant_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	
 	return MCS_perfect_alignments, MCS_variant_alignments
 
@@ -401,7 +401,7 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 	local_translation_peptide_aux = translation_seq(chr, new_sequence)
 	differences_ntds = [new_sequence[i]+':'+str(i) for i in range(len(new_sequence)) if new_sequence[i]!= seq_reference_local[i]]
 	
-	if peptide == local_translation_peptide_aux or len(info_snps) == len(differences_ntds):
+	if peptide == local_translation_peptide_aux and len(info_snps) == len(differences_ntds):
 		MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 		
 	return MCS_perfect_alignments, MCS_variant_alignments

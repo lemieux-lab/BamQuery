@@ -7,9 +7,10 @@ Configuration
 Bam_files_info.dic
 *******************
 
-BamQuery stores the information of all BAM/CRAM files consulted in a dictionary. The key of each bam/cram file is obtained from the path where the file is located. 
-Therefore, take precautions to store the bam/cram files under informative folder names that serve to differentiate them. 
-For example, for all GTEx healthy tissue cram files, the file organization looks as follows: 
+BamQuery stores in a Python dictionary information about each BAM/CRAM file queried. 
+The key for each bam/cram file is obtained from the path where the file is located. 
+Therefore, take precautions to store bam/cram files under informative folder names that serve to differentiate them. 
+For example, for all GTEx healthy tissue cram files, the file organization should be as follows: 
 
 .. code::
 
@@ -22,12 +23,11 @@ For example, for all GTEx healthy tissue cram files, the file organization looks
         │   ├
 
 
-where the path for a cram file from GTEx, looks like follows:  ``/home/GTEX/brain_amygdala/SRR1333352/SRR1333352.cram``.
+With this file structure, a cram path file for GTEx should look like this:  ``/home/GTEX/brain_amygdala/SRR1333352/SRR1333352.cram``.
 
 In this example, BamQuery creates the key ``brain_amygdala_SRR1333352`` to save information related to this sample.
 
-The following is the information that BamQuery stores for each sample in array form:
-
+This information is organized in a list as follows:
 0: ``/home/GTEX/brain_amygdala/SRR1333352/SRR1333352.cram`` --> Whole path to bam/cram file |br| 
 1: ``80302110`` --> Total Primary Read count in the bam/cram file |br| 
 2: ``brain_amygdala`` --> Tissue |br| 
@@ -35,11 +35,13 @@ The following is the information that BamQuery stores for each sample in array f
 4: ``no`` --> Shortlist |br| 
 5: ``NA`` --> Sequencing  |br| 
 6: ``NA`` --> Library |br| 
-7: ``User_1`` --> The user that includes the information (first user quering a given bam file) |br| 
+7: ``User_1`` --> The user that includes the bam/cram file information (first user quering a given bam file) |br| 
 
 
 The Tissue, Tissue type and Shortlist fields must be provided by the first user who queries the given bam/cram file. This is done only once (see instructions below). |br| 
-For the Sequencing and Library field, if the bam/cram file is a stranded file, BamQuery gets the information directly from the file.
+
+The sequencing and library fields are guessed directly by BamQuery from the bam/cram file. This is also done once when a user configures BamQuery to query the file taking into account its stradedness. 
+
 
 
 Provide details to each Bam file
