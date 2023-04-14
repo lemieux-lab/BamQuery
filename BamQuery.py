@@ -63,7 +63,6 @@ class BamQuery:
 		name_path_normal = self.path_to_output_folder+'res/'+self.name_exp+'_rna_count.csv'
 		
 		exists_normal = os.path.exists(name_path_normal) 
-		
 		if not exists_normal :
 			
 			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger, self.threads)

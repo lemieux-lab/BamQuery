@@ -26,7 +26,6 @@ class GetCountsSC:
 		self.threads = threads
 
 	def filter_alignment_information(self, perfect_alignments, path_alignment_information):
-
 		alignment_information = {}
 		for peptide_key, information_peptide in perfect_alignments.items():
 			peptide = peptide_key.split('_')[0]
@@ -41,12 +40,6 @@ class GetCountsSC:
 
 	def get_counts(self, perfect_alignments, bam_files_list):
 
-
-		def sum_dict(d1, d2):
-			for key, value in d1.items():
-				d1[key] = value + d2.get(key, 0)
-			return d1
-	
 		df_counts = pd.DataFrame()
 		
 		rna_sc_count_path = self.path_to_output_folder_res+self.name_exp+'_rna_sc_count.csv'
@@ -585,7 +578,6 @@ class GetCountsSC:
 		# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
 		t_2 = time.time()
 		total = t_2-t_0
-		#print ('Total ', total)
 		
 		return contReads_to_return
 	
