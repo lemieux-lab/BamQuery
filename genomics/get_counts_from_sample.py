@@ -67,7 +67,7 @@ def set_strand_read(strand):
 	else:
 		return '+'
 
-def get_ranges(cigar, start, len_seq):
+def get_ranges_aux(cigar, start, len_seq):
 	
 	rang = [0]*len_seq
 	splices_sites = set()
@@ -100,6 +100,37 @@ def get_ranges(cigar, start, len_seq):
 		elif ('I' in index):
 			indels.append(len(rang)+1)
 
+	return rang, splices_sites, indels
+
+def get_ranges(cigar, start, len_seq):
+	
+	rang = []
+	splices_sites = set()
+	rx = re.findall('(\d+)([MISDNX=])?', cigar)
+	indels = []
+	
+	for index in rx:
+		operation = index[1]
+		length = int(index[0])
+		
+		if ('S' in operation):
+			end = length
+			rang.extend([0]*length)
+			
+		elif ('M' in index) or ('=' in index) or ('X' in index) :
+			end = start + length
+			rang.extend(range(start,end))
+			start += length
+
+		elif ('N' in index) or ('D' in index):
+			splices_sites.add(start)
+			start = start + length
+			splices_sites.add(start)
+
+		elif ('I' in index):
+			indels.extend([len(rang)+i for i in range(0, length)])
+			rang.extend([0]*length)
+			
 	return rang, splices_sites, indels
 
 def remove_at(i, s):

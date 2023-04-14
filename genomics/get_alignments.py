@@ -27,33 +27,30 @@ def set_strand_read(strand):
 
 def get_ranges(cigar, start, lenSeq, strand, chr, faFile):
 
-	rang = [0]*lenSeq
+	rang = []
 	rx = re.findall('(\d+)([MISDNX=])?', cigar)
-	operators = []
 	lastIndex = 0
 	seqReference = ''
 
 	for index in rx:
 		operation = index[1]
 		length = int(index[0])
-		operators.append(operation)
-
+		
 		if ('S' in operation):
 			end = length
 			lastIndex += end
 			resSeq = faFile.fetch(chr, start-1,start+end-1)
 			seqReference += resSeq
+			rang.extend([0]*length)
 
-		elif ('I' in index) or ('M' in index) or ('=' in index) or ('X' in index) :
+		elif ('M' in index) or ('=' in index) or ('X' in index) :
 			end = length
 			resSeq = faFile.fetch(chr, start-1, start+end-1)
 			seqReference += resSeq
 			
-			for i in range(0,end):
-				rang[lastIndex+i] = start
-				start = start + 1
-
-			lastIndex = lastIndex + end
+			end = start + length
+			rang.extend(range(start,end))
+			start += length
 
 		elif ('N' in index) or ('D' in index):
 			end = start + length
@@ -68,7 +65,7 @@ def get_ranges(cigar, start, lenSeq, strand, chr, faFile):
 	if 'n' in seqReference:
 		seqReference = seqReference.replace("n", "C")
 	
-	return rang, operators, seqReference
+	return rang, seqReference
 
 
 def get_local_reference(start, lenSeq, chr, strand, faFile):
@@ -189,7 +186,9 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 		range_trans_local = find_ranges(chr, range(readStart, end+1), strand)
 		key_local = peptide+'_'+range_trans_local
 		
-		rang, operators, seq_reference_align = get_ranges(cigar, readStart, lenSeq, strand, chr, faFile)
+		if 'I' in cigar:
+			continue
+		rang, seq_reference_align = get_ranges(cigar, readStart, lenSeq, strand, chr, faFile)
 		range_trans = find_ranges(chr, rang, strand)
 		if range_trans == chr:
 			continue
