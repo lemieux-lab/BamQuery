@@ -277,7 +277,7 @@ def generer_alignments_information(alignments_input):
 		dif_ntd_write = ''
 		
 		for snv in snvs:
-			snv_to_print = '['+snv[0]+'->'+snv[1]+'|snp:'+snv[2]+'|GenPos:'+str(snv[3])+'|MCSPos:'+str(snv[4])+']'
+			snv_to_print = snv[0]+'>'+snv[1]+'|snp:'+snv[2]+'|GenPos:'+str(snv[3])+'|MCSPos:'+str(snv[4])+','
 			snvs_write += snv_to_print
 			pos_to_search_cosmic = alignment.split('chr')[1].split(':')[0]+':'+str(snv[3])+'-'+str(snv[3])
 			
@@ -287,12 +287,12 @@ def generer_alignments_information(alignments_input):
 				pass
 
 		for dif_aa in dif_aas:
-			dif_aa_write += '['+dif_aa+']'
+			dif_aa_write += dif_aa+','
 
 		for dif_ntd in dif_ntds:
-			dif_ntd_write += '['+dif_ntd+']'
+			dif_ntd_write += dif_ntd+','
 
-		row_list.append([peptide, strand, alignment, known_splice_junction, MCS, peptide_with_snps_local_reference, dif_aa_write, dif_ntd_write, snvs_write ])
+		row_list.append([peptide, strand, alignment, known_splice_junction, MCS, peptide_with_snps_local_reference, dif_aa_write[:-1], dif_ntd_write[:-1], snvs_write[:-1] ])
 
 	if len(row_list) == 1048575 :
 		return row_list, info_cosmic

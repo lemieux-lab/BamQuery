@@ -25,48 +25,39 @@ def set_strand_read(strand):
 	else:
 		return '+'
 
-def get_ranges(cigar, start, lenSeq, strand, chr, faFile):
 
-	rang = []
-	rx = re.findall('(\d+)([MISDNX=])?', cigar)
-	lastIndex = 0
-	seqReference = ''
+def get_ranges(cigar, start, strand, seqReference):
+    
+    rang = []
+    seqReference = seqReference.upper()
+	# https://pysam.readthedocs.io/en/latest/api.html?highlight=read.cigartuples#pysam.AlignedSegment.cigartuples
+    for tuple_ in cigar:
+        operation = tuple_[0]
+        length = tuple_[1]
 
-	for index in rx:
-		operation = index[1]
-		length = int(index[0])
-		
-		if ('S' in operation):
-			end = length
-			lastIndex += end
-			resSeq = faFile.fetch(chr, start-1,start+end-1)
-			seqReference += resSeq
-			rang.extend([0]*length)
+        if (4 == operation): 
+            end = length
+            rang.extend([0]*length)
 
-		elif ('M' in index) or ('=' in index) or ('X' in index) :
-			end = length
-			resSeq = faFile.fetch(chr, start-1, start+end-1)
-			seqReference += resSeq
-			
-			end = start + length
-			rang.extend(range(start,end))
-			start += length
+        elif (0 == operation) or (7 == operation) or (8 == operation) :
+            end = start + length
+            rang.extend(range(start,end))
+            start += length
 
-		elif ('N' in index) or ('D' in index):
-			end = start + length
-			start = end
+        elif (3 == operation) :
+            end = start + length
+            start = end
 
-	if strand == '-':
-		seqReference = uf.reverseComplement(seqReference)
-		rang = rang[::-1]
+    if strand == '-':
+        seqReference = uf.reverseComplement(seqReference)
+        rang = rang[::-1]
 
-	if 'N' in seqReference:
-		seqReference = seqReference.replace("N", "C")
-	if 'n' in seqReference:
-		seqReference = seqReference.replace("n", "C")
-	
-	return rang, seqReference
-
+    if 'N' in seqReference:
+        seqReference = seqReference.replace("N", "C")
+    if 'n' in seqReference:
+        seqReference = seqReference.replace("n", "C")
+    
+    return rang, seqReference
 
 def get_local_reference(start, lenSeq, chr, strand, faFile):
 
@@ -111,9 +102,15 @@ def read_sam_file(sam_file):
 	for read in samfile:
 		queryname = read.query_name
 		cigar = read.cigarstring
+
+		if 'I' in cigar or 'D' in cigar:
+			continue
+		cigar = read.cigartuples
+
 		chr = read.reference_name
 		readStart = int(read.reference_start) + 1
-		
+		seqReference = read.get_reference_sequence()
+
 		if read.is_reverse:
 			strand = "-"
 		else:
@@ -131,14 +128,14 @@ def read_sam_file(sam_file):
 		if strand == '-':
 			MCS = uf.reverseComplement(MCS)
 
-		key = str(readStart)+'|'+cigar+'|'+MCS+'|'+peptide+'|'+strand
+		key = [readStart, cigar, MCS, peptide, strand, seqReference]
 		
 		try:
 			chromosomes_alignments = alignments_by_chromosome_strand[chr]
-			chromosomes_alignments.add(key)
+			chromosomes_alignments.append(key)
 		except KeyError:
-			set_alignments = set()
-			set_alignments.add(key)
+			set_alignments = []
+			set_alignments.append(key)
 			alignments_by_chromosome_strand[chr] = set_alignments
 
 	samfile.close()		
@@ -173,27 +170,23 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 		chromosome = {}
 		
 	for position in chromosomes_alignments: 
-		split_position = position.split('|')
-		
-		readStart = int(split_position[0])
-		cigar = split_position[1]
-		MCS = split_position[2]
-		peptide = split_position[3]
-		strand  = split_position[4]
+		readStart = int(position[0])
+		cigar = position[1]
+		MCS = position[2]
+		peptide = position[3]
+		strand  = position[4]
+		seqReference = position[5]
 		lenSeq = len(MCS)
-
+		
 		end = readStart+lenSeq-1
 		range_trans_local = find_ranges(chr, range(readStart, end+1), strand)
 		key_local = peptide+'_'+range_trans_local
 		
-		if 'I' in cigar:
-			continue
-		rang, seq_reference_align = get_ranges(cigar, readStart, lenSeq, strand, chr, faFile)
+		rang, seq_reference_align = get_ranges(cigar, readStart, strand, seqReference)
 		range_trans = find_ranges(chr, rang, strand)
 		if range_trans == chr:
 			continue
 		key_pos = peptide+'_'+range_trans
-		
 		
 		MCS_perfect_alignments_align, MCS_variant_alignments_align = get_sequences_at_position(peptide, seq_reference_align, MCS, rang, strand, chromosome, chr)
 		
@@ -271,21 +264,33 @@ def reverse_translation(ntd):
 	else:
 		return 'A'
 
-
 def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref, strand, chromosome, chr):
 
 	MCS_perfect_alignments = []
 	MCS_variant_alignments = []
 	
-	local_translation_peptide = translation_seq(chr, seq_reference_local)
-	differences_ntds = [seq_reference_local[i]+':'+str(i) for i in range(len(seq_reference_local)) if seq_reference_local[i]!= MCS[i]]
-	list_seq_reference_local = list(seq_reference_local)
+	if MCS == seq_reference_local:
+		MCS_perfect_alignments = [MCS, [peptide, [], [], []]]
+		return MCS_perfect_alignments, MCS_variant_alignments
 
+	local_translation_peptide = translation_seq(chr, seq_reference_local)
+	differences_ntds = []
+	for i in range(len(seq_reference_local)) :
+		if seq_reference_local[i]!= MCS[i]:
+			differences_ntds.append(seq_reference_local[i]+':'+str(i))
+			
+	list_seq_reference_local = list(seq_reference_local)
+	
 	info_snps = []
 	snps_set = set()
 	
+	if len(differences_ntds) > 4:
+		return MCS_perfect_alignments, MCS_variant_alignments
+
+	difs_ntd = set()
 	for dif in differences_ntds:
 		dif = int(dif.split(':')[1])
+		difs_ntd.add(dif)
 		pos_in_genome = rang_local_ref[dif]
 		ntd_in_MCS = MCS[dif]
 		try:
@@ -317,10 +322,15 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 				return MCS_perfect_alignments, MCS_variant_alignments
 			else:
 				pass
-
+	
 	new_sequence = "".join(list_seq_reference_local)
 	local_translation_peptide_aux = translation_seq(chr, new_sequence)
-	differences_pep = [peptide[i]+':'+str(i) for i in range(len(peptide)) if peptide[i]!= local_translation_peptide[i]]
+	differences_pep = []
+	difs_aa = []
+	for i in range(len(peptide)) :
+		if peptide[i]!= local_translation_peptide[i]:
+			differences_pep.append(peptide[i]+':'+str(i))
+			difs_aa.append(i)
 	
 	if MCS == new_sequence:
 		MCS_perfect_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
@@ -331,8 +341,13 @@ def get_sequences_at_position(peptide, seq_reference_local, MCS, rang_local_ref,
 		else:
 			MCS_perfect_alignments = [new_sequence, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
 	
-		if (len(differences_ntds) + len(info_snps) ) <= 4:
+		if (len(differences_ntds) + len(info_snps)) <= 3:
 			MCS_variant_alignments = [MCS, [local_translation_peptide, differences_pep, info_snps, differences_ntds]]
+
+	if len(MCS_variant_alignments) == 0 and var and len(difs_aa) == 1  :
+		rang = set(range(difs_aa[0]*3, difs_aa[0]*3+3))
+		if len(rang.intersection(difs_ntd)) == len(difs_ntd):
+			MCS_variant_alignments = [MCS, [local_translation_peptide, differences_pep, [], differences_ntds]]
 	
 	return MCS_perfect_alignments, MCS_variant_alignments
 
@@ -348,7 +363,7 @@ def get_sequences_at_position_local(peptide, seq_reference_local, MCS, rang_loca
 
 	info_snps = []
 	snps_set = set()
-	if len(differences_pep) > 4:
+	if len(differences_pep) > 2:
 		return MCS_perfect_alignments, MCS_variant_alignments
 
 	for ind, dif in enumerate(differences_pep):

@@ -249,7 +249,6 @@ class GetCountsSC:
 				pickle.dump(peptides_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
 			
 			for peptide, info_peptide in peptides_info.items():
-				to_add = []
 				peptide_type = self.peptides_by_type[peptide]
 				for alignment, info_sequences in info_peptide.items():
 					key_splited = alignment.split('_')

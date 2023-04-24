@@ -155,7 +155,7 @@ For more information, see :ref:`single_cell_example`.
 
 **-\-var**
 ----------
-A variant alignment refers to an alignment where the mapped MCS may deviate from the reference genome sequence by a maximum of 4 nucleotides. |br| 
+A variant alignment refers to an alignment where the mapped MCS may deviate from the reference genome sequence by a maximum of 3 nucleotides (1 amino acid). |br| 
 In these cases, single nucleotide variants are taken into account even though they are not included in the selected dbSNP.  
 
 .. note::

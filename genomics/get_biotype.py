@@ -288,7 +288,7 @@ class BiotypeAssignation:
 			
 			group = df_position_genomic_position_ere_class.get_group((peptide_type, peptide, alignment, known_sj, strand))
 			genomic_biotypes = list(group['genomic_position_biotype'])
-			ere_biotypes = list(set(filter(lambda a: a != '', group['ERE class'])))
+			ere_biotypes = list(filter(lambda a: a != '', group['ERE class']))
 			total_biotypes = list(genomic_biotypes+ere_biotypes)
 
 			if '' in total_biotypes:
@@ -301,20 +301,32 @@ class BiotypeAssignation:
 			count_total_biotypes = dict(sorted(count_total_biotypes.items(), key = operator.itemgetter(1), reverse=True))
 			
 			best_guess = ''
+			best_guess_equal = self.biotypes_names[list(count_total_biotypes.keys())[0]]
+			equal_bios_ratio = False
+			first_bio_ratio = count_total_biotypes[list(count_total_biotypes.keys())[0]]
+			cont = 0
 			for bio, value in count_total_biotypes.items():
-				
+				if cont != 0 and value == first_bio_ratio:
+					equal_bios_ratio = True
+					best_guess_equal += '/'+ self.biotypes_names[bio]
+
 				coeff = self.coefficients[bio]
 				df_position_biotypes_info_counts.at[index, bio] = coeff
 				ratio = value/(total_biotypes_types*1.0)
+				
 				df_position_biotypes_info_counts_naive.at[index, bio] = ratio
 				percentage = round(ratio*100,2)
 				string_biotype += self.biotypes_names[bio]+': '+str(percentage)+'% - '
 				if self.biotypes_names[bio] == 'In_frame':
 					best_guess = 'In_frame'
+				cont += 1
 
 			string_biotype = string_biotype[:-2]
 			if best_guess == '':
-				best_guess = self.biotypes_names[list(count_total_biotypes.keys())[0]]#self.biotypes_names[sorted(total_biotypes)[0]]
+				if equal_bios_ratio:
+					best_guess = best_guess_equal
+				else:
+					best_guess = self.biotypes_names[list(count_total_biotypes.keys())[0]]
 
 			df_position_biotypes_info.at[index, 'Annotation Frequencies'] = string_biotype
 			df_position_biotypes_info.at[index, 'Best Guess'] = best_guess
@@ -369,8 +381,14 @@ class BiotypeAssignation:
 			
 			string_biotype = ''
 			best_guess = ''
-
+			equal_bios_ratio = False
+			first_bio_ratio = b[0][1]
+			best_guess_equal = self.biotypes_names[b[0][0]]
+			cont = 0
 			for index_biotype, ratio in b:
+				if cont != 0 and ratio == first_bio_ratio:
+					equal_bios_ratio = True
+					best_guess_equal += '/'+ self.biotypes_names[index_biotype]
 				percentage = round(ratio*100.0,2)
 				biotype_name = self.biotypes_names[index_biotype]
 				string_biotype += biotype_name+': '+str(percentage)+'% - '
@@ -398,13 +416,17 @@ class BiotypeAssignation:
 						biotypes_all_peptides_genomic_ere_annot[biotype_name] += ratio
 					except KeyError:
 						biotypes_all_peptides_genomic_ere_annot[biotype_name] = ratio
+				cont += 1
 			
 			string_biotype = string_biotype[:-2]
 			row_input['Annotation Frequencies'] = string_biotype
 			
 			if best_guess == '' and len(b) > 0:
-				best_guess = self.biotypes_names[b[0][0]]
-
+				if equal_bios_ratio:
+					best_guess = best_guess_equal
+				else:
+					best_guess = self.biotypes_names[b[0][0]]
+				
 			df_position_biotypes_info_2.loc[(df_position_biotypes_info_2['Peptide Type'] == peptide_type) & (df_position_biotypes_info_2['Peptide'] == peptide), 'Best Guess'] = best_guess
 			
 			row_input['Best Guess'] = best_guess
