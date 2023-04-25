@@ -382,8 +382,9 @@ class BiotypeAssignation:
 			string_biotype = ''
 			best_guess = ''
 			equal_bios_ratio = False
-			first_bio_ratio = b[0][1]
-			best_guess_equal = self.biotypes_names[b[0][0]]
+			if len(b) > 0:
+				first_bio_ratio = b[0][1]
+				best_guess_equal = self.biotypes_names[b[0][0]]
 			cont = 0
 			for index_biotype, ratio in b:
 				if cont != 0 and ratio == first_bio_ratio:

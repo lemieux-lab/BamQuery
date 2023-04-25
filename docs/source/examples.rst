@@ -373,7 +373,7 @@ The final biotype for the peptide at the given location corresponds to: |br|
 
 Best guess : 
 			1. 'In_Frame' if it is among the genomic position biotypes.
-			2. Otherwise, the biotype with the highest percentage representation in annotation frequencies.
+			2. Otherwise, the biotype with the highest percentage representation in annotation frequencies. If BamQuery detects that all biotypes have equal representation, it will report all of them as the "Best guess".
 
 
 .. thumbnail:: _images/genomic_and_ERE_Anno_by_Region_Full.jpg
@@ -402,7 +402,7 @@ The final biotype for the peptide corresponds to: |br|
 
 Best guess : 
 			1. 'In_Frame' if it is among the genomic position biotypes.
-			2. Otherwise, the biotype with the highest percentage representation in annotation frequencies.
+			2. Otherwise, the biotype with the highest percentage representation in annotation frequencies. If BamQuery detects that all biotypes have equal representation, it will report all of them as the "Best guess".
 
 
 .. thumbnail:: _images/general_Gen_and_ERE_Biotype_Consensus.jpg
@@ -428,7 +428,7 @@ The final biotype for the peptide corresponds to: |br|
 
 Best guess : 
 			1. 'In_Frame' if it is among the genomic position biotypes.
-			2. Otherwise, the biotype with the highest percentage representation in the weighted biotype.
+			2. Otherwise, the biotype with the highest percentage representation in the weighted biotype. If BamQuery detects that all biotypes have equal representation, it will report all of them as the "Best guess".
 
 .. thumbnail:: _images/Weighted_Gen_and_ERE_Biotype_Consensus.jpg
 
@@ -443,7 +443,7 @@ The biotype representation (percentage) is computed from the count of RNA-seq re
 
 Best guess : 
 			1. 'In_Frame' if it is among the genomic position biotypes.
-			2. Otherwise, the biotype with the highest percentage representation in the weighted biotype.
+			2. Otherwise, the biotype with the highest percentage representation in the weighted biotype. If BamQuery detects that all biotypes have equal representation, it will report all of them as the "Best guess".
 
 .. thumbnail:: _images/group_Samples_Gen_and_ERE_Biotype_Consensus.jpg
 

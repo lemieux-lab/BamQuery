@@ -428,7 +428,6 @@ def translation_seq(chr, seq):
 
 	return translation
 
-
 def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version, mode, mouse, threads):
 
 	global path_to_db

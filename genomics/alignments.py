@@ -78,7 +78,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			seedNoneLociPerWindow = 1000
 			alignWindowsPerReadNmax = 15000
 			alignTranscriptsPerWindowNmax = 1000
-			outFilterMultimapScoreRange = 3
+			outFilterMultimapScoreRange = 2
 
 		limitOutSAMoneReadBytes = 2 * ( 33 + 100 ) * maxMulti
 
