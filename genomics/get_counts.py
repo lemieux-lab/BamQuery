@@ -2,8 +2,6 @@ import warnings, os
 warnings.filterwarnings("ignore")
 import os, time, pickle, os, copy
 import genomics.get_counts_from_sample as get_counts_sample
-from readers.intersection_alignments_annotations import IntersectAnnotations
-from genomics.get_information_from_bed_intersection import GetInformationBEDIntersection
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
@@ -37,7 +35,6 @@ class GetCounts:
 		self.count_path = self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv'
 		self.count_all_alignments_path = self.path_to_output_temps_folder+self.name_exp+'_rna_count_All_alignments.csv'
 		self.last_treated_bam_file = self.path_to_output_folder_alignments+'info_treated_bam_files.pkl'
-		self.to_write = self.path_to_output_folder_alignments+'to_write.pkl'
 
 		
 		if self.mode == 'translation':
@@ -46,7 +43,6 @@ class GetCounts:
 			self.count_path = self.path_to_output_temps_folder+self.name_exp+'_ribo_counts.csv'
 			self.count_all_alignments_path = self.path_to_output_temps_folder+self.name_exp+'_ribo_count_All_alignments.csv'
 			self.last_treated_bam_file = self.path_to_output_folder_alignments+'info_treated_ribo_bam_files.pkl'
-			self.to_write = self.path_to_output_folder_alignments+'to_ribo_write.pkl'
 			if self.light:
 				self.alignment_information_path = self.path_to_output_folder_alignments+'Alignments_information_light_ribo.dic'
 			else:
@@ -82,14 +78,8 @@ class GetCounts:
 			with open(self.last_treated_bam_file , 'rb') as fp:
 				last_treated_bam_file = pickle.load(fp)
 
-			try:
-				with open(self.to_write, 'rb') as fp:
-					to_write = pickle.load(fp)
-			except FileNotFoundError:
-				to_write = {} 
 		else:
 			last_treated_bam_file = -1
-			to_write = {} 
 		
 		
 		if not exists_count :
@@ -140,8 +130,6 @@ class GetCounts:
 			
 			self.super_logger.info('Total unique regions : %s ', str(len(keys)))
 
-			pool = ProcessPool(nodes=self.threads)
-
 			with open(self.path_to_output_folder+'/genome_alignments/references_chrs.pkl', "rb") as f:
 				references_chrs = pickle.load(f)
 
@@ -153,6 +141,9 @@ class GetCounts:
 					key = chr
 				digits_bam_file_BQ_reference.append(key)
 
+			if len(info_bams)-1 != last_treated_bam_file:
+				pool = ProcessPool(nodes=self.threads)
+			
 			for idx, bam_file in enumerate(info_bams):
 				if idx > last_treated_bam_file:
 
@@ -196,26 +187,6 @@ class GetCounts:
 								
 								index_sample = get_index(sample) 
 
-								key_aux = alignment+'_'+sequence
-								try:
-									peptide_info_to_write = to_write[peptide]
-
-									try:
-										peptide_info_to_write[key_aux][index_sample] = count
-									except KeyError:
-										counts = [0]*total_samples
-										to_add = [strand]
-										to_add.extend(counts)
-										to_add[index_sample] = count
-										peptide_info_to_write[key_aux] = to_add
-
-								except KeyError:
-									counts = [0]*total_samples
-									to_add = [strand]
-									to_add.extend(counts)
-									to_add[index_sample]  = count
-									to_write[peptide] = {key_aux: to_add}
-				
 								key = peptide+'_'+alignment+'_'+sequence
 								if len(alignment_information[key][-1]) == 0:
 									alignment_information[key][-1] = [0]*total_samples
@@ -242,9 +213,6 @@ class GetCounts:
 						with open(self.alignment_information_path, 'wb') as handle:
 							pickle.dump(alignment_information, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-						with open(self.to_write, 'wb') as handle:
-							pickle.dump(to_write, handle, protocol=pickle.HIGHEST_PROTOCOL)
-						
 				else:
 					self.super_logger.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
 
@@ -264,15 +232,17 @@ class GetCounts:
 			header.extend(list_bam_files_order)
 			to_write_list = []
 			
-			for peptide, info_peptide in to_write.items():
-				to_add = []
+			for peptide_key, info_peptide in alignment_information.items():
+				split_key = peptide_key.split('_')
+				peptide = split_key[0]
+				position = split_key[1]
+				MCS = split_key[2]
+				strand = info_peptide[0]
 				peptide_type = self.peptides_by_type[peptide]
-				for alignment, info_counts in info_peptide.items():
-					position = alignment.split('_')[0]
-					MCS = alignment.split('_')[1]
-					to_add =  [peptide_type, peptide, position, MCS]
-					to_add.extend(info_counts)
-					to_write_list.append(to_add)
+				info_counts = info_peptide[-1]
+				to_add =  [peptide_type, peptide, position, MCS, strand]
+				to_add.extend(info_counts)
+				to_write_list.append(to_add)
 
 			df_alignments = pd.DataFrame(to_write_list, columns=header)
 			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum().reset_index()
@@ -296,11 +266,6 @@ class GetCounts:
 
 			df_alignments = pd.read_csv(self.count_all_alignments_path)
 
-		try:
-			os.remove(self.to_write)
-		except FileNotFoundError:
-			pass
-		
 		return df_counts, alignment_information, df_alignments
 
 

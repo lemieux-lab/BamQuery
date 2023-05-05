@@ -54,8 +54,6 @@ class ReverseTranslation:
 		
 			peptides_list = list(peptide_mode.keys())
 			
-			#list_of_list_peptides = [peptides_list[x:x+100] for x in range(0, len(peptides_list), 100)]
-			
 			total_pep = 0
 			
 			manager = mp.Manager()

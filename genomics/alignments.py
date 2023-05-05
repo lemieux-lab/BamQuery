@@ -71,7 +71,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			seedNoneLociPerWindow = 1500
 			alignWindowsPerReadNmax = 20000
 			alignTranscriptsPerWindowNmax = 1500
-			outFilterMultimapScoreRange = 4
+			outFilterMultimapScoreRange = 3
 		else:
 			alignTranscriptsPerReadNmax = 20000
 			seedPerWindowNmax = 1000
@@ -326,11 +326,11 @@ def write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, d
 	if len(df1) < 1048576:
 		writer = pd.ExcelWriter(path_to_output_folder_alignments+name_exp+'_info_alignments.xlsx', engine='xlsxwriter')
 		writer.book.use_zip64()
-		df1.to_excel(writer, sheet_name='Perfect Alignments')
-		df3.to_excel(writer, sheet_name='COSMIC Information')
+		df1.to_excel(writer, sheet_name='Perfect Alignments', index=None)
+		df3.to_excel(writer, sheet_name='COSMIC Information', index=None)
 		writer.save()
 	else:
-		df1.to_csv(path_to_output_folder_alignments+name_exp+'_info_alignments.csv', header=0)
-		df3.to_csv(path_to_output_folder_alignments+name_exp+'_cosmic_information.csv', header=0)
+		df1.to_csv(path_to_output_folder_alignments+name_exp+'_info_alignments.csv', index=None)
+		df3.to_csv(path_to_output_folder_alignments+name_exp+'_cosmic_information.csv', index=None)
 		
 
