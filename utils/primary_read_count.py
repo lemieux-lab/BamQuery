@@ -67,18 +67,18 @@ class GetPrimaryReadCountBamFiles:
 
 		logging.info('Total Bam Files to Query : %d %s', len(bam_files_list), bam_files_list)
 		
-		if self.grant_access_to_bam_files_info_dic(path_to_lock_file, 'getting_primary_read_count_bam_files'):
-			logging.info('Lock access to Bam_files_info.dic')
-			pass
-		else:
-			raise Exception("\nCould not acquire the lock to consult the Bam_files_info.dic. Check if there is another run of BamQuery that wrote to the lock file and it is still running." )
-
 		if len(bam_files_list) >= threads:
 			pool = ProcessPool(nodes=threads)
 		else:
 			pool = ProcessPool(nodes=len(bam_files_list))
 		
 		results = pool.map(self.get_all_counts_bam_file, bam_files_list)
+
+		if self.grant_access_to_bam_files_info_dic(path_to_lock_file, 'getting_primary_read_count_bam_files'):
+			logging.info('Lock access to Bam_files_info.dic')
+			pass
+		else:
+			raise Exception("\nCould not acquire the lock to consult the Bam_files_info.dic. Check if there is another run of BamQuery that wrote to the lock file and it is still running." )
 
 		with open(path_to_all_counts_file, 'rb') as fp:
 			dictionary_total_reads_bam_files = pickle.load(fp)

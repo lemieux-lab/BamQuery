@@ -17,15 +17,18 @@ class Normalization:
 		if self.light:
 			self.path_to_output_folder = path_to_output_folder+'res_light/'
 			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
+			self.path_to_output_aux_folder = path_to_output_folder+'res_light/AUX_files/'
 		else:
 			self.path_to_output_folder = path_to_output_folder+'res/'
 			self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
 			self.path_to_output_total_transcription_expression_heatmap_folder = path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/'
+			self.path_to_output_aux_folder = path_to_output_folder+'res/AUX_files/'
 		if self.mode == 'translation':
 			self.path_to_output_folder = path_to_output_folder+'res_translation/'
 			self.path_to_output_temps_folder = path_to_output_folder+'res_translation/temps_files/'
 			self.path_to_output_total_transcription_expression_heatmap_folder = path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/'
-		
+			self.path_to_output_aux_folder = path_to_output_folder+'res_translation/AUX_files/'
+
 		self.name_exp = name_exp
 		self.path_to_all_counts_file = path_to_lib+"Bam_files_info.dic"
 		self.peptides_types = peptides_types
