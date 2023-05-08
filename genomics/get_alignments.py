@@ -565,4 +565,3 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 			pool.clear()
 			
 	return positions_mcs_peptides_perfect_alignment, total_peptides_in
-

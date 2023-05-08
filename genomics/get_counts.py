@@ -216,9 +216,10 @@ class GetCounts:
 				else:
 					self.super_logger.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
 
-			pool.close()
-			pool.join()
-			pool.clear()
+			if len(info_bams)-1 != last_treated_bam_file:
+				pool.close()
+				pool.join()
+				pool.clear()
 
 			self.super_logger.info('Average time to process a BamFile : %f min', np.mean(times))
 
@@ -233,6 +234,7 @@ class GetCounts:
 			to_write_list = []
 			
 			for peptide_key, info_peptide in alignment_information.items():
+				
 				split_key = peptide_key.split('_')
 				peptide = split_key[0]
 				position = split_key[1]
@@ -306,7 +308,7 @@ class GetCounts:
 						reference_correspondence[references_chr] = list(intersection)[0]
 					else:
 						for chr in chr_bam_file:
-							if self.is_contained_ignore_case(self.select_not_digits_no_special_chars(references_chr), self.select_not_digits_no_special_chars(chr)):
+							if self.is_contained(self.select_not_digits_no_special_chars(references_chr), self.select_not_digits_no_special_chars(chr)):
 								reference_correspondence[references_chr] = chr
 								break
 						not_associated_chr_ref_bam_file.append(references_chr)
