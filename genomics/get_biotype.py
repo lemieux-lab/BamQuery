@@ -61,106 +61,102 @@ class BiotypeAssignation:
 		self.dev = dev
 
 			
-	def get_biotypes(self, info_peptide_alignments, peptides_by_type):
+	def get_biotypes(self, info_peptide_alignments, all_mode_peptide):
 
 		self.super_logger.info('========== Getting information to define biotyping... ============ ')
 		data_gen_ere = []
 		self.biotype_type = set()
 		
-		for type_peptide, peptides in peptides_by_type.items():
+		for peptide, type_peptide in all_mode_peptide.items():
 
-			for peptide in peptides:
-
-				# EAAPDTVLR
-				if True :#peptide == 'EAAPDTVLR'  : #== peptide :#'AEKLGFAGL' == peptide:
-					try:
-						info_alignments_peptide = info_peptide_alignments[peptide]
-						alignments = info_alignments_peptide[0]
-						total_count_rna = info_alignments_peptide[1]
-						
-						# ('chr13:99970439-99970465', 'GCGGCGGCGGCACCCCGGCCAGCTCTT', '+', [0, 0], [])
-						# information_final_biotypes_peptides[key_peptide] = {transcript: [gene_type, transcript_type, transcript_level_biotype]}
-						for key_peptide_alignment, info_alignment in alignments.items():
-
-							peptide = key_peptide_alignment.split('_')[0]
-							position = key_peptide_alignment.split('_')[1]
-							MCS = key_peptide_alignment.split('_')[2]
-							strand = info_alignment[0]
-							rna_bam_files = info_alignment[1]
-							
-							known_sj = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position)]['Known Splice Junction'].values[0]
+			try:
+				info_alignments_peptide = info_peptide_alignments[peptide]
+				alignments = info_alignments_peptide[0]
+				total_count_rna = info_alignments_peptide[1]
 				
-							to_add_gen_ere = []
+				# ('chr13:99970439-99970465', 'GCGGCGGCGGCACCCCGGCCAGCTCTT', '+', [0, 0], [])
+				# information_final_biotypes_peptides[key_peptide] = {transcript: [gene_type, transcript_type, transcript_level_biotype]}
+				for key_peptide_alignment, info_alignment in alignments.items():
 
-							repName = ''
-							repClass = ''
-							repFamily = ''
+					peptide = key_peptide_alignment.split('_')[0]
+					position = key_peptide_alignment.split('_')[1]
+					MCS = key_peptide_alignment.split('_')[2]
+					strand = info_alignment[0]
+					rna_bam_files = info_alignment[1]
+					
+					known_sj = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position)]['Known Splice Junction'].values[0]
+		
+					to_add_gen_ere = []
 
-							key_aux = peptide+'_'+position+'_'+MCS
+					repName = ''
+					repClass = ''
+					repFamily = ''
 
-							rep_names = []
+					key_aux = peptide+'_'+position+'_'+MCS
+
+					rep_names = []
+					try:
+						rep_names = list(self.peptides_intersected_ere[peptide][key_aux])
+						repName = rep_names[0]
+						if 'antisense_' in repName:
+							repName_aux = repName.split('antisense_')[1]
+							repClass = self.biotypes_names.index('Antisense_EREs')
+							repFamily = self.ere_info[repName_aux][1]
+							repFamily = 'antisense_'+repFamily
+						else:
 							try:
-								rep_names = list(self.peptides_intersected_ere[peptide][key_aux])
-								repName = rep_names[0]
-								if 'antisense_' in repName:
-									repName_aux = repName.split('antisense_')[1]
-									repClass = self.biotypes_names.index('Antisense_EREs')
-									repFamily = self.ere_info[repName_aux][1]
-									repFamily = 'antisense_'+repFamily
+								repClass = self.biotypes_names.index(self.ere_info[repName][0])
+							except ValueError:
+								if repName == 'Other':
+									repName = 'SINE'
+									repClass = self.biotypes_names.index(self.ere_info[repName][0])
 								else:
-									try:
-										repClass = self.biotypes_names.index(self.ere_info[repName][0])
-									except ValueError:
-										if repName == 'Other':
-											repName = 'SINE'
-											repClass = self.biotypes_names.index(self.ere_info[repName][0])
-										else:
-											continue
-									repFamily = self.ere_info[repName][1]
-								
-								self.biotype_type.add(repClass)
-
-							except KeyError:
-								pass
-
-							try:
-								transcripts_biotypes = self.information_final_biotypes_peptides[peptide][key_aux]
-
-								for transcript, peptide_genomic_biotypes in transcripts_biotypes.items():
-									
-									gene_level_biotype = peptide_genomic_biotypes[0]
-									transcript_level_biotype = peptide_genomic_biotypes[1]
-									genomic_position_biotype = self.biotypes_names.index(self.mod_type(peptide_genomic_biotypes[2]))
-										
-									to_add_gen_ere = [type_peptide, peptide, position, known_sj, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
-									
-									to_add_gen_ere.extend(rna_bam_files)
-									to_add_gen_ere.append(sum(rna_bam_files))
-									data_gen_ere.append(to_add_gen_ere)
-									
-									self.biotype_type.add(genomic_position_biotype)
-
-							except KeyError:
-								transcript = 'No Annotation'
-								gene_level_biotype = 'Intergenic'
-								transcript_level_biotype = 'Intergenic'
-								genomic_position_biotype = self.biotypes_names.index('Intergenic')
-
-								if len(rep_names) > 0 :
-									gene_level_biotype = ''
-									transcript_level_biotype = ''
-									genomic_position_biotype = ''
-								else:
-									self.biotype_type.add(genomic_position_biotype)
-								
-								to_add_gen_ere = [type_peptide, peptide, position, known_sj, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
-									
-								to_add_gen_ere.extend(rna_bam_files)
-								to_add_gen_ere.append(sum(rna_bam_files))
-								data_gen_ere.append(to_add_gen_ere)
+									continue
+							repFamily = self.ere_info[repName][1]
+						
+						self.biotype_type.add(repClass)
 
 					except KeyError:
-						info_alignments_peptide = []
+						pass
+
+					try:
+						transcripts_biotypes = self.information_final_biotypes_peptides[peptide][key_aux]
+
+						for transcript, peptide_genomic_biotypes in transcripts_biotypes.items():
+							
+							gene_level_biotype = peptide_genomic_biotypes[0]
+							transcript_level_biotype = peptide_genomic_biotypes[1]
+							genomic_position_biotype = self.biotypes_names.index(self.mod_type(peptide_genomic_biotypes[2]))
+								
+							to_add_gen_ere = [type_peptide, peptide, position, known_sj, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
+							
+							to_add_gen_ere.extend(rna_bam_files)
+							to_add_gen_ere.append(sum(rna_bam_files))
+							data_gen_ere.append(to_add_gen_ere)
+							
+							self.biotype_type.add(genomic_position_biotype)
+
+					except KeyError:
+						transcript = 'No Annotation'
+						gene_level_biotype = 'Intergenic'
+						transcript_level_biotype = 'Intergenic'
+						genomic_position_biotype = self.biotypes_names.index('Intergenic')
+
+						if len(rep_names) > 0 :
+							gene_level_biotype = ''
+							transcript_level_biotype = ''
+							genomic_position_biotype = ''
+						else:
+							self.biotype_type.add(genomic_position_biotype)
+						
+						to_add_gen_ere = [type_peptide, peptide, position, known_sj, MCS, strand, transcript, gene_level_biotype, transcript_level_biotype, genomic_position_biotype, repName, repClass, repFamily]
+							
+						to_add_gen_ere.extend(rna_bam_files)
+						to_add_gen_ere.append(sum(rna_bam_files))
+						data_gen_ere.append(to_add_gen_ere)
+
+			except KeyError:
+				info_alignments_peptide = []
 
 		columns_gen_ere = ['Peptide Type', 'Peptide','Alignment', 'Known Splice Junction', 'MCS', 'Strand', 'Transcript', 'gene_level_biotype', 'transcript_level_biotype', 'genomic_position_biotype', 'ERE name', 'ERE class', 'ERE family']
 		
@@ -474,7 +470,7 @@ class BiotypeAssignation:
 			self.super_logger.info('========== biotypes_all_peptides_genomic_ere_annot : Genome & ERE annotations : Done! ============ ')
 			biotypes_all_peptides_genomic_ere_annot = []
 			self.super_logger.info('========== Plots : Done! ============ ')
-
+			
 	
 	def compute_biotype_by_sample(self, df_position_biotypes_info_counts):
 

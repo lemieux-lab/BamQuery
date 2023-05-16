@@ -81,10 +81,10 @@ class ReverseTranslation:
 
 			self.translate_reserve_peptide_2(peptides_to_re_do)
 			
-			for peptide, info_peptide in CS_mode.items():
-				total_reads_to_align += 1
-				sequence = info_peptide[0]
-				to_write_reverse_translation+= '>'+peptide+'\n'+sequence+'\n'
+			for peptide, cs in CS_mode.items():
+				total_reads_to_align += len(cs)
+				for sequence in cs:
+					to_write_reverse_translation+= '>'+peptide+'\n'+sequence+'\n'
 
 			output_message += 'Total Coding Sequences : ' + str(total_reads_to_align)+'\n'
 			

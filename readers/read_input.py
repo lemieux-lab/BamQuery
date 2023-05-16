@@ -49,8 +49,8 @@ class ReadInputFile:
 		self.all_mode_peptide = {}
 		self.peptides_by_type = {}
 		self.peptides_by_type_user = {}
-		peptide_cs = set()
 		manual_mode_repeat_peptides = set()
+		cs_mode_repeat_peptides = set()
 
 		peptides_list = self.path_to_input_folder+'peptides.tsv'
 		cont = 0
@@ -70,6 +70,8 @@ class ReadInputFile:
 				self.peptides_by_type_user[peptide_type].append(peptide)
 			except KeyError:
 				self.peptides_by_type_user[peptide_type] = [peptide]
+			
+			return types
 
 
 		with open(peptides_list) as f:
@@ -83,19 +85,18 @@ class ReadInputFile:
 					if (len(peptide)>=8 and len(peptide) <= 11):
 						if peptide not in self.all_mode_peptide :
 							self.peptide_mode[peptide] = ['','','',peptide_type]
-							self.all_mode_peptide[peptide] = peptide_type
-							get_info_from_peptide_line(peptide_type, peptide)
+							types = set(get_info_from_peptide_line(peptide_type, peptide))
+							peptide_types = set()
+							peptide_types = peptide_types.union(types)
+							self.all_mode_peptide[peptide] = peptide_types
 						else:
-							peptide_type_aux = self.peptide_mode[peptide][-1]
-							if peptide_type not in peptide_type_aux :
-								self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
-								peptide_type = peptide_type_aux+';'+peptide_type
-								self.all_mode_peptide[peptide] = peptide_type
-								self.peptide_mode[peptide][-1] = peptide_type
-								get_info_from_peptide_line(peptide_type, peptide)
+							types = set(get_info_from_peptide_line(peptide_type, peptide))
+							self.all_mode_peptide[peptide] = self.all_mode_peptide[peptide].union(peptide_type)
+							self.peptide_mode[peptide][-1] = ';'.join(sorted(list(self.all_mode_peptide[peptide]))) 
+							
 					else:
 						self.super_logger.info('Skipping peptide : %s because its length. Peptide should be between 8 and 11 aa.', peptide)
-											
+										
 				elif len(line) == 3:
 					peptide = line[0].strip()
 					cs = line[1].strip()
@@ -105,22 +106,19 @@ class ReadInputFile:
 						raise Exception("Sorry, Nucleotide sequence doesn\'t correspond to the peptide. ' ", peptide, cs)
 					peptide_type = line[2].strip()
 
-					key = peptide+'_'+cs
-
-					if key not in peptide_cs:
-						peptide_cs.add(key)
-						self.CS_mode[peptide] = [cs,'','',peptide_type]
-						self.all_mode_peptide[peptide] = peptide_type
-						get_info_from_peptide_line(peptide_type, peptide)
+					if peptide not in self.CS_mode:
+						cs_set = set()
+						cs_set.add(cs)
+						self.CS_mode[peptide] = cs_set
+						types = set(get_info_from_peptide_line(peptide_type, peptide))
+						peptide_types = set()
+						peptide_types = peptide_types.union(types)
+						self.all_mode_peptide[peptide] = peptide_types
 					else:
-						peptide_type_aux = self.CS_mode[peptide][-1]
-						if peptide_type not in peptide_type_aux:
-							self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
-							peptide_type = peptide_type_aux+';'+peptide_type
-							self.all_mode_peptide[peptide] = peptide_type
-							self.CS_mode[peptide][-1] = peptide_type
-							get_info_from_peptide_line(peptide_type, peptide)
-
+						types = set(get_info_from_peptide_line(peptide_type, peptide))
+						self.all_mode_peptide[peptide] = self.all_mode_peptide[peptide].union(types)
+						self.CS_mode[peptide].add(cs)
+					
 				elif len(line) == 5:
 					peptide = line[0].strip()
 					cs = line[1].strip()
@@ -135,31 +133,33 @@ class ReadInputFile:
 					if '+' not in strand and '-' not in strand:
 						raise Exception("Sorry, You must provide an appropriate strand, either + (Forward) or - (Backward) for peptide ", peptide)
 					peptide_type = line[4].strip()
+					
+					key = peptide+'_'+cs+'_'+position+'_'+strand
 
-					if peptide not in self.all_mode_peptide :
+					if peptide not in self.manual_mode :
 						self.manual_mode[peptide] = [[cs, position, strand, peptide_type]]
-						manual_mode_repeat_peptides.add(peptide+cs+position+strand)
-						self.all_mode_peptide[peptide] = peptide_type
-						get_info_from_peptide_line(peptide_type, peptide)
+						manual_mode_repeat_peptides.add(key)
+						types = set(get_info_from_peptide_line(peptide_type, peptide))
+						peptide_types = set()
+						peptide_types = peptide_types.union(types)
+						self.all_mode_peptide[peptide] = peptide_types
 					else:
-						peptide_type_aux = self.manual_mode[peptide][-1]
-						key = peptide+cs+position+strand
-						if peptide_type not in peptide_type_aux :
-							self.peptides_by_type_user[peptide_type_aux].remove(peptide) 
-							peptide_type = peptide_type_aux+';'+peptide_type
-							self.all_mode_peptide[peptide] = peptide_type
+						types = set(get_info_from_peptide_line(peptide_type, peptide))
+						self.all_mode_peptide[peptide] = self.all_mode_peptide[peptide].union(types)
 						if key not in manual_mode_repeat_peptides:
 							self.manual_mode[peptide].append([cs, position, strand, peptide_type])
-							get_info_from_peptide_line(peptide_type, peptide)
+							manual_mode_repeat_peptides.add(key)
+							
 				else:
 					raise Exception("Sorry, You must provide peptides in the appropriate format mode : peptide/CS/manual ")
 				
 		self.peptides_by_type_user = {k: v for k, v in self.peptides_by_type_user.items() if v}	
+		self.all_mode_peptide = {k: ';'.join(sorted(list(v))) for k, v in self.all_mode_peptide.items()}	
 		self.super_logger.info('Peptides to evaluate in Peptide Mode : %d', len(self.peptide_mode))
 		self.super_logger.info('Peptides to evaluate in Coding Sequence (CS) Mode : %d', len(self.CS_mode))
 		self.super_logger.info('Peptides to evaluate in Manual Mode: %d', len(self.manual_mode))
 		self.super_logger.info('Total Peptides to evaluate : %d', len(self.peptide_mode)+len(self.CS_mode)+len(self.manual_mode))
-
+		
 
 	def evaluate_cs_ntd(self, cs):
 		cs_set = set(cs)
