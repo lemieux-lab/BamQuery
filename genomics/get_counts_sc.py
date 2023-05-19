@@ -8,6 +8,7 @@ from itertools import repeat
 from operator import itemgetter
 import re
 from functools import reduce
+import sys
 
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
@@ -64,10 +65,17 @@ class GetCountsSC:
 			except FileNotFoundError:
 				peptides_info = {}
 
+			try:
+				with open(self.path_to_output_folder_alignments+'cell_names.pkl', 'rb') as fp:
+					cell_names = pickle.load(fp)
+
+			except FileNotFoundError:
+				cell_names = set()
+
 		else:
 			last_treated_bam_file = -1
 			peptides_info = {}
-		
+			cell_names = set()
 
 		if not exists_rna_sc:
 			t_0 = time.time()
@@ -131,8 +139,6 @@ class GetCountsSC:
 					key = chr
 				digits_bam_file_BQ_reference.append(key)
 
-			cell_lines = set()
-
 			for idx, bam_file in enumerate(info_bams):
 				
 				if idx > last_treated_bam_file:
@@ -166,36 +172,26 @@ class GetCountsSC:
 								index_sample = count_align[2]
 								strand = count_align[3]
 								key = alignment+'_'+strand
-								try:
-									peptide_info_aux = peptides_info[peptide]
-									try:
-										peptide_info_aux_alignment = peptide_info_aux[key]
-									except KeyError:
-										peptide_info_aux[key] = {}
-								except KeyError:
-									peptides_info[peptide] = {key: {}}
-
 							else:
 								count_info = count_align[0]
 								sequence = count_align[1]
+								new_key = peptide+'_'+alignment+'_'+strand+'_'+sequence
 								
 								if count_info == -1:
 									not_permission = True
 								
-								info_alignment = peptides_info[peptide][key]
-								
 								if len(count_info) > 0: # cell names
 									cells = set(count_info.keys())
-									cell_lines = cell_lines.union(cells)
-
+									cell_names = cell_names.union(cells)
+								
 								try:
-									info_sequence = info_alignment[sequence]
+									info_sequence = peptides_info[new_key]
 
 									if len(count_info) > 0:
-										info_alignment[sequence].update(count_info)
+										info_sequence.update(count_info)
 										
 								except KeyError:
-									info_alignment[sequence] = count_info
+									peptides_info[new_key] = count_info
 									
 								count = sum(count_info.values())
 								new_key = peptide+'_'+alignment+'_'+sequence
@@ -219,13 +215,16 @@ class GetCountsSC:
 						with open(self.path_to_output_folder_alignments+'info_treated_bam_files.pkl', 'wb') as f:  
 							pickle.dump(idx, f)
 
+						with open(self.path_to_output_folder_alignments+'cell_names.pkl', 'wb') as f:  
+							pickle.dump(cell_names, f)
+
 						with open(alignment_information_sc_path, 'wb') as handle:
 							pickle.dump(alignment_information_sc, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 						with open(self.path_to_output_folder_alignments+'peptides_info.pkl', 'wb') as handle:
 							pickle.dump(peptides_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
 				else:
-					self.super_logger.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
+					self.super_logger.info('Bam File already processed: %s %s.', str(idx), list_bam_files_order[idx])
 			
 			pool.close()
 			pool.join()
@@ -234,52 +233,62 @@ class GetCountsSC:
 			with open(self.path_to_output_folder_alignments+'info_treated_bam_files.pkl', 'wb') as f:  
 				pickle.dump(idx, f)
 			
+			with open(self.path_to_output_folder_alignments+'cell_names.pkl', 'wb') as f:  
+				pickle.dump(cell_names, f)
+
 			with open(alignment_information_sc_path, 'wb') as handle:
 				pickle.dump(alignment_information_sc, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-			cell_lines = list(cell_lines)
-			if len(cell_lines) == 0:
-				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand', 'No intersected cells']
-			
-			else:
-				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']+cell_lines
-			data = []
-			
 			with open(self.path_to_output_folder_alignments+'peptides_info.pkl', 'wb') as handle:
 				pickle.dump(peptides_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
-			
-			for peptide, info_peptide in peptides_info.items():
-				peptide_type = self.peptides_by_type[peptide]
-				for alignment, info_sequences in info_peptide.items():
-					key_splited = alignment.split('_')
-					alignment = key_splited[0]
-					strand = key_splited[1]
-					
-					for sequence, value_sequence in info_sequences.items():
-						if len(value_sequence)>=0 :  # remove the = if only want to show the peptides that have some counting
-							aux = [peptide_type, peptide, alignment, sequence, strand]
-							zeros = [0]*len(cell_lines)
-							for cell, count in value_sequence.items():
-								index = cell_lines.index(cell)
-								zeros[index] = count
-							aux = aux+zeros
-							data.append(aux)
-					if len(cell_lines) == 0:
-						aux = [peptide_type, peptide, alignment, sequence, strand, 0]
-						data.append(aux)
 
-			df_alignments = pd.DataFrame(data, columns = header)
-			if len(cell_lines) > 0:
-				cell_lines = sorted(cell_lines, key=lambda x: (int(x.split('_')[0]), x))
-				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']+cell_lines
-				df_alignments = df_alignments.reindex(columns=header)
+			cell_names = list(cell_names)
+			if len(cell_names) == 0:
+				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand', 'No intersected cells']
+			else:
+				cell_names = sorted(cell_names, key=lambda x: (int(x.split('_')[0]), x))
+				data = []
+				new_cell_names = []
+
+				for cont, cell_name in enumerate(cell_names, start=1):
+					bam_file = int(cell_name.split('_')[0])
+					cell_name = cell_name.split('_')[1]
+					new_cell_names.append(cont)
+					data.append([cont, bam_file, cell_name])
+
+				convertion = pd.DataFrame(data, columns=['id','Single_cell_bam_file', 'Cell name'])
+				convertion.to_csv(self.path_to_output_folder_res+self.name_exp+'_cell_names_identification.csv',  header=True, index=False)
+				header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']+new_cell_names
+			
+			data = []
+			
+			for peptide_info, cell_counts in peptides_info.items():
+				peptide_info_split = peptide_info.split('_')
+				peptide = peptide_info_split[0]
+				alignment = peptide_info_split[1]
+				strand = peptide_info_split[2]
+				sequence = peptide_info_split[3]
+				peptide_type = self.peptides_by_type[peptide]
+				if len(cell_counts)>0 :  # remove the = if only want to show the peptides that have some counting
+					aux = [peptide_type, peptide, alignment, sequence, strand]
+					zeros = [0]*len(cell_names)
+					for cell, count in cell_counts.items():
+						index = cell_names.index(cell)
+						zeros[index] = count
+					aux = aux+zeros
+					data.append(aux)
+				if len(cell_names) == 0:
+					aux = [peptide_type, peptide, alignment, sequence, strand, 0]
+					data.append(aux)
+
+			try:
+				df_alignments = pd.DataFrame(data, columns = header)
+			except MemoryError:
+				print ('The available memory is insufficient to complete the query. Please allocate additional memory to ensure successful execution. \nIf the issue continues, we recommend dividing the number of peptides into smaller batches for the query.')
+				sys.exit(2)
 
 			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum().reset_index()
 			df_counts.sort_values(by=['Peptide Type'])
-
-			if len(cell_lines) > 0:
-				header = ['Peptide Type', 'Peptide']+cell_lines
-				df_counts = df_counts.reindex(columns=header)
 
 			df_counts.to_csv(rna_sc_count_path,  header=True, index=False)
 			df_alignments.to_csv(rna_sc_count_all_alignments_path, index=False, header=True)
@@ -447,7 +456,6 @@ class GetCountsSC:
 			if seq_overlap in cs and name not in set_names_reads:
 				set_names_reads.add(name)
 				cells_names_reads.add((name, cell))
-				return percentage_overlap
 
 		if library == 'unstranded' or sens == 'unstranded':
 
