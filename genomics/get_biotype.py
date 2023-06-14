@@ -270,7 +270,9 @@ class BiotypeAssignation:
 
 		df_position_biotypes_info = copy.deepcopy(counts)
 		df_position_biotypes_info.insert(4, 'Annotation Frequencies', '', allow_duplicates=False)
-		df_position_biotypes_info.insert(5, 'Best Guess', '', allow_duplicates=False)
+		df_position_biotypes_info.insert(5, 'Best Guess Annotation Frequencies', '', allow_duplicates=False)
+		df_position_biotypes_info.insert(6, 'Weighted Biotype', '', allow_duplicates=False)
+		df_position_biotypes_info.insert(7, 'Best Guess Weighted Biotype', '', allow_duplicates=False)
 
 		df_position_biotypes_info_counts = pd.DataFrame(0.0, columns=range(len(self.biotypes_names)), index=range(len(self.df_position)))
 		df_position_biotypes_info_counts_naive = pd.DataFrame(0.0, columns=range(len(self.biotypes_names)), index=range(len(self.df_position)))
@@ -295,12 +297,15 @@ class BiotypeAssignation:
 			string_biotype = ''
 			
 			count_total_biotypes = dict(sorted(count_total_biotypes.items(), key = operator.itemgetter(1), reverse=True))
+			counts_reads_in_region = df_position_biotypes_info[(df_position_biotypes_info['Peptide']==peptide) & (df_position_biotypes_info['Alignment']==alignment)& (df_position_biotypes_info['Strand']==strand)]['Total reads count RNA'].values[0]
 			
 			best_guess = ''
 			best_guess_equal = self.biotypes_names[list(count_total_biotypes.keys())[0]]
 			equal_bios_ratio = False
 			first_bio_ratio = count_total_biotypes[list(count_total_biotypes.keys())[0]]
 			cont = 0
+			coeff_aux_dic = {}
+			
 			for bio, value in count_total_biotypes.items():
 				if cont != 0 and value == first_bio_ratio:
 					equal_bios_ratio = True
@@ -308,11 +313,13 @@ class BiotypeAssignation:
 
 				coeff = self.coefficients[bio]
 				df_position_biotypes_info_counts.at[index, bio] = coeff
-				ratio = value/(total_biotypes_types*1.0)
 				
+				ratio = value/(total_biotypes_types*1.0)
 				df_position_biotypes_info_counts_naive.at[index, bio] = ratio
 				percentage = round(ratio*100,2)
 				string_biotype += self.biotypes_names[bio]+': '+str(percentage)+'% - '
+				coeff_aux_dic[self.biotypes_names[bio]] = coeff
+
 				if self.biotypes_names[bio] == 'In_frame':
 					best_guess = 'In_frame'
 				cont += 1
@@ -325,8 +332,24 @@ class BiotypeAssignation:
 					best_guess = self.biotypes_names[list(count_total_biotypes.keys())[0]]
 
 			df_position_biotypes_info.at[index, 'Annotation Frequencies'] = string_biotype
-			df_position_biotypes_info.at[index, 'Best Guess'] = best_guess
+			df_position_biotypes_info.at[index, 'Best Guess Annotation Frequencies'] = best_guess
+
+			#if counts_reads_in_region > 0:
+			string_biotype = ''
+			best_guess = ''
+			order_biotypes = dict(sorted(coeff_aux_dic.items(), key = operator.itemgetter(1), reverse=True))
+			total_bios_param = sum(order_biotypes.values())
 			
+			for bio_name, ratio in order_biotypes.items():
+				percentage = round((ratio/total_bios_param)*100,2)
+				string_biotype += bio_name+': '+str(percentage)+'% - '
+				if bio_name == 'In_frame':
+					best_guess = 'In_frame'
+			if best_guess == '':
+				best_guess = list(order_biotypes.keys())[0]
+			df_position_biotypes_info.at[index, 'Weighted Biotype'] = string_biotype[:-2]
+			df_position_biotypes_info.at[index, 'Best Guess Weighted Biotype'] = best_guess
+				
 		path = self.path_to_output_folder+'/res/biotype_classification/full_info_biotypes/3_Genomic_and_ERE_Anno_by_Region_Full.csv'
 		df_position_biotypes_info.to_csv(path, index=False)
 
@@ -335,7 +358,7 @@ class BiotypeAssignation:
 
 		return df_position_biotypes_info_counts, df_position_biotypes_info_counts_naive
 
-
+	
 	def compute_genomic_and_ere_by_peptide(self, df_position_biotypes_info_counts_naive):
 
 		# Biotype based in the biotype genomic locations, with equals weights!

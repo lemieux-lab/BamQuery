@@ -27,11 +27,11 @@ With this file structure, a cram path file for GTEx should look like this:  ``/h
 
 In this example, BamQuery creates the key ``brain_amygdala_SRR1333352`` to save information related to this sample.
 
-This information is organized in a list as follows:
+This information is organized in a list as follows: |br| 
 0: ``/home/GTEX/brain_amygdala/SRR1333352/SRR1333352.cram`` --> Whole path to bam/cram file |br| 
 1: ``80302110`` --> Total Primary Read count in the bam/cram file |br| 
 2: ``brain_amygdala`` --> Tissue |br| 
-3: ``Brain``, --> Tissue type  |br| 
+3: ``Brain`` --> Tissue type  |br| 
 4: ``no`` --> Shortlist |br| 
 5: ``NA`` --> Sequencing  |br| 
 6: ``NA`` --> Library |br| 

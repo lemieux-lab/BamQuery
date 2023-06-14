@@ -16,11 +16,12 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 class GetCountsSC:
 
-	def __init__(self, path_to_output_folder, name_exp, mode, light, peptides_by_type, super_logger, threads):
+	def __init__(self, path_to_output_folder, name_exp, mode, light, umi, peptides_by_type, super_logger, threads):
 		self.path_to_output_folder = path_to_output_folder
 		self.path_to_output_folder_res = path_to_output_folder+'res/'
 		self.name_exp = name_exp
 		self.mode = mode
+		self.umi = umi
 		self.path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 		self.peptides_by_type = peptides_by_type
 		self.super_logger = super_logger
@@ -427,8 +428,10 @@ class GetCountsSC:
 			
 			try:
 				cell = read.split('CB:Z:')[1].split('-')[0]
+				umi = read.split('UB:Z:')[1].split('\t')[0]
 			except:
 				cell = read.split('CR:Z:')[1].split('\t')[0]
+				umi = read.split('UR:Z:')[1].split('\t')[0]
 
 			if len(indels) > 0:
 				for indel in indels:
@@ -439,7 +442,7 @@ class GetCountsSC:
 				index_fin = rang_.index(max(overlap)) + 1
 				seq_overlap = seq[index_ini :index_fin]
 				if percentage_overlap == 1 :
-					return name, cell, strand, seq_overlap, percentage_overlap
+					return name, cell, umi, strand, seq_overlap, percentage_overlap
 		
 	def get_depth_with_view(self, region_to_query, bam_file, index_sample, library, sens, strand, sequences, pos_set, splice_pos):
 
@@ -451,12 +454,15 @@ class GetCountsSC:
 		
 		def set_count(info_read, cs):
 
-			name, cell, strand, seq_overlap, percentage_overlap = info_read
+			name, cell, umi, strand, seq_overlap, percentage_overlap = info_read
 			
-			if seq_overlap in cs and name not in set_names_reads:
+			if not self.umi and seq_overlap in cs and name not in set_names_reads:
 				set_names_reads.add(name)
 				cells_names_reads.add((name, cell))
-
+			elif self.umi and seq_overlap in cs and (umi,cell) not in cells_names_reads:
+				set_names_reads.add(umi)
+				cells_names_reads.add((umi, cell))
+				
 		if library == 'unstranded' or sens == 'unstranded':
 
 			try:
@@ -474,7 +480,7 @@ class GetCountsSC:
 				contReads = 0
 				set_names_reads = set()
 				cells_names_reads = set()
-
+				
 				rcmcs = uf.reverseComplement(seq)
 				
 				sum_overlap_seq = list(map(set_count, reads_overlaping_area, repeat(seq)))

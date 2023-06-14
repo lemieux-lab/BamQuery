@@ -442,7 +442,3 @@ class GetInformationBamFiles:
 
 		return type_library, sequencing
 
-			
-
-
-

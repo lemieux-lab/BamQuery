@@ -420,11 +420,11 @@ For example:
 
 Three locations were collected for a given peptide.
 	(a) At location 1 the peptide overlaps in-frame with two transcripts of a canonical protein (``100% in_frame``) and at that location there is a count of 10 RNA-seq reads. 
-	(b) At location 2 the peptide overlaps in-frame with one transcript and in the 3'UTR of another transcript (``89% in_frame, 50% 3'UTR``) and at that location there are 20 RNA-seq reads. 
+	(b) At location 2 the peptide overlaps in-frame with one transcript and in the 3'UTR of another transcript (``89% in_frame, 11% 3'UTR``) and at that location there are 20 RNA-seq reads. 
 	(c) At location 3 the peptide overlaps with the intronic region of a transcript (``100% Intron``) and at that location there are 7 RNA-seq reads.
 
 The final biotype for the peptide corresponds to: |br|
-``In_frame : 75%, 3'UTR : 6%, Introns : 19%``. 
+``In_frame : 75%, Introns : 19%, 3'UTR : 6%``. 
 
 Best guess : 
 			1. 'In_Frame' if it is among the genomic position biotypes.

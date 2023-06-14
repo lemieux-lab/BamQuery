@@ -2,6 +2,7 @@ import os, time, pickle, pysam, time
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import utils.useful_functions as uf
+from Bio import pairwise2
 
 path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'
 
@@ -40,8 +41,6 @@ class BiotypeGenomicSearch:
 				self.genome = path_to_lib + 'genome_versions/genome_mouse_m30/GRCm39.primary_assembly.genome.fa'
 				self.annotations_file = path_to_lib+'genome_versions/genome_mouse_m30/Info_Transcripts_Annotations.dic'
 
-		path = self.path_to_output_folder_alignments +'/alignments_summary_information.pkl'
-		self.alignments_summary_information = pd.read_pickle(path)
 		self.translated_prots = {}
 
 
@@ -104,6 +103,7 @@ class BiotypeGenomicSearch:
 				transcripts_information[transcript] = info_transcript
 
 		information_final_biotypes_peptides = self.set_final_transcript_level_biotype(transcripts_information)
+		self.translated_prots = {}
 		return information_final_biotypes_peptides
 
 
@@ -197,9 +197,6 @@ class BiotypeGenomicSearch:
 						else:
 							if transcript_level_biotype[0] == 'CDS':
 								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript, position)
-								peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position) & (self.alignments_summary_information['MCS'] == mcs)]['Peptide in Reference'].values[0] 
-								if peptide_in_reference != peptide and transcript_level_biotype[0] == 'Frameshift':
-									transcript_level_biotype[0] = 'CDS'
 
 						transcript_level_biotype = transcript_level_biotype[0]
 						try:
@@ -239,10 +236,7 @@ class BiotypeGenomicSearch:
 						else:
 							if transcript_level_biotype[0] == 'CDS':
 								transcript_level_biotype = self.get_in_frame_out_frame_in_protein(peptide, transcript, info_transcript, position)
-								peptide_in_reference = self.alignments_summary_information[(self.alignments_summary_information['Peptide'] == peptide) & (self.alignments_summary_information['Alignment'] == position) & (self.alignments_summary_information['MCS'] == mcs)]['Peptide in Reference'].values[0] 
-								if peptide_in_reference != peptide and transcript_level_biotype[0] == 'Frameshift':
-									transcript_level_biotype[0] = 'CDS'
-
+								
 						transcript_level_biotype = transcript_level_biotype[0]	
 						try:
 							dic =  information_final_biotypes_peptides[peptide]
@@ -267,15 +261,30 @@ class BiotypeGenomicSearch:
 		len_prot = info_transcript['Info'][13]
 		
 		try:
-			protein = self.translated_prots[transcript]
+			proteins = self.translated_prots[transcript]
 		except KeyError:
-			protein = self.get_transcript_and_protein(chr, regions, strand)
-			self.translated_prots[transcript] = protein
+			proteins = self.get_transcript_and_protein(chr, regions, strand)
+			self.translated_prots[transcript] = proteins
+		
+		alignments = pairwise2.align.localms(proteins[0], peptide, 1, -1, -5, -.1)
+		alignment_score = alignments[0].score
+		percentage_similarity = (alignment_score / len(peptide)) 
+		print (peptide, percentage_similarity, proteins[0])
 
-		if peptide in protein:
+		if percentage_similarity >= 0.5:
 			transcript_level = 'In_frame'
 		else:
-			transcript_level = 'Frameshift'
+			alignments_1 = pairwise2.align.localms(proteins[1], peptide, 1, -1, -5, -.1)
+			alignment_score_1 = alignments_1[0].score
+			percentage_similarity_1 = (alignment_score_1 / len(peptide)) 
+			alignments_2 = pairwise2.align.localms(proteins[2], peptide, 1, -1, -5, -.1)
+			alignment_score_2 = alignments_2[0].score
+			percentage_similarity_2 = (alignment_score_2 / len(peptide)) 
+			
+			if percentage_similarity_1 >= 0.5 or percentage_similarity_2 >= 0.5 : 
+				transcript_level = 'Frameshift'
+			else:
+				transcript_level = 'CDS'
 	
 		return [transcript_level]
 
@@ -297,10 +306,20 @@ class BiotypeGenomicSearch:
 				sequence_transcript =  sequence_transcript + sequence
 		
 		if chr == 'chrM':
-			protein = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='mt')
+			protein_1 = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='mt')
 		else:
-			protein = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='default')
+			protein_1 = uf.translateDNA(sequence_transcript, frame = 'f1', translTable_id='default')
+		
+		if chr == 'chrM':
+			protein_2 = uf.translateDNA(sequence_transcript, frame = 'f2', translTable_id='mt')
+		else:
+			protein_2 = uf.translateDNA(sequence_transcript, frame = 'f2', translTable_id='default')
 
-		return protein
+		if chr == 'chrM':
+			protein_3 = uf.translateDNA(sequence_transcript, frame = 'f3', translTable_id='mt')
+		else:
+			protein_3 = uf.translateDNA(sequence_transcript, frame = 'f3', translTable_id='default')
+
+		return [protein_1, protein_2, protein_3]
 
 

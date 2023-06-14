@@ -24,7 +24,7 @@ path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-2])+'/lib/'
 
 class BamQuery:
 
-	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse, t):
+	def __init__(self, path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, umi, var, maxmm, genome_version, overlap, mouse, t):
 		self.path_to_input_folder = path_to_input_folder
 		self.path_to_output_folder = path_to_output_folder
 		self.name_exp = name_exp
@@ -38,6 +38,7 @@ class BamQuery:
 		self.common = c
 		self.super_logger = super_logger
 		self.sc = sc
+		self.umi = umi
 		self.var = var
 		self.maxmm = maxmm
 		self.genome_version = genome_version
@@ -65,7 +66,7 @@ class BamQuery:
 		exists_normal = os.path.exists(name_path_normal) 
 		if not exists_normal :
 			
-			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.input_file_treatment.all_mode_peptide, self.super_logger, self.threads)
+			get_counts = GetCountsSC(self.path_to_output_folder, self.name_exp, self.mode, self.light, self.umi, self.input_file_treatment.all_mode_peptide, self.super_logger, self.threads)
 			res = get_counts.get_counts(self.perfect_alignments, self.bam_files_info.bam_files_list)
 			df_counts_rna = res[0]
 			self.perfect_alignments = res[1]
@@ -513,6 +514,7 @@ def main(argv):
 	parser.add_argument('--strandedness', action='store_true', help='Take into account strandedness of the samples')
 	parser.add_argument('--light', action='store_true', help='Display only the count and norm count for peptides and regions')
 	parser.add_argument('--sc', action='store_true', help='Query Single Cell Bam Files')
+	parser.add_argument('--umi', action='store_true', help='Count UMIs in Single Cell Bam Files')
 	parser.add_argument('--var', action='store_true', help='Keep Variants Alignments')
 	parser.add_argument('--maxmm', action='store_true', help='Enable STAR to generate a larger number of alignments')
 	parser.add_argument('--overlap', action='store_true', help='Count overlapping reads')
@@ -534,6 +536,7 @@ def main(argv):
 	plots = args.plots
 	c = args.c
 	sc = args.sc
+	umi = args.umi
 	var = args.var
 	maxmm = args.maxmm
 	overlap = args.overlap
@@ -555,7 +558,7 @@ def main(argv):
 		mode = 'normal'
 		plots = False
 
-	if (mode != 'normal' and mode != 'translation') or (dbSNP != 0 and dbSNP != 149 and dbSNP != 151 and dbSNP != 155) or (genome_version != 'v26_88' and genome_version != 'v33_99' and genome_version != 'v38_104' and genome_version != 'M24' and genome_version != 'M30' ):
+	if (mode != 'normal' and mode != 'translation') or (dbSNP not in [0, 149, 151, 155]) or (genome_version not in ['v26_88','v33_99', 'v38_104', 'M24','M30'] ):
 		sys.stderr.write('error: %s\n' % 'Some arguments are not valid!')
 		parser.print_help()
 		sys.exit(2)
@@ -577,7 +580,7 @@ def main(argv):
 		super_logger.info('=============== Start Parameters ===============')
 		super_logger.info(' - BamQuery id : %s ', name_exp)
 		super_logger.info(' - Mode : %s, Strandedness :  %s, Light:  %s ', mode, strandedness, str(light) )
-		super_logger.info(' - Single-Cell experiment (sc) :  %s', str(sc))
+		super_logger.info(' - Single-Cell experiment (sc) :  %s, Count UMIs : %s', str(sc), str(umi))
 		super_logger.info(' - dbSNP :  %s, COMMON SNPs : %s, Genome Version : %s ', str(dbSNP), str(c), genome_version)
 		super_logger.info(' - Plots : %s', str(plots))
 		super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
@@ -590,7 +593,7 @@ def main(argv):
 		super_logger.info('=============== Start Parameters ===============')
 		super_logger.info(' - BamQuery id : %s ', name_exp)
 		super_logger.info(' - Mode : %s, Strandedness :  %s, Light:  %s ', mode, strandedness, str(light) )
-		super_logger.info(' - Single-Cell experiment (sc) :  %s', str(sc))
+		super_logger.info(' - Single-Cell experiment (sc) :  %s, Count UMIs : %s', str(sc), str(umi))
 		super_logger.info(' - dbSNP :  %s, COMMON SNPs : %s, Genome Version : %s ', str(dbSNP), str(c), genome_version)
 		super_logger.info(' - Plots : %s', str(plots))
 		super_logger.info(' - Keep Variant Alignments : %s, Keep High Amount Alignments : %s', str(var), str(maxmm))
@@ -599,7 +602,7 @@ def main(argv):
 		super_logger.info(' - Threads : %s', str(t))
 		super_logger.info('=============== End Parameters ===============')
 
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse, t)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, umi, var, maxmm, genome_version, overlap, mouse, t)
 	
 	print ('========== BamQuery : Done! ============ ')
 	if not dev:
