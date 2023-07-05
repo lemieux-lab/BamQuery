@@ -42,7 +42,7 @@ ________________________________________________________________________________
 <h2>  Installation From source </h2>
 
 
-See the [user manual](https://bamquery.iric.ca/documentation/) for a detailed description usage.
+See the [user manual](https://bamquery.iric.ca/documentation/) for a detailed description of usage.
 
 <h3>1. Clone repository from github</h3>
 
@@ -68,11 +68,11 @@ You need to download the human or mouse genome version you wish to use to:
         
         cd lib/genome_versions
 
-And use the command below to download any human genome version : v26_88 or v33_99 or v38_104.
+And use the command below to download any human genome version: v26_88 or v33_99 or v38_104.
 
         wget https://bamquery.iric.ca/download/genome_SET_VERSION.tar.gz
                 
-or to download any mouse genome version : m24, m30.
+or to download any mouse genome version: m24, m30.
 
         wget https://bamquery.iric.ca/download/genome_mouse_SET_VERSION.tar.gz
 
@@ -91,11 +91,11 @@ You can download the annotated snps you need to (by default BamQuery does not us
         
         cd lib/snps
 
-And use the command below to download any dbSNP corresponding to human genome releases : 149 or 151 or 155.
+And use the command below to download any dbSNP corresponding to human genome releases 149 or 151 or 155.
 
         wget https://bamquery.iric.ca/download/dbsnps_SET_RELEASE.tar.gz
                 
-or to download any dbSNP corresponding to mouse genome releases : GRCm38 or GRCm39.
+or to download any dbSNP corresponding to mouse genome releases GRCm38 or GRCm39.
 
         wget https://bamquery.iric.ca/download/snps_mouse_SET_RELEASE.tar.gz
         
@@ -108,7 +108,7 @@ Finally, you need to:
 
 <h4>Option 1: Installation with Conda </h4>
 
-For users having no administrator priviledges, we recommend installing BamQuery with [conda](https://docs.conda.io/en/latest/miniconda.html).
+For users having no administrator privileges, we recommend installing BamQuery with [conda](https://docs.conda.io/en/latest/miniconda.html).
 
 1. First create a conda environment and activate it:
 
@@ -139,12 +139,12 @@ For users having no administrator priviledges, we recommend installing BamQuery 
 
 <h4>Option 2: Installation from source</h4>
 
-1. Download Python 3 and creare a virtual environment. Python: https://www.python.org/
+1. Download Python 3 and create a virtual environment. Python: https://www.python.org/
 
         python3 -m venv bamquery-venv
         source ${INSTALLDIR}/env/bin/activate
         
-2. Install python packages in the virtual environment</h4>
+2. Install Python packages in the virtual environment</h4>
 
         pip install --upgrade pip
         pip install pandas
@@ -190,13 +190,13 @@ A docker container is also available to provide a self contained working environ
 
 <h3>2. Download the docker image:</h3>
 
-        wget https://bamquery.iric.ca/download/bamquery-2023-02-17.tar.gz
+        wget https://bamquery.iric.ca/download/bamquery-2023-07-03.tar.gz
         
 ------------------------       
 <h3>3. Install the docker image (requires sudo access):</h3>
         
-        gunzip bamquery-2023-02-17.tar.gz
-        sudo docker load --input bamquery-2023-02-17
+        gunzip bamquery-2023-07-03.gz
+        sudo docker load --input bamquery-2023-07-03
         
 ------------------------        
 <h3>4. Install required library files within $INSTALLDIR:</h3>
@@ -215,13 +215,13 @@ Please, follow the instructions in step 2 enumerated above.
         iric/bamquery:0.2 python3 /opt/bamquery/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
         
         
-making sure to map any required folder mentionned in the input files (BAM locations, input folder) so that these paths may be available from within the container. 
+making sure to map any required folder mentioned in the input files (BAM locations, input folder) so that these paths may be available from within the container. 
 This is done with multiple arguments `-v $DATAFOLDER:$DATAFOLDER` (where `$DATAFOLDER` is to be replaced by an actual folder name) and `-v $PWD:$PWD` if needed.
 Note also that we force the application to run with user permissions instead of root using the `--user $(id -u):$(id -g)` argument.
 
 ------------------------ 
 
-For more information on configuration, see : https://bamquery.iric.ca/documentation/configuration.html
+For more information on configuration, see: https://bamquery.iric.ca/documentation/configuration.html
 
 **Note:** BamQuery requires a specific folder structure to work.
 
