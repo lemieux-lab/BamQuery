@@ -7,7 +7,6 @@ See this guide for examples of different uses of BamQuery.
 BamQuery can search for peptide expression in the human (GRCh38, annotation versions v26_88 / v33_99 / v38_104) 
 and mouse (GRCm38 and GRCm39, annotation versions M24, M30, respectively) genomes.
 
-
 =======================
 
 
@@ -16,6 +15,7 @@ and mouse (GRCm38 and GRCm39, annotation versions M24, M30, respectively) genome
 *******************
 normal mode example
 *******************
+===================
 
 **Input**
 #########
@@ -86,13 +86,13 @@ This directory contains 4 folders and the main results are organized as follows:
 	    └── normal_mode_count_norm_info.xlsx
 
 
-
+-------------
 
 .. _alignments:
 
 
-**alignments**
-==============
+:purple:`alignments`
+====================
 
 .. code::
 
@@ -117,7 +117,6 @@ This file reports, for each peptide queried, all locations in the genome that ar
 
 
 `Sheet : Perfect Alignments`
-
 For each MAP: position, strand, MCS, reference amino acid, nucleotide differences and SNVs annotated in the dbSNP database are reported. In the case of the latter, it will be reported that the coding sequence has some difference with the reference genome, but has been compensated by one or more annotated SNVs.
 
 
@@ -125,7 +124,6 @@ For each MAP: position, strand, MCS, reference amino acid, nucleotide difference
 
 
 `Sheet : COSMIC Information`
-
 Reports whether the SNVs displayed by the peptides have already been annotated as somatic mutations in the COSMIC database.
 
 
@@ -141,8 +139,8 @@ Find here the `Additional information`_ description from COSMIC.
 
 .. _Logs:
 
-**logs**
-========
+:purple:`logs`
+==============
 
 .. code::
 
@@ -162,8 +160,8 @@ This file reports for each BAM/CRAM file in the **BAM_directories.tsv** the tota
 
 -----
 
-**plots**
-=========
+:purple:`plots`
+===============
 
 The Plots folder contains the heat map and biotype analysis expression plots for all peptides.
 If the --plots parameter is specified, pie charts of the biotype classification are produced. 
@@ -193,14 +191,14 @@ If the --plots parameter is specified, pie charts of the biotype classification 
 	│           └── total_transcription_expression_heatmap
 	
 
-**biotypes**
--------------
+:maroon:`biotypes`
+------------------
 
-The `biotype_by_sample_group` folder contains the biotype assignment based on transcription expression, i.e. the biotype is computed based on those locations where there are underlying RNA-seq reads. For more information please refers to :ref:`biotype` and :ref:`biotypes`
+The **biotype_by_sample_group** folder contains the biotype assignment based on transcription expression, i.e. the biotype is computed based on those locations where there are underlying RNA-seq reads. For more information please refers to :ref:`biotype` and :ref:`biotypes`
 
 This folder contains pie charts organised as follows:
 
-1) `all_peptides`: Pie chart depicting the general assignment of biotypes for all peptides queried based on their transcription in the BAM/CRAM files consulted.  
+1) **all_peptides**: Pie chart depicting the general assignment of biotypes for all peptides queried based on their transcription in the BAM/CRAM files consulted.  
 
 .. image:: _images/biotype_transcription.jpg
    :alt: Biotype based on transcription
@@ -208,51 +206,49 @@ This folder contains pie charts organised as follows:
    :scale: 50 %
 
 
-2) `by_peptide_type`: Pie charts showing the general assignment of biotypes according to each peptide type (specified in the **peptides.tsv** file) based on transcript expression, i.e. biotype is calculated based on the locations where there are underlying RNA-seq reads
+2) **by_peptide_type**: Pie charts showing the general assignment of biotypes according to each peptide type (specified in the **peptides.tsv** file) based on transcript expression, i.e. biotype is calculated based on the locations where there are underlying RNA-seq reads
 
 
-The `genome_and_ERE_annotation` folder contains the biotype assignment regardless of transcript expression, i.e. the biotype assignment for each peptide is calculated based on all locations in the genome (expressed or not).
+The **genome_and_ERE_annotation** folder contains the biotype assignment regardless of transcript expression, i.e. the biotype assignment for each peptide is calculated based on all locations in the genome (expressed or not).
 
 This folder contains pie charts organised as follows:
 
-1) `all_peptides`: Pie chart depicting the general assignment of biotypes for all peptides queried based on all the locations for all the peptides.  
+1) **all_peptides**: Pie chart depicting the general assignment of biotypes for all peptides queried based on all the locations for all the peptides.  
 
 .. image:: _images/biotype_locations.jpg
    :alt: Biotype based on locations
    :align: center
    :scale: 50 %
 
-2) `by_peptide_type`: Pie charts showing the general assignment of biotypes according to each peptide type (specified in the **peptides.tsv** file) based on all the locations for all the peptides. 
+2) **by_peptide_type**: Pie charts showing the general assignment of biotypes according to each peptide type (specified in the **peptides.tsv** file) based on all the locations for all the peptides. 
 
 
 .. _heat maps folder:
 
-**heat_maps**
--------------
+:maroon:`heat_maps`
+-------------------
 
 This folder contains the heat maps representing the transcription expression levels of all peptides queried.
 
-`average_transcription_expression_heatmap` folder: 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**average_transcription_expression_heatmap** folder: |br|
 Heat maps representing the mean transcription expression for each peptide queried in the tissues associated with the BAM/CRAM files.
 
-`_norm_all_tissues.pdf` : Heat map representing the average level of transcription expression associated with tissue types, computed from all samples in the tissue.
+**_norm_all_tissues.pdf**: Heat map representing the average level of transcription expression associated with tissue types, computed from all samples in the tissue.
 
 .. thumbnail:: _images/average_transcription_expression_heatmap.jpg
 
 
-`_norm_selected_tissues.pdf` : Heat map representing the average level of transcription expression associated with tissue types, computed from selected tissues (short list of tissues).
+**_norm_selected_tissues.pdf**: Heat map representing the average level of transcription expression associated with tissue types, computed from selected tissues (short list of tissues).
 
 .. thumbnail:: _images/average_transcription_expression_heatmap_selected.jpg
 
 
-`norm_info.csv`: reports, for each peptide queried, the mean and median values of rphm in the tissues associated with the BAM/CRAM files.
+**norm_info.csv**: reports, for each peptide queried, the mean and median values of rphm in the tissues associated with the BAM/CRAM files.
 
 .. thumbnail:: _images/norm_info_.jpg
 
 
-`total_transcription_expression_heatmap` folder: 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**total_transcription_expression_heatmap** folder: |br|
 Heat maps representing the mean transcription expression and total number of RNA-seq reads for each peptide queried in each BAM/CRAM file.
 
 .. warning::
@@ -262,8 +258,8 @@ Heat maps representing the mean transcription expression and total number of RNA
 
 -----------
 
-**res**
-=======
+:purple:`res`
+=============
 
 .. code::
 
@@ -282,8 +278,8 @@ Heat maps representing the mean transcription expression and total number of RNA
 
 .. _biotype_classification:
 
-**biotype_classification**
---------------------------
+:maroon:`biotype_classification`
+--------------------------------
 
 .. _Ensembl: https://m.ensembl.org/info/genome/genebuild/biotypes.html
 
@@ -318,7 +314,7 @@ Heat maps representing the mean transcription expression and total number of RNA
 
 .. _Genomic_and_ERE_Annotations_Full:
 
-`1_Genomic_and_ERE_Annotations_Full.csv`: 
+**1_Genomic_and_ERE_Annotations_Full.csv**: 
 For a given peptide carrying an MCS mapped to a given genomic location, BamQuery reports all overlapping biotypes in the Ensembl and Repeat Masker annotations.
 
 Overlap information:
@@ -337,7 +333,7 @@ Overlap information:
 
 .. _Genomic_and_ERE_Annotations_Summary_Full:
 
-`2_Genomic_and_ERE_Annotations_Summary_Full.csv`: 
+**2_Genomic_and_ERE_Annotations_Summary_Full.csv**: 
 For a given peptide at a given genomic location, BamQuery reports all overlapping biotypes in the Ensembl and Repeat Masker annotations.
 
 Overlap information:
@@ -356,24 +352,29 @@ Overlap information:
 
 .. _Genomic_and_ERE_Anno_by_Region_Full:
 
-`3_Genomic_and_ERE_Anno_by_Region_Full.csv`: 
+**3_Genomic_and_ERE_Anno_by_Region_Full.csv**: 
 
-For a given peptide at a given location, BamQuery reports a consensus biotype according to all the overlapping biotypes at the given genomic location. |br|
-Each biotype, whether from Ensembl or Repeat Masker annotations, has equal weight in the calculation of the consensus, which is based on the frequencies of the biotype at the location. 
+For a given peptide at a given location, BamQuery reports a consensus biotype according to all overlapping biotypes at the genomic location (either from Ensembl or from Repeat Masker annotations). |br|
+First, BamQuery reports a consensus ``Annotation Frequencies`` in which each overlapping biotype has equal weight in the consensus calculation. This biotype is based on the frequencies of the biotype at the location. |br|
+Second, BamQuery reports a consensus ``Weighted Biotype`` in which each overlapping biotype is weighted according to the coefficients estimated with the ``EM`` algorithm.
+These coefficients are used in the consensus calculation to determine the percentage contribution to each biotype. 
 
 For example: 
 
 One location was collected for a given peptide.
-	(a) In the same location the peptide overlaps in frame two transcripts of a canonical protein (``100% in_frame``). 
-	(b) In the same location the peptide overlaps the 3'UTR of one transcript of the same canonical protein (``100% 3'UTR``). 
-	(c) In the same location the peptide overlaps an ERE region (``100% ERE``).
+	(a) In the same location the peptide overlaps in frame two transcripts of a canonical protein (``In_frame``). 
+	(b) In the same location the peptide overlaps the 3'UTR of one transcript of the same canonical protein (``3'UTR``). 
+	(c) In the same location the peptide overlaps an ERE region (``ERE``).
 
-The final biotype for the peptide at the given location corresponds to: |br|
-``In_frame : 50%, 3'UTR : 25%, ERE : 25%``. i.e, Computaiton doesn't take into consideration the transcription expression!.
+The final biotype corresponding to the ``Annotation Frequencies`` for the peptide at the given location is given as: |br|
+``In_frame : 50%, 3'UTR : 25%, ERE : 25%``. i.e, RNA-seq reads are attributed to each biotype according to the annotation frequencies at the location.
+
+The final biotype corresponding to the ``Weighted Biotype`` for the peptide at the given location is given as: |br|
+``In_frame : 75%, Introns : 19%, 3'UTR : 6%``. i.e, RNA-seq reads are attributed to each biotype according to the coefficients estimated using the ``EM`` algorithm.
 
 Best guess : 
-			1. 'In_Frame' if it is among the genomic position biotypes.
-			2. Otherwise, the biotype with the highest percentage representation in annotation frequencies. If BamQuery detects that all biotypes have equal representation, it will report all of them as the "Best guess".
+			1. ``In_frame``, if the biotye is among the genomic position biotypes.
+			2. Otherwise, the biotype with the highest percentage representation in annotation frequencies. If BamQuery detects that all biotypes have equal representation, it will report all of them as the ``Best guess``.
 
 
 .. thumbnail:: _images/genomic_and_ERE_Anno_by_Region_Full.jpg
@@ -385,7 +386,7 @@ Best guess :
 
 .. _General_Gen_and_ERE_Biotype_Consensus:
 
-`1_General_Gen_and_ERE_Biotype_Consensus.csv`: 
+**1_General_Gen_and_ERE_Biotype_Consensus.csv**: 
 For a given peptide, BamQuery reports assigns a consensus biotype taking into account all possible locations where the peptide appears in the genome. 
 To assign the consensus biotype to the peptide, BamQuery aggregates all reads assigned to each biotype that were distributed according to the percentage of the biotype at each genomic location. This distribution is described in more detail in the file 3_Genomic_and_ERE_Anno_by_Region_Full.csv. 
 Next, the total reads assigned to each biotype are weighted with the total reads of all samples investigated.
@@ -398,11 +399,11 @@ Three locations were collected for a given peptide.
 	(c) At location 3 the peptide overlaps with the intronic region of a transcript (``100% Intron``) and at that location there are 7 RNA-seq reads.
 
 The final biotype for the peptide corresponds to: |br|
-``In_frame : 54%, 3'UTR : 27%, Introns : 19%``. 
+``In_frame : 54%, 3'UTR : 27%, Introns : 19%``. i.e, RNA-seq reads are attributed to each biotype according to the annotation frequencies in all the peptidelocations.
 
 Best guess : 
-			1. 'In_Frame' if it is among the genomic position biotypes.
-			2. Otherwise, the biotype with the highest percentage representation in annotation frequencies. If BamQuery detects that all biotypes have equal representation, it will report all of them as the "Best guess".
+			1. ``In_frame``, if the biotype is among the genomic position biotypes.
+			2. Otherwise, the biotype with the highest percentage representation in annotation frequencies. If BamQuery detects that all biotypes have equal representation, it will report all of them as the ``Best guess``.
 
 
 .. thumbnail:: _images/general_Gen_and_ERE_Biotype_Consensus.jpg
@@ -411,7 +412,7 @@ Best guess :
 
 .. _Weighted_Gen_and_ERE_Biotype_Consensus:
 
-`2_Weighted_Gen_and_ERE_Biotype_Consensus.csv`: 
+**2_Weighted_Gen_and_ERE_Biotype_Consensus.csv**: 
 
 For a given peptide, BamQuery reports the consensus of biotypes according to their overlap at all genomic locations of the peptide. 
 The biotype representation (percentage) is computed from the count of RNA-seq reads attributed to each biotype according to the coefficients estimated using the ``EM`` algorithm as a function of the total reads for the given peptide in all the samples, (only expressed locations are taken into account to calculate the percentage) .
@@ -424,11 +425,11 @@ Three locations were collected for a given peptide.
 	(c) At location 3 the peptide overlaps with the intronic region of a transcript (``100% Intron``) and at that location there are 7 RNA-seq reads.
 
 The final biotype for the peptide corresponds to: |br|
-``In_frame : 75%, Introns : 19%, 3'UTR : 6%``. 
+``In_frame : 75%, Introns : 19%, 3'UTR : 6%``. i.e, RNA-seq reads are attributed to each biotype according to the coefficients estimated using the ``EM`` algorithm.
 
 Best guess : 
-			1. 'In_Frame' if it is among the genomic position biotypes.
-			2. Otherwise, the biotype with the highest percentage representation in the weighted biotype. If BamQuery detects that all biotypes have equal representation, it will report all of them as the "Best guess".
+			1. ``In_frame``, if the biotype is among the genomic position biotypes.
+			2. Otherwise, the biotype with the highest percentage representation in the weighted biotype. If BamQuery detects that all biotypes have equal representation, it will report all of them as the ``Best guess``.
 
 .. thumbnail:: _images/Weighted_Gen_and_ERE_Biotype_Consensus.jpg
 
@@ -436,14 +437,14 @@ Best guess :
 
 .. _Group_Samples_Gen_and_ERE_Biotype_Consensus:
 
-`3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv`: 
+**3_Group_Samples_Gen_and_ERE_Biotype_Consensus.csv**: 
 
 For a given peptide, BamQuery reports the consensus of biotypes according to their overlap at all genomic locations of the peptide. 
 The biotype representation (percentage) is computed from the count of RNA-seq reads attributed to each biotype according to the coefficients estimated using the ``EM`` algorithm as a function of the total reads for the given peptide in every group of samples as well as for all the samples, (only expressed locations are taken into account to calculate the percentage) .
 
 Best guess : 
-			1. 'In_Frame' if it is among the genomic position biotypes.
-			2. Otherwise, the biotype with the highest percentage representation in the weighted biotype. If BamQuery detects that all biotypes have equal representation, it will report all of them as the "Best guess".
+			1. ``In_frame``, if the biotye is among the genomic position biotypes.
+			2. Otherwise, the biotype with the highest percentage representation in the weighted biotype. If BamQuery detects that all biotypes have equal representation, it will report all of them as the ``Best guess``.
 
 .. thumbnail:: _images/group_Samples_Gen_and_ERE_Biotype_Consensus.jpg
 
@@ -455,7 +456,6 @@ Best guess :
 ------------------------------------
 
 `Sheet : Alignments Read count RNA-seq`
-
 This sheet reports for each peptide queried, all positions in the genome that are perfect alignments for one or more coding sequences of a peptide are reported. For each position, the strand, coding sequence and read count for each BAM/CRAM file are reported.
 
 .. thumbnail:: _images/alignments_Read_count_RNA_seq.jpg
@@ -464,7 +464,6 @@ This sheet reports for each peptide queried, all positions in the genome that ar
 
 
 `Sheet : Read count RNA-seq by peptide`
-
 This sheet reports for each peptide queried, the total reads for each BAM/CRAM file considering all positions. 
 
 .. thumbnail:: _images/read_count_RNA_seq_by_peptide.jpg
@@ -472,7 +471,7 @@ This sheet reports for each peptide queried, the total reads for each BAM/CRAM f
 .. _log10 RPHM RNA seq by peptide:
 
 
-`Sheet : log10(RPHM) RNA-seq by peptide`
+**Sheet : log10(RPHM) RNA-seq by peptide**
 
 This sheet reports for each peptide queried, the :math:`rphm` `(read per hundred million)` for each BAM/CRAM file considering all expressed positions. The :math:`rphm = (read\_overlap * 10^8)/total\_primary\_reads` with `total_primary_reads` representing the total number of reads sequenced in a given RNA-Seq experiment. These values are transformed into logarithm :math:`log_{10}(rphm + 1)`.
 

@@ -4,6 +4,7 @@
 translation mode example
 *************************
 
+------
 
 The BamQuery translation mode was designed to search BAM files from Ribo-seq data. 
 In this mode, BamQuery can be used as a means to verify the presence of ribosome profiling reads that overlap with peptide MCSs. 
@@ -18,7 +19,7 @@ For example, if a Ribo-seq read overlaps with 70% of the MCS in a given region, 
 **Input**
 #########
 
-In this mode, instead of BAM_directories.tsv BamQuery expects a BAM_ribo_directories.tsv that includes the Ribo-seq datasets. 
+In this mode, instead of **BAM_directories.tsv** BamQuery expects a  **BAM_ribo_directories.tsv** that includes the Ribo-seq datasets. 
 
 **Command line:**
 
@@ -64,8 +65,8 @@ see `output_normal_mode_example`_ for detailed information about the output file
 
 ----------
 
-**plots**
-=========
+:purple:`plots`
+===============
 
 .. code::
 
@@ -83,37 +84,35 @@ see `output_normal_mode_example`_ for detailed information about the output file
 							└── translation_example_ribo_norm.pdf
 
 
-**heat_maps**
--------------
+:maroon:`heat_maps`
+-------------------
 
 This folder contains the heat maps representing the translation expression level of all peptides queried.
 
-`average_translation_expression_heatmap` folder: 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**average_translation_expression_heatmap** folder: |br|
 Heat maps representing the mean translation expression for each peptide queried in the tissues associated with the BAM/CRAM ribo-seq files.
 
-`norm_info.csv`: reports, for each peptide queried, the mean and median values of rphm in the tissues associated with the BAM/CRAM ribo-seq files.
+**norm_info.csv**: reports, for each peptide queried, the mean and median values of rphm in the tissues associated with the BAM/CRAM ribo-seq files.
 
-`_norm_all_tissues.pdf` : Heat map representing the mean level of translation expression associated with tissue types, computed from all samples in the tissue.
+**_norm_all_tissues.pdf** : Heat map representing the mean level of translation expression associated with tissue types, computed from all samples in the tissue.
 
 .. thumbnail:: _images/translation_example_ribo_norm_all_tissues_heatmap.jpg
 
-`_norm_selected_tissues.pdf` : Heat map representing the mean level of translation expression associated with tissue types, computed from selected tissues (short list of tissues).
+**_norm_selected_tissues.pdf**: Heat map representing the mean level of translation expression associated with tissue types, computed from selected tissues (short list of tissues).
 
 
-`total_translation_expression_heatmap` folder: 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**total_translation_expression_heatmap** folder: |br|
 Heat maps representing the mean translation expression and total number of ribo-seq reads for each peptide queried in each BAM/CRAM ribo-seq file.
 
-`_ribo_counts.csv`: reports, for each peptide queried, the total number of ribo-seq reads in each BAM/CRAM ribo-seq file.
+**_ribo_counts.csv**: reports, for each peptide queried, the total number of ribo-seq reads in each BAM/CRAM ribo-seq file.
 
-`_ribo_counts.pdf` : heat map representing the mean number of ribo-seq reads in each BAM/CRAM ribo-seq file.
+**_ribo_counts.pdf**: heat map representing the mean number of ribo-seq reads in each BAM/CRAM ribo-seq file.
 
 .. thumbnail:: _images/translation_example_ribo_counts_heatmap.jpg
 
-`_ribo_norm.csv`: reports, for each peptide queried, the mean rphm values in each BAM/CRAM ribo-seq file.
+**_ribo_norm.csv**: reports, for each peptide queried, the mean rphm values in each BAM/CRAM ribo-seq file.
 
-`_ribo_norm.pdf` : heat map representing the mean translation expression level of each peptide in each BAM/CRAM ribo-seq file.
+**_ribo_norm.pdf**: heat map representing the mean translation expression level of each peptide in each BAM/CRAM ribo-seq file.
 
 .. thumbnail:: _images/translation_example_ribo_norm_heatmap.jpg
 

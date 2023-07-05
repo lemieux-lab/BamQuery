@@ -162,7 +162,7 @@ def define_read_in(read, pos_set, splice_pos, overlap_in):
 			seq_overlap = seq[index_ini :index_fin]
 			if overlap_in:
 				if percentage_overlap >= 0.6 :
-					return name, strand, seq_overlap, percentage_overlap
+					return name, strand, seq_overlap, 1
 			else:
 				if percentage_overlap == 1.0 :
 					return name, strand, seq_overlap, percentage_overlap

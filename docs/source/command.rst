@@ -22,21 +22,22 @@ At the command line::
 			genome_version        Genome human releases : v26_88 / v33_99 / v38_104; Genome mouse releases : M24 / M30
 
 		optional arguments:
-			-h, --help            show this help message and exit
-			--mode MODE           BamQuery search mode : normal / translation
-			--th_out TH_OUT       Threshold to assess expression comparation with other tissues
-			--dbSNP DBSNP         Human dbSNP : 149 / 151 / 155
-			--c                   Take into account the only common SNPs from the dbSNP database chosen
-			--strandedness        Take into account strandedness of the samples
-			--light               Display only the count and norm count for peptides and regions
-			--sc                  Query Single Cell Bam Files
-			--var                 Keep Variants Alignments
-			--maxmm               Enable STAR to generate a larger number of alignments
-			--overlap             Count overlapping reads
-			--plots               Plot biotype pie-charts
-			--m                   Mouse genome
-			--dev                 Save all temps files
-			--t T                 Specify the number of processing threads to run BamQuery. The default is 4
+						-h, --help            show this help message and exit
+						--mode MODE           BamQuery search mode : normal / translation
+						--th_out TH_OUT       Threshold to assess expression comparation with other tissues
+						--dbSNP DBSNP         Human dbSNP : 149 / 151 / 155
+						--c                   Take into account the only common SNPs from the dbSNP database chosen
+						--strandedness        Take into account strandedness of the samples
+						--light               Display only the count and norm count for peptides and regions
+						--sc                  Query Single Cell Bam Files
+						--umi                 Count UMIs in Single Cell Bam Files
+						--var                 Keep Variants Alignments
+						--maxmm               Enable STAR to generate a larger number of alignments
+						--overlap             Count overlapping reads
+						--plots               Plot biotype pie-charts
+						--m                   Mouse genome
+						--dev                 Save all temps files
+						--t T                 Specify the number of processing threads to run BamQuery. The default is 4
 
 
 ====================
@@ -149,9 +150,16 @@ For more information, see :ref:`light_mode_example`.
 **-\-sc**
 ---------
 
-BamQuery expects to find in BAM_directories.tsv the BAM/CRAM files corresponding to the single cell RNA-seq datasets. BamQuery reports the expression of each peptide in cell populations and generates specific output. |br| 
+BamQuery expects to find in BAM_directories.tsv the BAM/CRAM files corresponding to the single cell RNA-seq datasets. |br|
+BamQuery reports the RNA-seq read count for each peptide in cell populations and generates specific output. |br| 
 For more information, see :ref:`single_cell_example`.
 
+**-\-umi**
+-----------
+
+BamQuery expects to find in BAM_directories.tsv the BAM/CRAM files corresponding to the single cell RNA-seq datasets. |br|
+BamQuery reports instead of RNA-seq read count, it reports the unique molecular identifier (UMI) count for each peptide in cell populations and generates specific output. |br| 
+For more information, see :ref:`single_cell_example`.
 
 **-\-var**
 ----------
