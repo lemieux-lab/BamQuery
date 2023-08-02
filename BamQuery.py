@@ -444,6 +444,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	c = False
 	sc = False
 	var = False
+	umi = False
 	maxmm = False
 	overlap = False
 	mouse = False
@@ -463,8 +464,7 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 	path_to_output_folder, super_logger, bam_files_logger, handler_super_logger, handler_bam_files_logger  = directories_creation(path_to_input_folder, name_exp, mode, light, sc)
 
 	t0 = time.time()
-
-	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, var, maxmm, genome_version, overlap, mouse, threads)
+	BamQuery(path_to_input_folder, path_to_output_folder, name_exp, mode, strandedness, th_out, light, dev, plots, dbSNP, c, super_logger, bam_files_logger, sc, umi, var, maxmm, genome_version, overlap, mouse, threads)
 	
 	predictions = Immunogenicity(path_to_output_folder, name_exp)
 	predictions.get_predictions()

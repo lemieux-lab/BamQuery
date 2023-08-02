@@ -81,11 +81,41 @@ This option allows to choose between three GRCh38 human genome annotation public
 
 This option together with **-\-m** (which allows BamQuery to search in the mouse genome) supports two mouse genome annotation versions of GRCm38 and GRCm39, respectively: M24 / M30. |br|
 
-You need to donwload any of the human or mouse supported versions in BamQuery.
-Genome human releases : v26_88 / v33_99 / v38_104;
-Genome mouse releases : M24 / M30
+You need to donwload any of the human or mouse supported versions in BamQuery. |br|
+Genome human releases : v26_88 / v33_99 / v38_104 |br|
+Genome mouse releases : M24 / M30 |br|
 
-Please see :ref:`installation` to follow the instructions for the installation of the genome versions.
+Please see :ref:`installation` to follow the installation instructions for the genome versions..
+
+.. note::
+	**Gencode Human Releases supported with BamQuery**
+
+	Gencode_human/release_26 : v26_88 |br|
+	Evidence-based annotation of the human genome (GRCh38), version 26 (Ensembl 88)
+	https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/
+
+
+	Gencode_human/release_33 : v33_99 |br|
+	Evidence-based annotation of the human genome (GRCh38), version 33 (Ensembl 99)
+	https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_33/
+
+
+	Gencode_human/release_38 : v38_104 |br|
+	Evidence-based annotation of the human genome (GRCh38), version 38 (Ensembl 104)
+	https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_38/
+
+
+
+	**Gencode Mouse Releases supported with BamQuery**
+
+	Gencode_mouse/release_M24 : M24 |br|
+	Evidence-based annotation of the mouse genome (GRCm38), version M24 (Ensembl 99)
+	https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M24/
+
+
+	Gencode_mouse/release_M30 : M30 |br|
+	Evidence-based annotation of the mouse genome (GRCm39), version M30 (Ensembl 107)
+	https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M30/
 
 ----------------
 

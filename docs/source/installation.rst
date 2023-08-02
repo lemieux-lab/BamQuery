@@ -94,7 +94,7 @@ Finally, you need to:
 Option 1: Installation with Conda
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For users having no administrator priviledges, we recommend installing BamQuery with conda: https://docs.conda.io/en/latest/miniconda.html |br|
+For users having no administrator priviledges, we recommend installing BamQuery with conda: https://docs.conda.io/en/latest/miniconda.html version Python 3.9 |br|
 
 1. First create a conda environment and activate it: |br|
 
@@ -103,14 +103,13 @@ For users having no administrator priviledges, we recommend installing BamQuery 
         conda create -n BQ
         conda activate BQ
 
-2. Then install all dependencies:
-
 2. Then install all dependencies: |br|
 
 .. code::
         
         conda install -y -c bioconda pysam
         conda install -y -c anaconda pandas
+        conda install -y -c bioconda Bio
         conda install -y -c conda-forge pathos
         conda install -y -c conda-forge xlsxwriter
         conda install -y -c anaconda seaborn
@@ -121,7 +120,7 @@ For users having no administrator priviledges, we recommend installing BamQuery 
         conda install -y -c conda-forge mamba
         mamba install -y -c conda-forge r-ggplot2
         mamba install -y -c conda-forge r-data.table
-
+        
         
 3. Launch the analysis: |br|
 

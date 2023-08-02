@@ -82,7 +82,7 @@ if (mode == 'translation'){
   g = g + labs(col = label) 
   #g = g + guides(fill = guide_colourbar(title = label))
 }
-g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
+g = g + geom_tile(width = 0.75, height = 0.75, linewidth = 0.3)
 g = g + scale_color_manual(values=c("FALSE"="grey", "TRUE"="black"))
 g = g + guides(color = guide_legend(override.aes = list(fill = "white"))) 
 
@@ -96,10 +96,10 @@ g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 total_peptides = length(unique(proSplusMerged$Peptide))
 
 if (total_peptides > 50){
-  g = g + theme(axis.text.y = element_text(size = 5))
+  g = g + theme(axis.text.y = element_text(linewidth = 5))
 }
 if (total_peptides > 100){
-  g = g + theme(axis.text.y = element_text(size = 3))
+  g = g + theme(axis.text.y = element_text(linewidth = 3))
 }
 ggsave(sprintf('%s/%s', output, filename), width = 11, height = 11, useDingbats = FALSE)
 
@@ -117,7 +117,7 @@ if (mode == 'translation'){
   g = ggplot(proSplusMerged[proSplusMerged$Short_list == 'yes', ], aes(x = Tissue, y = Peptide, fill = mean, color = as.factor(mean > log10(th_out + 1))))
   g = g + labs(col = label)
 }
-g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
+g = g + geom_tile(width = 0.75, height = 0.75, linewidth = 0.3)
 
 g = g + scale_color_manual(values=c("FALSE"="grey", "TRUE"="black"))
 g = g + guides(color = guide_legend(override.aes = list(fill = "white"))) 
@@ -129,10 +129,10 @@ g = g + theme_bw() + xlab('') + ylab('')
 g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
 if (total_peptides > 50){
-  g = g + theme(axis.text.y = element_text(size = 5))
+  g = g + theme(axis.text.y = element_text(linewidth = 5))
 }
 if (total_peptides > 100){
-  g = g + theme(axis.text.y = element_text(size = 3))
+  g = g + theme(axis.text.y = element_text(linewidth = 3))
 }
 ggsave(sprintf('%s/%s', output, filename), width = 11, height = 11, useDingbats = FALSE)
 

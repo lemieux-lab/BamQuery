@@ -32,7 +32,7 @@ if (grepl('Reads_count', label)) {
 }
 
 g = g + labs(col = label_2) 
-g = g + geom_tile(width = 0.75, height = 0.75, size = 0.3)
+g = g + geom_tile(width = 0.75, height = 0.75, linewidth = 0.3)
 g = g + scale_color_manual(values=c("FALSE"="grey", "TRUE"="black"))
 g = g + guides(color = guide_legend(override.aes = list(fill = "white"))) 
 
@@ -50,10 +50,10 @@ g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 total_peptides = length(unique(proSplus$Peptide))
 
 if (total_peptides > 50){
-  g = g + theme(axis.text.y = element_text(size = 5))
+  g = g + theme(axis.text.y = element_text(linewidth = 5))
 }
 if (total_peptides > 70){
-  g = g + theme(axis.text.y = element_text(size = 3))
+  g = g + theme(axis.text.y = element_text(linewidth = 3))
 }
 
 filename = sprintf('%s.%s', name, 'pdf') 

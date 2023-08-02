@@ -5,6 +5,7 @@ import pandas as pd
 import billiard as mp
 import re, sys, inspect
 
+
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
@@ -96,8 +97,8 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 		p_1 = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 		out, err = p_1.communicate()
 		if 'successfully' not in out.decode():
-			super_logger.info('A problem occurred while running STAR. Please check if there is enough memory for the %s number of threads.', str(threads))
-			message = '\nA problem occurred while running STAR. Please check if there is enough memory for the '+ str(threads)+' number of threads.'
+			super_logger.info('A problem occurred while running STAR. \nPlease also verify there is enough memory for the %s number of threads.',str(threads))
+			message = '\nA problem occurred while running STAR.\nPlease also verify there is enough memory for the '+ str(threads)+' number of threads.'
 			raise NeedMoreInfo(message)
 		t_2 = time.time()
 		total = t_2-t_0
