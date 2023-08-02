@@ -269,8 +269,7 @@ class BiotypeGenomicSearch:
 		alignments = pairwise2.align.localms(proteins[0], peptide, 1, -1, -5, -.1)
 		alignment_score = alignments[0].score
 		percentage_similarity = (alignment_score / len(peptide)) 
-		print (peptide, percentage_similarity, proteins[0])
-
+		
 		if percentage_similarity >= 0.5:
 			transcript_level = 'In_frame'
 		else:
