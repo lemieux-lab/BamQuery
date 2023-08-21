@@ -9,6 +9,7 @@
 	}
 </style>
 
+
 <div class="content-section">
 	<div class="media">
 
@@ -21,8 +22,9 @@ This BamQuery interface facilitates tumor antigen prioritization. The interface 
 <p>
 Entry requirements:
 <br>1. Query name (This name will be required to download your results).
-<br>2. List of MAPs (a maximum of 100 MAPs per run).
-<br>3. Select the genome version and the dbSNP database.
+<br>2. List of MAPs (a maximum of 100 MAPs per run). BamQuery analyze MAPs ranging in length from 8 to 11 amino acids (aa).
+<br>3. The genome version selected is v26_88, as the samples were aligned using this genome reference.
+<br>4. Select the dbSNP database.
 </p>
 		</small>
 	</div>
@@ -33,11 +35,11 @@ Entry requirements:
 <form method="POST" action="" enctype="multipart/form-data">
 	{{ form.hidden_tag() }}
 	<fieldset class="form-group">
-		<legend class="border-bottom mb-4">NewQuery</legend>  
+		<legend class="border-bottom mb-4">New Query</legend>  
 
 		<div class="row" >
-			<div class="col" class="form-group">
-
+			<div class="col" >
+				<div class="form-group">
 				{{ form.name_query.label(class="form-control-label") }}
 
 				{% if form.name_query.errors %}
@@ -53,93 +55,89 @@ Entry requirements:
 				<small class="text-muted">
 						Set a name to identify your query. Keep this name in mind to retrieve your results later.
 				</small>
+				</div>
 			</div>
-			<div  class="col" class="form-group">
 
+			<div  class="col">
+				<div class="form-group">
 				{{ form.th_out.label(class="form-control-label") }}
 
 				{% if form.th_out.errors %}
-					{{ form.th_out(class="form-control form-control-sm is-invalid") }}
+					{{ form.th_out(class="form-control form-control-sm is-invalid", style="width: 200px") }}
 					<div class="invalid-feedback">
 						{% for error in form.th_out.errors %}
 							<span>{{ error }}</span>
 						{% endfor %}
 					</div>
 				{% else %}
-					{{ form.th_out(class="form-control") }}
+					{{ form.th_out(class="form-control", style="width: 100px") }}
 				{% endif %}
 				<small class="text-muted">
 				
-				This value changes the threshold that is considered for comparing the expression levels of different tissues. <br>
-				Default = 8.55 rphm (reads per hundred million).
+				RPHM (reads per hundred million) value used to differentiate low from high expression. <br>
 				</small>
+				</div>
 
 			</div>
 			<div class="col" >
-			{{ form.genome_version.label(class="form-control-label") }}
-			{{ form.genome_version }}
-			<small class="text-muted">
-					<br>
-					Genome version supported : v26_88 / v33_99 / v38_104.
-			</small>
-		</div>
-		
-		<div class="col" >
-			{{ form.data_base_snp.label(class="form-control-label") }}
-			{{ form.data_base_snp}}
-			<small class="text-muted">
-				<br>
-					dbSNP supported : 149 / 151 / 155 / None.
+				{{ form.genome_version.label(class="form-control-label") }}
+				{{ form.genome_version }}
+				<small class="text-muted">
+						<br>
+						Genome version supported : v26_88 / v33_99 / v38_104.
 				</small>
-				
+			</div>
+
+			<div class="col" >
+				{{ form.data_base_snp.label(class="form-control-label") }}
+				{{ form.data_base_snp}}
+				<small class="text-muted">
+					<br>
+						dbSNP supported : 149 / 151 / 155 / None.
+					</small>
+					
+			</div>
+
 		</div>
+
+		<div class="row">
+			<div class="col-2">
+				
+					{{ form.peptides_list.label() }}
+					<div class="form-group">
+						{{ form.peptides_list(class="form-control-file", rowsstyle="width: 600px !important; height: 150px;") }}
 			
-		<div class="row" >
-			<div class="col"  class="form-group">
-
-				{{ form.peptides_list.label() }} 
-				<small class="text-muted">
-					<br>
-					 Limited number of peptides = 100 per run.
-					<br>
-					 BamQuery analyze MAPs ranging in length from 8 to 11 amino acids (aa).
-					 
-				<div class="row" >
-				<small class="text-muted">
-				<br>
-					 Peptides example list: 
-					 <br>
-					 YVHMVTHF
-					 <br>
-					 AAMLDTVVFK
-					 <br>
-					 ...
-				</small>
-			</div>
-				</small>
-				<p align="align-self-center"> {{ form.peptides_list(class="form-control-file", cols="100", rows="11") }}</p>
-
-				{% if form.peptides_list.errors %}
-						{% for error in form.peptides_list.errors %}
-						<span class="text-danger">{{ error }}</span>
-						{% endfor %}
-				{% endif %}
-
+						{% if form.peptides_list.errors %}
+							{% for error in form.peptides_list.errors %}
+								<span class="text-danger">{{ error }}</span>
+							{% endfor %}
+						{% endif %}
+					</div>
 				
 			</div>
-
+				<div class="col">
+					<br>
+					<small class="text-muted">
+						Peptides example list:<br>
+						YVHMVTHF <br>
+						AAMLDTVVFK<br>
+						AGDDAPRAVF<br>
+						EVGGEALGRL<br>
+						[...]
+					</small>
+				
+				</div>
 		</div>
 
 	</fieldset>
 </div>
-	<div class="container">
-		<div class="col"> 
-			<div class="form-group col">
-			{{ form.submit(class="btn btn-outline-info") }}
-			</div>
+<div class="container">
+	<div class="col"> 
+		<div class="form-group col">
+		{{ form.submit(class="btn btn-outline-info") }}
 		</div>
 	</div>
-	</fieldset>
+</div>
 	<br>
 		<div class="row"> 
 		<legend class="border-bottom mb-4"></legend>

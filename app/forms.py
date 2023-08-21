@@ -53,7 +53,7 @@ class BamQuery_search(FlaskForm):
 		validators=[Optional()],default=8.55)
 
 	genome_version = SelectField('Genome Version :', choices=['v26_88', 'v33_99', 'v38_104'], default='v26_88', render_kw={'disabled': True}) 
-	data_base_snp = SelectField('dbSNP Release :', choices=['dbSNP_149', 'dbSNP_151', 'dbSNP_155' , 'None']) 
+	data_base_snp = SelectField('dbSNP Release :', choices=['dbSNP_149', 'dbSNP_151', 'dbSNP_155' , 'None'], default='None') 
 
 	submit = SubmitField('Submit')
 

@@ -121,9 +121,60 @@ def about():
 def installation():
 	return render_template('installation.html')
 
+@app.route('/publications')
+def publications():
+	# Replace this with your actual list of article publications
+	article_publications = [
+		{
+			'title': 'Unmutated tumor antigens are abundant and contribute to tumor control in melanoma.',
+			'authors': 'Apavaloaei A, Zhao Q, Hesnard L, Vincent K, Hardy MP, Durette C, Lanoix J, Laverdure JP, Larouche JD, Ruiz Cuevas MV, Ehx G, Lemieux S, Thibault P, Perreault C.',
+			'date': '2023;83 (7_Supplement): 2993',
+			'journal': 'Cancer Research',
+			'doi':'https://doi.org/10.1158/1538-7445.AM2023-2993'
+		},
+		{
+			'title': 'Breast cancer immunopeptidomes contain numerous shared tumor antigens.',
+			'authors': 'Kina E, Laverdure JP, Durette C, Lanoix J, Courcelles M, Zhao Q, Apavaloaei A, Larouche JD, Hardy MP, Vincent K, Gendron P, Hesnard L, Ruiz Cuevas MV, Ehx G, Thibault P, Perreault C.',
+			'date': '2022;10',
+			'journal': 'Journal for ImmunoTherapy of Cancer',
+			'doi':'http://dx.doi.org/10.1136/jitc-2022-SITC2022.1411'
+		},
+		{
+			'title': 'Autophagy degrades immunogenic endogenous retroelements induced by 5-azacytidine in acute myeloid leukemia.',
+			'authors': 'Noronha N, Durette C, E Silva B, Courtois J, Humeau J, Sauvat A, Hardy MP, Vincent K, Laverdure JP, Lanoix J, Baron F, Thibault P, Perreault C, Ehx G.',
+			'date': '2022',
+			'journal': 'BioRXiv',
+			'doi':'https://doi.org/10.1101/2022.12.02.518683'
+		},
+		{
+			'title': 'Induced pluripotent stem cells display a distinct set of MHC I-associated peptides shared by human cancers.',
+			'authors': 'Apavaloaei A, Hesnard L, Hardy MP, Benabdallah B, Ehx G, Thériault C, Laverdure JP, Durette C, Lanoix J, Courcelles M, Noronha N, Chauhan KD, Lemieux S, Beauséjour C, Bhatia M, Thibault P, Perreault C.',
+			'date': '2022;40(7):111241',
+			'journal': 'Cell Reports',
+			'doi':'https://doi.org/10.1016/j.celrep.2022.111241'
+		},
+		{
+			'title': 'Immunopeptidomic analyses of colorectal cancers with and without microsatellite instability.',
+			'authors': 'Cleyle J, Hardy MP, Minati R, Courcelles M, Durette C, Lanoix J, Laverdure JP, Vincent K, Perreault C, Thibault P. ',
+			'date': '2022;21(5):100228',
+			'journal': 'Molecular & Cellular Proteomics',
+			'doi':'https://doi.org/10.1016/j.mcpro.2022.100228'
+		},
+		{
+			'title': 'Atypical acute myeloid leukemia-specific transcripts generate shared and immunogenic MHC class-I-associated epitopes.',
+			'authors': 'Ehx G, Larouche JD, Durette C, Laverdure JP, Hesnard L, Vincent K, Hardy MP, Thériault C, Rulleau C, Lanoix J, Bonneil E, Feghaly A, Apavaloaei A, Noronha N, Laumont CM, Delisle JS, Vago L, Hébert J, Sauvageau G, Lemieux S, Thibault P, Perreault C.',
+			'date': '2021;54(4):737-752.e10',
+			'journal': 'Immunity',
+			'doi':'https://doi.org/10.1016/j.immuni.2021.03.001'
+		},
+		
+	]
+	return render_template('publications.html', publications=article_publications)
+
+
 @app.route('/documentation', methods=['POST', 'GET'])
 def documentation():
-	return redirect("http://bamquery.iric.ca/", code=302)
+	return redirect("https://bamquery.iric.ca/documentation/", code=302)
 
 @app.route('/favicon.ico')
 def favicon():

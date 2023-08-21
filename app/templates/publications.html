@@ -1,0 +1,61 @@
+<!-- publications.html -->
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+	.progress {
+		width: 100%;
+		text-align: center;
+	}
+	.scrollable {
+		max-height: 500px;
+		overflow-y: scroll;
+	}
+	.publication {
+		border: 1px solid #ccc;
+		padding: 8px;
+		margin: 8px 0;
+		background-color: #f9f9f9;
+	}
+	.publication-title {
+		font-weight: bold;
+		font-style: italic;
+	}
+	.journal-name {
+		font-weight: bold;
+	}
+	.doi-link {
+		color: blue;
+		text-decoration: underline;
+	}
+	.publication-entry {
+    display: flex; /* Use flexbox to align items */
+    align-items: center; /* Align items vertically in the middle */
+	}
+
+	.publication-authors {
+		display: inline; /* Display inline to be in the same line */
+		margin-right: 10px; /* Add some spacing between elements */
+	}
+
+	/* You can adjust styles for .publication-info as needed */
+	.publication-info {
+		display: inline-block; /* Display inline-block to be in the same line */
+	}
+
+</style>
+	
+	<div class="content-section">
+	<div> <h3>Publications</h3></div>
+	
+	List of publications where BamQuery (or its embryonic version) were used:
+	<div class="scrollable">
+		{% for publication in publications %}
+		<div class="publication">
+			<div class="publication-authors">{{ publication.authors }}  <i>{{ publication.title }}</i> <b>{{ publication.journal }}</b>.  {{ publication.date }}</div>
+			<div class="doi-link"><a href="{{ publication.doi }}" target="_blank">{{ publication.doi }}</a></div>
+			<!-- Add more details as needed -->
+		</div>
+		{% endfor %}
+	</div>
+{% endblock content %}

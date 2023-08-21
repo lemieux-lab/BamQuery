@@ -225,7 +225,6 @@ class BamQuery:
 
 		self.bam_files_info = GetInformationBamFiles(self.path_to_input_folder, self.path_to_output_folder, self.mode, self.strandedness, self.light, bam_files_logger, self.sc, self.genome_version, self.mouse, self.threads)
 
-		bam_files_logger 
 		handlers = bam_files_logger.handlers[:]
 		for handler in handlers:
 			bam_files_logger.removeHandler(handler)
@@ -488,8 +487,8 @@ def running_for_web(path_to_input_folder, name_exp, strandedness, genome_version
 		shutil.rmtree(path_to_output_folder+'res/BED_files', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/AUX_files', ignore_errors=True)
 		shutil.rmtree(path_to_output_folder+'res/temps_files', ignore_errors=True)
-		os.system('rmdir /S /Q "{}"'.format(path_to_output_folder+'logs'))
 		os.system('rm -rf "{}"'.format(path_to_output_folder+'logs'))
+		os.system('rmdir "{}"'.format(path_to_output_folder+'logs'))
 		shutil.rmtree(path_to_output_folder+'logs', ignore_errors=True)	
 	except Exception as err:
 		print (err)
