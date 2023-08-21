@@ -6,7 +6,7 @@ BamQuery supports only genomically templated peptides, not proteasome-recombined
 
 BamQuery can be installed as described here or tested with our [online portal](https://bamquery.iric.ca/search). The portal will quantify any peptide in medullary thymic epithelial cells and dendritic cells to evaluate their probability of being expressed by normal tissues. A prediction of their immunogenicity will also be provided based on these expression measures. Therefore, BamQuery can be used to evaluate the specificity and immunogenicity of tumor antigens.
 
-The preprint of our article can be found on BioRXiv: https://doi.org/10.1101/2022.10.07.510944
+Read our article in [Genome Biology](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-03029-1)
 
 For detailed usage instructions, see the documentation on our web page: https://bamquery.iric.ca/
 
