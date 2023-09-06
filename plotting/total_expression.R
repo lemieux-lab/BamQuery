@@ -50,10 +50,10 @@ g = g + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 total_peptides = length(unique(proSplus$Peptide))
 
 if (total_peptides > 50){
-  g = g + theme(axis.text.y = element_text(linewidth = 5))
+  g = g + theme(axis.text.y = element_text(size = 5))
 }
 if (total_peptides > 70){
-  g = g + theme(axis.text.y = element_text(linewidth = 3))
+  g = g + theme(axis.text.y = element_text(size = 3))
 }
 
 filename = sprintf('%s.%s', name, 'pdf') 
