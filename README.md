@@ -46,7 +46,7 @@ See the [user manual](https://bamquery.iric.ca/documentation/) for a detailed de
 
 <h3>1. Clone repository from github</h3>
 
-        export INSTALLDIR=/opt/bamquery
+        export INSTALLDIR=./opt/bamquery
         mkdir $INSTALLDIR
         cd $INSTALLDIR
         git clone https://github.com/lemieux-lab/BamQuery.git
@@ -68,11 +68,13 @@ You need to download the human or mouse genome version you wish to use to:
         
         cd lib/genome_versions
 
-And use the command below to download any human genome version: v26_88 or v33_99 or v38_104.
+And use the command below to download any human genome version: v26_88 or v33_99 or v38_104. 
+
+Change <b>SET_VERSION</b> for any of the genome versions.
 
         wget https://bamquery.iric.ca/download/genome_SET_VERSION.tar.gz
                 
-or to download any mouse genome version: m24, m30.
+or to download any mouse genome version: m24, m30. 
 
         wget https://bamquery.iric.ca/download/genome_mouse_SET_VERSION.tar.gz
 
@@ -80,7 +82,9 @@ or to download any mouse genome version: m24, m30.
 Finally, you need to:
         
         tar vxzf GENOME_VERSION.tar.gz
-        
+
+Change <b>GENOME_VERSION</b> by the name of the genome version that was downloaded. Example: genome_v26_88.tar.gz
+
  <br>
  
 <h4>2.b Installation of SNPs</h4>
@@ -123,6 +127,7 @@ For users having no administrator privileges, we recommend installing BamQuery w
         conda install -y -c conda-forge xlsxwriter
         conda install -y -c anaconda seaborn
         conda install -y -c conda-forge billiard
+        conda install -c conda-forge biopython
         conda install -y -c anaconda scipy
         conda install -y -c bioconda bedtools
         conda install -y -c bioconda star=2.7.9a
@@ -130,7 +135,7 @@ For users having no administrator privileges, we recommend installing BamQuery w
         mamba install -y -c conda-forge r-ggplot2
         mamba install -y -c conda-forge r-data.table
         
-3. Launch the analysis:
+4. Launch the analysis:
 
         conda activate BQ
         python3 ${INSTALLDIR}/BamQuery/BamQuery.py path_to_input_folder name_exp genome_version
@@ -155,9 +160,10 @@ For users having no administrator privileges, we recommend installing BamQuery w
         pip install billiard
         pip install numpy
         pip install scipy
+        pip install biopython
         
 
-3. Install external dependencies so that their binaries are available in your $PATH:</h3>
+4. Install external dependencies so that their binaries are available in your $PATH:</h3>
 
 * STAR 2.7.9a: https://github.com/alexdobin/STAR
 
