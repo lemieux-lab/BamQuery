@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SubmitField, BooleanField, SelectField, FieldList
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms.validators import DataRequired, Length, Regexp, Optional
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import TextAreaField
 from wtforms.widgets import TextArea
@@ -40,7 +40,8 @@ def validate_peptides_list(form, field):
 class BamQuery_search(FlaskForm):
 
 	name_query = StringField('Name Query :', 
-		validators=[DataRequired(message="This field is required."), Length(min=2, max=20)])
+		validators=[DataRequired(message="This field is required."), Regexp('^[A-Za-z]*$', message='Only letters are allowed.'),
+        Length(max=20, message='Input cannot exceed 20 characters.')])
 
 	#peptides = FileField('Upload peptides.tsv file', validators=[FileRequired(), FileAllowed(['tsv'])])
 

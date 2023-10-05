@@ -55,8 +55,8 @@ def search():
 
 	return render_template('search.html', title ='Search', image_file = image_file, form = form, block=False)
 
-@app.route("/retrival", methods=['POST', 'GET'])
-def retrival():
+@app.route("/retrieval", methods=['POST', 'GET'])
+def retrieval():
 	form_2 = Retrieve_results()
 	image_file = url_for('static', filename='favicon.png')
 	
@@ -91,7 +91,7 @@ def retrival():
 		except FileNotFoundError:
 			flash(f'No query with this name: { name_exp } is found in our server !', 'error')
 
-	return render_template('retrival.html', title ='Retrival', image_file = image_file, form_2 = form_2, block=False)
+	return render_template('retrieval.html', title ='Retrieval', image_file = image_file, form_2 = form_2, block=False)
 
 
 def file_len(fname):

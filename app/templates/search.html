@@ -7,6 +7,11 @@
 		width: 100%;
 		text-align: center;
 	}
+
+	.bold-label {
+		font-weight: bold;
+	}
+
 </style>
 
 
@@ -53,7 +58,13 @@ Entry requirements:
 					{{ form.name_query(class="form-control") }}
 				{% endif %}
 				<small class="text-muted">
-						Set a name to identify your query. Keep this name in mind to retrieve your results later.
+						Set a name to identify your query. 
+						<br>
+						<i class="fas fa-exclamation-circle"></i>
+						The name cannot exceed 20 character. 
+						<br>
+						<i class="fas fa-exclamation-circle"></i>
+						Only letters are allowed.
 				</small>
 				</div>
 			</div>
@@ -99,7 +110,7 @@ Entry requirements:
 			</div>
 
 		</div>
-
+		<br>
 		<div class="row">
 			<div class="col-2">
 				
