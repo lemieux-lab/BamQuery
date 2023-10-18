@@ -127,7 +127,7 @@ For users having no administrator privileges, we recommend installing BamQuery w
         conda install -y -c conda-forge xlsxwriter
         conda install -y -c anaconda seaborn
         conda install -y -c conda-forge billiard
-        conda install -c conda-forge biopython
+        conda install -y -c conda-forge biopython
         conda install -y -c anaconda scipy
         conda install -y -c bioconda bedtools
         conda install -y -c bioconda star=2.7.9a
