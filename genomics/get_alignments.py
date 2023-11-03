@@ -99,6 +99,7 @@ def read_sam_file(sam_file):
 	alignments_by_chromosome_strand = {}
 	
 	samfile = pysam.AlignmentFile(sam_file, "r")
+	total_alignments = 0
 	for read in samfile:
 		queryname = read.query_name
 		cigar = read.cigarstring
@@ -137,27 +138,39 @@ def read_sam_file(sam_file):
 			set_alignments = []
 			set_alignments.append(key)
 			alignments_by_chromosome_strand[chr] = set_alignments
+		total_alignments += 1
 
 	samfile.close()		
 	timeFinal = time.time()
 	total = (timeFinal-time0) / 60.0
 	total_chromosomes = len(alignments_by_chromosome_strand)
 	super_logger.info('Time reading SAM file : %f min Chromosomes %d ', total, total_chromosomes)
-	name_path = sam_file+'.dic'
-	with open(name_path, 'wb') as handle:
-		pickle.dump(alignments_by_chromosome_strand, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	super_logger.info('Total alignments in SAM file %d ', total_alignments)
 	
-	return alignments_by_chromosome_strand
+	super_logger.info('Splitting SAM aligments file for chr ')
+	chrs_list = []
+	for chr, value in alignments_by_chromosome_strand.items():
+		name_path_chr = path_to_output_folder_alignments+'/'+chr+'.set'
+		with open(name_path_chr, 'wb') as handle:
+			pickle.dump(value, handle, protocol=pickle.HIGHEST_PROTOCOL)
+		chrs_list.append(chr)
+	
+	print ('Saving set of alignments for each chromosome: done !')
+	name_path_check = path_to_output_folder_alignments+'/all_chrs_saved.pkl'
+	with open(name_path_check, 'wb') as handle:
+		pickle.dump(chrs_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	
+	return chrs_list
 
 
-def get_alignments_chromosome(chr, chromosomes_alignments):
+def get_alignments_chromosome(chr):
 
 	positions_mcs_peptides_perfect_alignment = {}
 	
 	chromosome = {}
 	peptides_in = set()
-
 	local_visited = set()
+
 	faFile = pysam.FastaFile(genomePath, genomePathFai)
 
 	if path_to_db != '':
@@ -168,7 +181,10 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 			chromosome = {}
 	else:
 		chromosome = {}
-		
+	
+	with open(path_to_output_folder_alignments+'/'+chr+'.set', 'rb') as fp:
+		chromosomes_alignments = pickle.load(fp)
+
 	for position in chromosomes_alignments: 
 		readStart = int(position[0])
 		cigar = position[1]
@@ -251,6 +267,9 @@ def get_alignments_chromosome(chr, chromosomes_alignments):
 					positions_mcs_peptides_perfect_alignment[key_local_v] = [strand, local_translation_peptide, differences_pep, info_snps, differences_ntds, []]
 
 	chromosome = {}
+	chromosomes_alignments = set()
+	super_logger.info('Chromosome %s processed !', str(chr))
+	print('Chromosome ',str(chr),' processed !')
 	return positions_mcs_peptides_perfect_alignment, peptides_in
 
 
@@ -428,8 +447,9 @@ def translation_seq(chr, seq):
 
 	return translation
 
-def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_version, mode, mouse, threads):
+def get_alignments(sam_file, path_to_output_folder_alignments_aux, dbSNP, common, super_logger_aux, var_aux, genome_version, mode, mouse, threads):
 
+	t_0 = time.time()
 	global path_to_db
 	global super_logger
 	global var
@@ -437,10 +457,15 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 	global genomePath
 	global mode_translation
 	global splice_junctions_annotated
+	global path_to_output_folder_alignments
 
 	super_logger = super_logger_aux
+	path_to_output_folder_alignments = path_to_output_folder_alignments_aux
 	var = var_aux
-	
+
+	super_logger.info('Selection of the perfect locations in each chromosome')	
+	print ('Selection of the perfect locations in each chromosome')	
+
 	if genome_version == 'v26_88': 
 		genomePathFai = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa.fai'
 		genomePath = path_to_lib + 'genome_versions/genome_v26_88/GRCh38.primary_assembly.genome.fa'
@@ -508,60 +533,55 @@ def get_alignments(sam_file, dbSNP, common, super_logger_aux, var_aux, genome_ve
 
 	super_logger.info('Using dbSNP database %s with COMMON SNPs = %s. Database Path : %s ', str(dbSNP), str(common), str(path_to_db))
 	
-	exists = os.path.exists(sam_file+'.dic')
+	exists = os.path.exists(path_to_output_folder_alignments+'/all_chrs_saved.pkl')
 	if not exists:
-		alignments_by_chromosome_strand = read_sam_file(sam_file)
+		chrs_order = read_sam_file(sam_file)
 	else:
-		with open(sam_file+'.dic', 'rb') as fp:
-			alignments_by_chromosome_strand = pickle.load(fp)
+		with open(path_to_output_folder_alignments+'/all_chrs_saved.pkl', 'rb') as fp:
+			chrs_order = pickle.load(fp)
 		super_logger.info('Information SAM file already collected !')
 
-	od = collections.OrderedDict(sorted(alignments_by_chromosome_strand.items(), reverse=True))
-
-	del alignments_by_chromosome_strand
+	chrs_order = sorted(chrs_order)
 
 	positions_mcs_peptides_perfect_alignment = {}
 	total_peptides_in = set()
 	
-	keys = list(od.keys())
-	values = list(od.values())
-	
 	if common or dbSNP == 149 or dbSNP == 0:
 		pool = ProcessPool(nodes=threads)
-		results = pool.map(get_alignments_chromosome, keys, values)
+		results = pool.map(get_alignments_chromosome, chrs_order)
 	
 		for res in results:
 			positions_mcs_peptides_perfect_alignment.update(res[0])
 			total_peptides_in = total_peptides_in.union(res[1])
-
-		keys.clear()
-		values.clear()
-
 	else:
 		for chr in ['chr1', 'chr2', 'chr3', 'chr4', 'chr5']:
-			try:
-				index = keys.index(chr)
-				res = get_alignments_chromosome(chr, values[index])
-				positions_mcs_peptides_perfect_alignment.update(res[0])
-				total_peptides_in = total_peptides_in.union(res[1])
-				del keys[index]
-				del values[index]
-			except ValueError:
-				pass
+			if chr in chrs_order:
+				try:
+					res = get_alignments_chromosome(chr)
+					positions_mcs_peptides_perfect_alignment.update(res[0])
+					total_peptides_in = total_peptides_in.union(res[1])
+				except ValueError:
+					pass
 		
-		nodes = 5
+		chrs_order = sorted(list(set(chrs_order) - set(['chr1', 'chr2', 'chr3', 'chr4', 'chr5'])))
+		nodes = int(threads/2)
 		cont = 0
-		for i in range(0,len(keys),nodes):
+		for i in range(0,len(chrs_order),nodes):
 			pool = ProcessPool(nodes=nodes)
 			cont += nodes
-			results = pool.map(get_alignments_chromosome, keys[i:cont], values[i:cont])
+			results = pool.map(get_alignments_chromosome, chrs_order[i:cont])
 
 			for res in results:
 				positions_mcs_peptides_perfect_alignment.update(res[0])
 				total_peptides_in = total_peptides_in.union(res[1])
 
 			pool.close()
-			pool.join()
 			pool.clear()
-			
+	
+	t_2 = time.time()
+	total = t_2-t_0
+
+	super_logger.info('Total time get perfect locations in all chromosomes : %f min', (total/60.0))	
+	print ('Total time get perfect locations in all chromosomes ', (total/60.0), ' min')		
+		
 	return positions_mcs_peptides_perfect_alignment, total_peptides_in

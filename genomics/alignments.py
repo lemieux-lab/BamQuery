@@ -3,6 +3,7 @@ import genomics.get_alignments as get_alig
 import collections
 import pandas as pd
 import billiard as mp
+from pathos.multiprocessing import ProcessPool
 import re, sys, inspect
 
 
@@ -55,7 +56,7 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 	exist_sam_dic = os.path.exists(path_to_output_folder_genome_alignments+'/Aligned.out.sam.dic')
 	exists_light = os.path.exists(path_to_output_folder_alignments+'/Alignments_information_light.dic')
 	exists_normal= os.path.exists(path_to_output_folder_alignments+'/Alignments_information.dic')
-	exists_fastq= os.path.exists(path_to_output_folder_genome_alignments+'/'+name_exp+'.fastq')
+	exists_fastq = os.path.exists(path_to_output_folder_genome_alignments+'/'+name_exp+'.fastq')
 	
 	if not exist and not exist_sam_dic and not exists_light and not exists_normal and exists_fastq:
 		t_0 = time.time()
@@ -81,12 +82,17 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 			alignTranscriptsPerWindowNmax = 1000
 			outFilterMultimapScoreRange = 2
 
+		if var:
+			outFilterMismatchNmax = 4
+		else:
+			outFilterMismatchNmax = 3
+
 		limitOutSAMoneReadBytes = 2 * ( 33 + 100 ) * maxMulti
 
 		command = 'ulimit -s 8192; STAR --runThreadN '+str(threads)+\
 				' --genomeDir '+genomeDirectory+' --seedSearchStartLmax '+str(seed)+\
 				' --alignEndsType EndToEnd --sjdbOverhang 32 --alignSJDBoverhangMin 1 --alignSJoverhangMin 10000'+\
-				' --outFilterMismatchNmax 4 --outFilterIntronMotifs RemoveNoncanonicalUnannotated --scoreGapNoncan -50 --outFilterType BySJout --winAnchorMultimapNmax '+str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
+				' --outFilterMismatchNmax '+str(outFilterMismatchNmax)+' --outFilterIntronMotifs RemoveNoncanonicalUnannotated --scoreGapNoncan -50 --outFilterType BySJout --winAnchorMultimapNmax '+str(anchor)+' --outFilterMultimapNmax '+str(maxMulti)+\
 				' --readFilesIn '+inputFilesR1_1+' --outSAMattributes NH HI MD --limitOutSJcollapsed 5000000'+\
 				' --limitOutSAMoneReadBytes '+str(limitOutSAMoneReadBytes) +\
 				' --outFilterMultimapScoreRange '+str(outFilterMultimapScoreRange)+' --alignTranscriptsPerWindowNmax '+str(alignTranscriptsPerWindowNmax) +' --alignWindowsPerReadNmax '+str(alignWindowsPerReadNmax)+ \
@@ -129,7 +135,7 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 		
 		if not exists_light and not exists:
 
-			res_star = get_alig.get_alignments(sam_file, dbSNP, common, super_logger, var, genome_version, mode, mouse, threads)
+			res_star = get_alig.get_alignments(sam_file, path_to_output_folder_genome_alignments, dbSNP, common, super_logger, var, genome_version, mode, mouse, threads)
 			
 			t_2 = time.time()
 			total = t_2-t_0
@@ -146,16 +152,20 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 							'Mutation CDS', 'Mutation AA', 'Description',
 							'Mutation Strand', 'Resistance', 'Score', 'Prediction', 'Status' ]
 
-			alignments = [perfect_alignments]
-			pool = mp.Pool(threads)
-			results = pool.map(generer_alignments_information, alignments)
-			
-			perfect_alignments_to_print = results[0][0]
+			pool = ProcessPool(nodes=threads)
+			keys = perfect_alignments.keys()
+			values = perfect_alignments.values()
+			results = pool.map(generation_alignments_information, keys, values)
+			perfect_alignments_to_print = []
+			info_cosmic = {}
+			for res in results:
+				perfect_alignments_to_print.extend([res[0]])
+				info_cosmic.update(res[1])
+
 			pool.close()
-			pool.join()
-			
-			if not mouse:
-				info_cosmic = results[0][1]
+			pool.clear()
+
+			if not mouse and len(info_cosmic) != 0:
 				info_cosmic_to_print = get_info_cosmic(info_cosmic)
 				
 				if len(info_cosmic_to_print) == 0:
@@ -233,72 +243,66 @@ def filter_peptides_from_alignments_information_light(peptides, path_to_alignmen
 	return perfect_alignments, peptides_with_alignments
 
 
-def generer_alignments_information(alignments_input):
+def generation_alignments_information(peptide_info, info_alignment):
 
-	row_list = []
+	row_info = []
 	info_cosmic = {}
 
-	alignments = collections.OrderedDict(sorted(alignments_input.items()))
+	alignment = peptide_info.split('_')[1]
+	peptide = peptide_info.split('_')[0]
+
+	try:
+		MCS = peptide_info.split('_')[2]
+	except IndexError:
+		MCS = ''
+	strand = info_alignment[0]
+	peptide_with_snps_local_reference = info_alignment[1]
 	
-	for peptide_info, info_alignment in alignments.items():
-		alignment = peptide_info.split('_')[1]
-		peptide = peptide_info.split('_')[0]
+	dif_aas = info_alignment[2]
+	snvs = info_alignment[3]
+	dif_ntds = info_alignment[4]
 
+	chr = alignment.split(':')[0]
+	known_splice_junction = []
+
+	if '|' in alignment:
+		result = re.findall(r"\d+", alignment.split(':')[1])[1:-1]
+		tuples = [(int(result[i]), int(result[i+1])) for i in range(0, len(result), 2)]
+			
+		for tuple in tuples:
+			annotated_sj = splice_junctions_annotated[(splice_junctions_annotated[0]==chr) & (splice_junctions_annotated[1]==tuple[0]+1)& (splice_junctions_annotated[2]==tuple[1]-1) & (splice_junctions_annotated[3]==strand)]
+			if not annotated_sj.empty:
+				known_splice_junction.append('yes')
+			else:
+				known_splice_junction.append('no')
+	else:
+		known_splice_junction.append('NA')
+		
+	known_splice_junction = '/'.join(known_splice_junction)
+	snvs_write = ''
+	dif_aa_write = ''
+	mutations_write = ''
+	dif_ntd_write = ''
+	
+	for snv in snvs:
+		snv_to_print = snv[0]+'>'+snv[1]+'|snp:'+snv[2]+'|GenPos:'+str(snv[3])+'|MCSPos:'+str(snv[4])+','
+		snvs_write += snv_to_print
+		pos_to_search_cosmic = alignment.split('chr')[1].split(':')[0]+':'+str(snv[3])+'-'+str(snv[3])
+		
 		try:
-			MCS = peptide_info.split('_')[2]
-		except IndexError:
-			MCS = ''
-		strand = info_alignment[0]
-		peptide_with_snps_local_reference = info_alignment[1]
-		
-		dif_aas = info_alignment[2]
-		snvs = info_alignment[3]
-		dif_ntds = info_alignment[4]
+			info_cosmic[pos_to_search_cosmic] = [peptide, strand, alignment, snv[2], pos_to_search_cosmic]
+		except :
+			pass
 
-		chr = alignment.split(':')[0]
-		known_splice_junction = []
+	for dif_aa in dif_aas:
+		dif_aa_write += dif_aa+','
 
-		if '|' in alignment:
-			result = re.findall(r"\d+", alignment.split(':')[1])[1:-1]
-			tuples = [(int(result[i]), int(result[i+1])) for i in range(0, len(result), 2)]
-				
-			for tuple in tuples:
-				annotated_sj = splice_junctions_annotated[(splice_junctions_annotated[0]==chr) & (splice_junctions_annotated[1]==tuple[0]+1)& (splice_junctions_annotated[2]==tuple[1]-1) & (splice_junctions_annotated[3]==strand)]
-				if not annotated_sj.empty:
-					known_splice_junction.append('yes')
-				else:
-					known_splice_junction.append('no')
-		else:
-			known_splice_junction.append('NA')
-			
-		known_splice_junction = '/'.join(known_splice_junction)
-		snvs_write = ''
-		dif_aa_write = ''
-		mutations_write = ''
-		dif_ntd_write = ''
-		
-		for snv in snvs:
-			snv_to_print = snv[0]+'>'+snv[1]+'|snp:'+snv[2]+'|GenPos:'+str(snv[3])+'|MCSPos:'+str(snv[4])+','
-			snvs_write += snv_to_print
-			pos_to_search_cosmic = alignment.split('chr')[1].split(':')[0]+':'+str(snv[3])+'-'+str(snv[3])
-			
-			try:
-				info_cosmic[pos_to_search_cosmic] = [peptide, strand, alignment, snv[2], pos_to_search_cosmic]
-			except :
-				pass
+	for dif_ntd in dif_ntds:
+		dif_ntd_write += dif_ntd+','
 
-		for dif_aa in dif_aas:
-			dif_aa_write += dif_aa+','
-
-		for dif_ntd in dif_ntds:
-			dif_ntd_write += dif_ntd+','
-
-		row_list.append([peptide, strand, alignment, known_splice_junction, MCS, peptide_with_snps_local_reference, dif_aa_write[:-1], dif_ntd_write[:-1], snvs_write[:-1] ])
-
-	if len(row_list) == 1048575 :
-		return row_list, info_cosmic
-
-	return row_list, info_cosmic
+	row_info = [peptide, strand, alignment, known_splice_junction, MCS, peptide_with_snps_local_reference, dif_aa_write[:-1], dif_ntd_write[:-1], snvs_write[:-1] ]
+	
+	return row_info, info_cosmic
 
 
 def get_info_cosmic(snv_alignments):
