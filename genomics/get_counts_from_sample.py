@@ -145,18 +145,17 @@ def get_ranges(cigar, start, len_seq):
 def remove_at(i, s):
 	return s[:i] + s[i+1:]
 
-def define_read_in(read, pos_set, splice_pos, overlap_in):
-
-	if len(read) > 0:
+def define_read_in(reads, pos_set, splice_pos, overlap_in):
+	for read in reads:
 		split_read = read.split('\t')
 		name = split_read[0]
-		strand = split_read[1]
-		chr = split_read[2]
+		strand = set_strand_read(split_read[1])
 		start = int(split_read[3])
 		seq = split_read[9]
 		cigar = split_read[5]
-		strand = set_strand_read(strand)
+
 		rang_, splices_sites, indels = get_ranges(cigar, start, len(seq))
+
 		splices_sites = splices_sites - splice_pos
 		overlap = set(rang_).intersection(pos_set)
 		percentage_overlap = len(overlap)/len(pos_set)
@@ -168,13 +167,13 @@ def define_read_in(read, pos_set, splice_pos, overlap_in):
 		if len(splices_sites.intersection(sorted(pos_set)[1:-1])) == 0 and percentage_overlap >= 0.6:
 			index_ini = rang_.index(min(overlap))
 			index_fin = rang_.index(max(overlap)) + 1
-			seq_overlap = seq[index_ini :index_fin]
+			seq_overlap = seq[index_ini:index_fin]
 			if overlap_in:
 				if percentage_overlap >= 0.6 :
-					return name, strand, seq_overlap, 1
+					yield name, strand, seq_overlap, 1
 			else:
 				if percentage_overlap == 1.0 :
-					return name, strand, seq_overlap, percentage_overlap
+					yield name, strand, seq_overlap, percentage_overlap
 
 
 def get_depth_with_view(
@@ -208,8 +207,9 @@ def get_depth_with_view(
 		except pysam.utils.SamtoolsError:
 			return -1
 
-		reads_overlaping_area = list(map(define_read_in, count_1, repeat(pos_set), repeat(splice_pos), repeat(overlap)))
-		reads_overlaping_area = list(filter(None, reads_overlaping_area))
+		reads = [read for read in count_1 if len(read) > 0]
+
+		reads_overlaping_area = list(define_read_in(reads, pos_set, splice_pos, overlap))
 		reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
 
 		for seq in sequences:
@@ -240,8 +240,9 @@ def get_depth_with_view(
 			except pysam.utils.SamtoolsError:
 				return -1
 
-		reads_overlaping_area = list(map(define_read_in, count_1, repeat(pos_set), repeat(splice_pos), repeat(overlap)))
-		reads_overlaping_area = list(filter(None, reads_overlaping_area))
+		reads = [read for read in count_1 if len(read) > 0]
+
+		reads_overlaping_area = list(define_read_in(reads, pos_set, splice_pos, overlap))
 		reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
 
 		for seq in sequences:
@@ -270,12 +271,13 @@ def get_depth_with_view(
 			except pysam.utils.SamtoolsError:
 				return -1
 
-		reads_overlaping_area_count_1 = list(map(define_read_in, count_1, repeat(pos_set), repeat(splice_pos), repeat(overlap)))
-		reads_overlaping_area_count_1 = list(filter(None, reads_overlaping_area_count_1))
+		reads_1 = [read for read in count_1 if len(read) > 0]
+		reads_2 = [read for read in count_1 if len(read) > 0]
+
+		reads_overlaping_area_count_1 = list(define_read_in(reads_1, pos_set, splice_pos, overlap))
 		reads_overlaping_area_count_1.sort(key=itemgetter(-1), reverse=True)
 
-		reads_overlaping_area_count_2 = list(map(define_read_in, count_2, repeat(pos_set), repeat(splice_pos), repeat(overlap)))
-		reads_overlaping_area_count_2 = list(filter(None, reads_overlaping_area_count_2))
+		reads_overlaping_area_count_2 = list(define_read_in(reads_2, pos_set, splice_pos, overlap))
 		reads_overlaping_area_count_2.sort(key=itemgetter(-1), reverse=True)
 
 		for seq in sequences:
