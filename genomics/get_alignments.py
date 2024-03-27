@@ -581,7 +581,8 @@ def get_alignments(sam_file, path_to_output_folder_alignments_aux, dbSNP, common
 	t_2 = time.time()
 	total = t_2-t_0
 
-	super_logger.info('Total time get perfect locations in all chromosomes : %f min', (total/60.0))	
-	print ('Total time get perfect locations in all chromosomes ', (total/60.0), ' min')		
-		
+	m = 'Total time to get perfect locations in all chromosomes : %f min' % (total/60.0)
+	super_logger.info(m)
+	print(m)
+
 	return positions_mcs_peptides_perfect_alignment, total_peptides_in

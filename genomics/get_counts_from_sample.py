@@ -9,7 +9,6 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
 def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
-
 	name_sample = bam[0]
 	bam_file = bam[1][0]
 	library = bam[1][1]
@@ -46,7 +45,17 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 		if len(pos) > 1 and i != len(pos) -1:
 			splice_pos.add(fini)
 
-	counts = get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequences, pos_set, splice_pos, overlap)
+	counts = get_depth_with_view(
+		region_to_query,
+		bam_file,
+		library,
+		sens,
+		strand,
+		sequences,
+		pos_set,
+		splice_pos,
+		overlap
+	)
 
 	for index, sequence in enumerate(sequences):
 		try:
@@ -168,7 +177,17 @@ def define_read_in(read, pos_set, splice_pos, overlap_in):
 					return name, strand, seq_overlap, percentage_overlap
 
 
-def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequences, pos_set, splice_pos, overlap):
+def get_depth_with_view(
+		region_to_query,
+		bam_file,
+		library,
+		sens,
+		strand,
+		sequences,
+		pos_set,
+		splice_pos,
+		overlap
+	):
 
 	contReads_to_return = []
 

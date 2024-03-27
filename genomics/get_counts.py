@@ -1,15 +1,19 @@
-import warnings, os
-warnings.filterwarnings("ignore")
-import os, time, pickle, os, copy
-import genomics.get_counts_from_sample as get_counts_sample
-import pandas as pd
-from pathos.multiprocessing import ProcessPool
-import utils.useful_functions as uf
+import copy
+import itertools
 import numpy as np
+import os
+import pandas as pd
+import pickle
 import pysam
 import re
+import time
+import warnings
+from pathos.multiprocessing import ProcessPool
 
+import utils.useful_functions as uf
+from genomics.get_counts_from_sample import get_counts_sample
 
+warnings.filterwarnings("ignore")
 os.environ["REF_PATH"] = "/dev/null"
 
 __author__ = "Maria Virginia Ruiz Cuevas"
@@ -90,7 +94,9 @@ class GetCounts:
 			t_0 = time.time()
 
 			if not exists_alignment_information :
-				alignment_information = self.filter_alignment_information(perfect_alignments, self.alignment_information_path)
+				alignment_information = self.filter_alignment_information(
+					perfect_alignments,
+					self.alignment_information_path)
 			else:
 				with open(self.alignment_information_path, 'rb') as fp:
 			 		alignment_information = pickle.load(fp)
@@ -99,7 +105,11 @@ class GetCounts:
 			bams = []
 
 			list_bam_files_order = []
-			for name_sample, info_bam in sorted(bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
+			for name_sample, info_bam in sorted(
+					bam_files_list.items(),
+					key=lambda e: e[1][-2],
+					reverse=False
+				):
 				info_bams.append((name_sample,info_bam))
 				list_bam_files_order.append(name_sample)
 
@@ -134,7 +144,12 @@ class GetCounts:
 
 			self.super_logger.info('Total unique regions : %s ', str(len(keys)))
 
-			with open(self.path_to_output_folder+'/genome_alignments/references_chrs.pkl', "rb") as f:
+			infile = os.path.join(
+				self.path_to_output_folder,
+				'genome_alignments',
+				'references_chrs.pkl'
+			)
+			with open(infile, "rb") as f:
 				references_chrs = pickle.load(f)
 
 			digits_bam_file_BQ_reference = []
@@ -148,8 +163,21 @@ class GetCounts:
 			if len(info_bams)-1 != last_treated_bam_file:
 				pool = ProcessPool(nodes=self.threads)
 
+			remaining_idxs = []
+			remaining_bams = []
+
 			for idx, bam_file in enumerate(info_bams):
 				if idx > last_treated_bam_file:
+					remaining_idxs.append(idx)
+					remaining_bams.append(bam_file)
+				else:
+					self.super_logger.info(
+						'Bam File already processed: %s %s.',
+						str(idx), bam_file[0]
+					)
+
+			for idx, bam_file in zip(remaining_idxs, remaining_bams):
+				if True:
 
 					t0_bam_file = time.time()
 					bam_file_path = bam_file[1][0]
@@ -164,23 +192,33 @@ class GetCounts:
 							references.add(bam_file_ref.getrname(alignment.reference_id))
 						bam_file_ref.close()
 
-					reference = self.get_corresponding_references(list(references), references_chrs, digits_bam_file_BQ_reference, bam_file_path)
-					references = [reference] * len(keys)
-					bams = [bam_file] * len(keys)
-					results = pool.map(get_counts_sample.get_counts_sample, bams, keys, values, references, [overlap]*len(values))
+					reference = self.get_corresponding_references(
+						list(references),
+						references_chrs,
+						digits_bam_file_BQ_reference,
+						bam_file_path
+					)
+
+					results = pool.map(
+						get_counts_sample,
+						itertools.repeat(bam_file),
+						keys,
+						values,
+						itertools.repeat(reference),
+						itertools.repeat(overlap)
+					)
 
 					message = "was successfully processed"
 
 					for res in results:
-
 						for index, count_align in enumerate(res):
-
 							if index == 0:
 								peptide = count_align[0]
 								alignment = count_align[1]
 								sample = count_align[2]
 								strand = count_align[3]
 								to_print = [peptide, alignment, sample]
+
 							else:
 								count = count_align[0]
 								if count == -1:
@@ -198,7 +236,6 @@ class GetCounts:
 
 								alignment_information[key][-1][index_sample-1] = count
 
-
 					t1_bam_file = time.time()
 					time_final = (t1_bam_file-t0_bam_file)/60.0
 					times.append(time_final)
@@ -210,16 +247,13 @@ class GetCounts:
 
 					if (idx % 50 == 0) and (idx != 0):
 						self.super_logger.info('Saving information for Bam Files processed')
-						print (str(idx), 'Bam Files processed')
+						print(str(idx), 'Bam Files processed')
 
 						with open(self.last_treated_bam_file, 'wb') as f:
 							pickle.dump(idx, f)
 
 						with open(self.alignment_information_path, 'wb') as handle:
 							pickle.dump(alignment_information, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-				else:
-					self.super_logger.info('Bam File already processed: %s %s.', str(idx), bam_file[0])
 
 			if len(info_bams)-1 != last_treated_bam_file:
 				pool.close()
