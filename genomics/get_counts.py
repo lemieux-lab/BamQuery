@@ -1,5 +1,6 @@
 import copy
 import itertools
+import gc
 import logging
 import numpy as np
 import os
@@ -181,6 +182,8 @@ class GetCounts:
 						str(idx), bam_file[0]
 					)
 
+			gc.collect()
+
 			for idx, bam_file in zip(remaining_idxs, remaining_bams):
 				if True:
 
@@ -241,6 +244,10 @@ class GetCounts:
 
 								alignment_information[key][-1][index_sample-1] = count
 
+					pool.clear()
+
+					gc.collect()
+
 					t1_bam_file = time.time()
 					time_final = (t1_bam_file-t0_bam_file)/60.0
 					times.append(time_final)
@@ -264,6 +271,8 @@ class GetCounts:
 				pool.close()
 				pool.join()
 				pool.clear()
+
+			gc.collect()
 
 			self.super_logger.info('Average time to process a BamFile : %f min', np.mean(times))
 
