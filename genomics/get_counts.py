@@ -31,12 +31,12 @@ class GetCounts:
 		else:
 			self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
 			self.alignment_information_path = self.path_to_output_folder_alignments+'Alignments_information_rna.dic'
-		
+
 		self.count_path = self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv'
 		self.count_all_alignments_path = self.path_to_output_temps_folder+self.name_exp+'_rna_count_All_alignments.csv'
 		self.last_treated_bam_file = self.path_to_output_folder_alignments+'info_treated_bam_files.pkl'
 
-		
+
 		if self.mode == 'translation':
 			self.path_to_output_temps_folder = path_to_output_folder+'res_translation/temps_files/'
 			self.path_to_output_bed_folder = path_to_output_folder+'res_translation/BED_files/'
@@ -70,7 +70,7 @@ class GetCounts:
 
 		exists_count = os.path.exists(self.count_path)
 		exists_alignment_information = os.path.exists(self.alignment_information_path)
-		
+
 		last_treated_bam_file = os.path.exists(self.last_treated_bam_file)
 
 		if last_treated_bam_file:
@@ -80,17 +80,17 @@ class GetCounts:
 
 		else:
 			last_treated_bam_file = -1
-		
-		
+
+
 		if not exists_count :
 			t_0 = time.time()
-			
+
 			if not exists_alignment_information :
 				alignment_information = self.filter_alignment_information(perfect_alignments, self.alignment_information_path)
 			else:
 				with open(self.alignment_information_path, 'rb') as fp:
 			 		alignment_information = pickle.load(fp)
-			
+
 			info_bams = []
 			bams = []
 
@@ -98,19 +98,19 @@ class GetCounts:
 			for name_sample, info_bam in sorted(bam_files_list.items(), key=lambda e: e[1][-2], reverse=False):
 				info_bams.append((name_sample,info_bam))
 				list_bam_files_order.append(name_sample)
-			
+
 			def get_index(sample):
 				index = list_bam_files_order.index(sample)
 				return index + 1
 
 			total_samples = len(list_bam_files_order)
 			print ('Getting counts for ',str(total_samples), ' samples')
-			
+
 			keys = alignment_information.keys()
 			self.super_logger.info('Total MCS mapped : %s ', str(len(keys)))
 
 			modif_dic = {}
-			
+
 			for key in keys:
 				split_key = key.split('_')
 				peptide = split_key[0]
@@ -119,7 +119,7 @@ class GetCounts:
 
 				strand = alignment_information[key][0]
 				new_key = peptide+'_'+position+'_'+strand
-				
+
 				try:
 					modif_dic[new_key].append(seq)
 				except KeyError:
@@ -127,7 +127,7 @@ class GetCounts:
 
 			keys = modif_dic.keys()
 			values = modif_dic.values()
-			
+
 			self.super_logger.info('Total unique regions : %s ', str(len(keys)))
 
 			with open(self.path_to_output_folder+'/genome_alignments/references_chrs.pkl', "rb") as f:
@@ -143,7 +143,7 @@ class GetCounts:
 
 			if len(info_bams)-1 != last_treated_bam_file:
 				pool = ProcessPool(nodes=self.threads)
-			
+
 			for idx, bam_file in enumerate(info_bams):
 				if idx > last_treated_bam_file:
 
@@ -170,7 +170,7 @@ class GetCounts:
 
 						for index, count_align in enumerate(res):
 
-							if index == 0: 
+							if index == 0:
 								peptide = count_align[0]
 								alignment = count_align[1]
 								sample = count_align[2]
@@ -180,12 +180,12 @@ class GetCounts:
 								count = count_align[0]
 								if count == -1:
 									not_permission = True
-								
+
 								sequence = count_align[1]
 								to_print_aux = copy.deepcopy(to_print)
 								to_print_aux.append(count)
-								
-								index_sample = get_index(sample) 
+
+								index_sample = get_index(sample)
 
 								key = peptide+'_'+alignment+'_'+sequence
 								if len(alignment_information[key][-1]) == 0:
@@ -207,7 +207,7 @@ class GetCounts:
 						self.super_logger.info('Saving information for Bam Files processed')
 						print (str(idx), 'Bam Files processed')
 
-						with open(self.last_treated_bam_file, 'wb') as f:  
+						with open(self.last_treated_bam_file, 'wb') as f:
 							pickle.dump(idx, f)
 
 						with open(self.alignment_information_path, 'wb') as handle:
@@ -223,18 +223,18 @@ class GetCounts:
 
 			self.super_logger.info('Average time to process a BamFile : %f min', np.mean(times))
 
-			with open(self.last_treated_bam_file, 'wb') as f:  
+			with open(self.last_treated_bam_file, 'wb') as f:
 				pickle.dump(idx, f)
-			
+
 			with open(self.alignment_information_path, 'wb') as handle:
 				pickle.dump(alignment_information, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']
 			header.extend(list_bam_files_order)
 			to_write_list = []
-			
+
 			for peptide_key, info_peptide in alignment_information.items():
-				
+
 				split_key = peptide_key.split('_')
 				peptide = split_key[0]
 				position = split_key[1]
@@ -250,7 +250,7 @@ class GetCounts:
 			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum().reset_index()
 			df_counts.sort_values(by=['Peptide Type'])
 			df_counts.to_csv(self.count_path, header=True, index=False)
-			
+
 			df_alignments.to_csv(self.count_all_alignments_path, index=False, header=True)
 
 			self.super_logger.info('Counts Information saved to : %s ', self.count_path)
@@ -276,7 +276,7 @@ class GetCounts:
 
 	def is_contained(self, word, text):
 		return bool(re.search(f'(?<=\w){word}(?=\w)', text))
-	
+
 	def has_digits(self, input_string):
 		return bool(re.search(r'\d', input_string))
 
@@ -286,7 +286,7 @@ class GetCounts:
 		no_digits = []
 		chr_string = 'chr' in references[0]
 		not_associated_chr_ref_bam_file = []
-		
+
 		for chr in references:
 			l = [x for x in chr if x.isdigit()]
 			key = ''.join(l)
@@ -297,7 +297,7 @@ class GetCounts:
 				digits_bam_file_search[key].append(chr)
 			except KeyError:
 				digits_bam_file_search[key] = [chr]
-				
+
 		for index, digits_reference in enumerate(digits_bam_file_BQ_reference):
 			references_chr = references_chrs[index]
 			try:
@@ -314,7 +314,7 @@ class GetCounts:
 						not_associated_chr_ref_bam_file.append(references_chr)
 				else:
 					reference_correspondence[references_chr] = chr_bam_file[0]
-				
+
 			except:
 				in_ = False
 				if not self.has_digits(digits_reference):
@@ -332,14 +332,14 @@ class GetCounts:
 									no_digits.pop(index)
 							if in_:
 								break
-								
+
 					else:
 						for index, i in enumerate(no_digits):
 							if ('MT' in i or 'M' in i) and references_chr == 'chrM':
 								reference_correspondence[references_chr] = i
 								in_ = True
 								no_digits.pop(index)
-							else: 
+							else:
 								if i.lower() == references_chr.lower():
 									reference_correspondence[references_chr] = i
 									in_ = True

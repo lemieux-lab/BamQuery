@@ -9,7 +9,7 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
 def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
-		
+
 	name_sample = bam[0]
 	bam_file = bam[1][0]
 	library = bam[1][1]
@@ -34,20 +34,20 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 	pos = alignment.split(':')[1].split('|')
 	pos_set = []
 	splice_pos = set()
-	
+
 	for i, chunck in enumerate(pos):
 		ini = int(chunck.split('-')[0])
 		fini = int(chunck.split('-')[1])
 		aux = set(range(ini, fini+1))
 		pos_set.extend(aux)
-	
+
 		if i != 0:
 			splice_pos.add(ini)
 		if len(pos) > 1 and i != len(pos) -1:
 			splice_pos.add(fini)
 
 	counts = get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequences, pos_set, splice_pos, overlap)
-	
+
 	for index, sequence in enumerate(sequences):
 		try:
 			count = counts[index]
@@ -68,7 +68,7 @@ def set_strand_read(strand):
 		return '+'
 
 def get_ranges_aux(cigar, start, len_seq):
-	
+
 	rang = [0]*len_seq
 	splices_sites = set()
 	rx = re.findall('(\d+)([MISDNX=])?', cigar)
@@ -78,11 +78,11 @@ def get_ranges_aux(cigar, start, len_seq):
 	for index in rx:
 		operation = index[1]
 		length = int(index[0])
-		
+
 		if ('S' in operation):
 			end = length
 			lastIndex += end
-			
+
 		elif ('M' in index) or ('=' in index) or ('X' in index) :
 			end = length
 
@@ -91,7 +91,7 @@ def get_ranges_aux(cigar, start, len_seq):
 				start = start + 1
 
 			lastIndex = lastIndex + end
-			
+
 		elif ('N' in index) or ('D' in index):
 			splices_sites.add(start)
 			start = start + length
@@ -103,20 +103,20 @@ def get_ranges_aux(cigar, start, len_seq):
 	return rang, splices_sites, indels
 
 def get_ranges(cigar, start, len_seq):
-	
+
 	rang = []
 	splices_sites = set()
 	rx = re.findall('(\d+)([MISDNX=])?', cigar)
 	indels = []
-	
+
 	for index in rx:
 		operation = index[1]
 		length = int(index[0])
-		
+
 		if ('S' in operation):
 			end = length
 			rang.extend([0]*length)
-			
+
 		elif ('M' in index) or ('=' in index) or ('X' in index) :
 			end = start + length
 			rang.extend(range(start,end))
@@ -130,7 +130,7 @@ def get_ranges(cigar, start, len_seq):
 		elif ('I' in index):
 			indels.extend([len(rang)+i for i in range(0, length)])
 			rang.extend([0]*length)
-			
+
 	return rang, splices_sites, indels
 
 def remove_at(i, s):
@@ -151,11 +151,11 @@ def define_read_in(read, pos_set, splice_pos, overlap_in):
 		splices_sites = splices_sites - splice_pos
 		overlap = set(rang_).intersection(pos_set)
 		percentage_overlap = len(overlap)/len(pos_set)
-		
+
 		if len(indels) > 0:
 			for indel in indels:
 				seq = remove_at(indel, seq)
-		
+
 		if len(splices_sites.intersection(sorted(pos_set)[1:-1])) == 0 and percentage_overlap >= 0.6:
 			index_ini = rang_.index(min(overlap))
 			index_fin = rang_.index(max(overlap)) + 1
@@ -166,7 +166,7 @@ def define_read_in(read, pos_set, splice_pos, overlap_in):
 			else:
 				if percentage_overlap == 1.0 :
 					return name, strand, seq_overlap, percentage_overlap
-		
+
 
 def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequences, pos_set, splice_pos, overlap):
 
@@ -174,19 +174,19 @@ def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequen
 
 	library = library.lower()
 	sens = sens.lower()
-	
+
 	def set_count(info_read, cs):
 
 		name, strand, seq_overlap, percentage_overlap = info_read
-		
+
 		if seq_overlap in cs and name not in set_names_reads:
 			set_names_reads.add(name)
-			return percentage_overlap 
+			return percentage_overlap
 
 	if library == 'unstranded' or sens == 'unstranded':
 		try:
 			count_1 = pysam.view("-F0X100", bam_file, region_to_query).split('\n')
-		except pysam.utils.SamtoolsError: 
+		except pysam.utils.SamtoolsError:
 			return -1
 
 		reads_overlaping_area = list(map(define_read_in, count_1, repeat(pos_set), repeat(splice_pos), repeat(overlap)))
@@ -197,15 +197,15 @@ def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequen
 			contReads = 0
 			set_names_reads = set()
 			rcmcs = uf.reverseComplement(seq)
-			
+
 			sum_overlap_seq = list(map(set_count, reads_overlaping_area, repeat(seq)))
 			sum_overlap_seq = sum(list(filter(None, sum_overlap_seq)))
 
 			sum_overlap_rcmcs= list(map(set_count, reads_overlaping_area, repeat(rcmcs)))
 			sum_overlap_rcmcs = sum(list(filter(None, sum_overlap_rcmcs)))
-			
+
 			contReads = sum_overlap_seq + sum_overlap_rcmcs
-			
+
 			contReads_to_return.append(contReads)
 
 	elif library == 'single-end':
@@ -213,12 +213,12 @@ def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequen
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
 			try:
 				count_1 = pysam.view("-F0X110", bam_file, region_to_query).split('\n')
-			except pysam.utils.SamtoolsError: 
+			except pysam.utils.SamtoolsError:
 				return -1
 		elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
 			try:
 				count_1 = pysam.view("-F0X100", "-f0X10", bam_file, region_to_query).split('\n')
-			except pysam.utils.SamtoolsError: 
+			except pysam.utils.SamtoolsError:
 				return -1
 
 		reads_overlaping_area = list(map(define_read_in, count_1, repeat(pos_set), repeat(splice_pos), repeat(overlap)))
@@ -235,20 +235,20 @@ def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequen
 			contReads = sum(list(filter(None, sum_overlap_seq)))
 
 			contReads_to_return.append(contReads)
-			
+
 	elif library == 'pair-end':
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
 			try:
 				count_1 = pysam.view("-F0X100", "-f0X60", bam_file, region_to_query).split('\n')
 				count_2 = pysam.view("-F0X100", "-f0X90", bam_file, region_to_query).split('\n')
-			except pysam.utils.SamtoolsError: 
+			except pysam.utils.SamtoolsError:
 				return -1
 
 		elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
 			try:
 				count_1 = pysam.view("-F0X100", "-f0X50", bam_file, region_to_query).split('\n')
 				count_2 = pysam.view("-F0X100", "-f0XA0", bam_file, region_to_query).split('\n')
-			except pysam.utils.SamtoolsError: 
+			except pysam.utils.SamtoolsError:
 				return -1
 
 		reads_overlaping_area_count_1 = list(map(define_read_in, count_1, repeat(pos_set), repeat(splice_pos), repeat(overlap)))
@@ -281,5 +281,3 @@ def get_depth_with_view(region_to_query, bam_file, library, sens, strand, sequen
 
 	# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
 	return contReads_to_return
-
-	

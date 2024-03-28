@@ -7,13 +7,13 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 
 	path_to_output_folder = '/'.join(path_to_input_folder.split('/')[:-2])+'/output/'
-	
+
 	try:
 		os.mkdir(path_to_output_folder)
 		print ("Successfully created the directory ", path_to_output_folder)
 	except OSError:
 		print ("The output directory already exists in this path. \nBamQuery analysis will continue where it left." )
-	
+
 	path_to_logs_folder = path_to_output_folder+'logs/'
 	try:
 		os.mkdir(path_to_logs_folder)
@@ -24,8 +24,8 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 
 
 	def setup_logger(name, log_file, mode, level=logging.INFO):
-		
-		handler = logging.FileHandler(log_file, mode=mode)        
+
+		handler = logging.FileHandler(log_file, mode=mode)
 		handler.setFormatter(formatter)
 
 		logger = logging.getLogger(name)
@@ -33,27 +33,27 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 		logger.addHandler(handler)
 
 		return logger, handler
-	
+
 	# First logger
 	nameLog = path_to_logs_folder+'BamQuery_Res_'+name_exp+'.log'
 	exists = os.path.exists(nameLog)
-	
+
 	super_logger, handler_super_logger = setup_logger('Super_Logger', nameLog, 'a')
 	if exists:
 		super_logger.info('')
 		super_logger.info('')
 		super_logger.info('BamQuery analysis will continue where it left....')
-	
+
 	# Second logger
 	nameLog = path_to_logs_folder+'Information_BAM_directories.log'
 	bam_files_logger, handler_bam_files_logger = setup_logger('Bam_Files_Logger', nameLog, 'a')
-	
+
 	if mode == 'translation':
-		paths = [path_to_output_folder+'res_translation/temps_files/', 
+		paths = [path_to_output_folder+'res_translation/temps_files/',
 		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/',
-		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/', 
+		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/',
 		path_to_output_folder+'res_translation/BED_files/', path_to_output_folder+'res_translation/AUX_files/']
-		
+
 		for path in paths:
 			try:
 				os.makedirs(path)
@@ -61,7 +61,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 				pass
 	elif sc:
 		paths = [path_to_output_folder+'res/temps_files/']
-		
+
 		for path in paths:
 			try:
 				os.makedirs(path)
@@ -70,10 +70,10 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 
 	elif not light :
 
-		paths = [path_to_output_folder+'res/BED_files/', 
-		path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/', 
-		path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/', 
-		path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/', 
+		paths = [path_to_output_folder+'res/BED_files/',
+		path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/',
+		path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/',
+		path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/',
 		path_to_output_folder+'plots/biotypes/biotype_by_sample_group/by_peptide_type/',
 		path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/all_peptides/',
 		path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/by_peptide_type/',
@@ -90,7 +90,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 
 	else:
 		paths = [path_to_output_folder+'res_light/temps_files/', path_to_output_folder+'res_light/AUX_files/']
-		
+
 		for path in paths:
 			try:
 				os.makedirs(path)
@@ -110,8 +110,8 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 	except OSError:
 		pass
 
-	
-	
+
+
 	super_logger.info('Path to input folder : %s ', path_to_input_folder)
 	super_logger.info('Path to output folder : %s ', path_to_output_folder)
 	super_logger.info('=============== # ===================')

@@ -14,16 +14,16 @@ files_with_not_permission = []
 
 
 class NoTraceBackWithLineNumber(Exception):
-    def __init__(self, msg):
-        try:
-            ln = sys.exc_info()[-1].tb_lineno
-        except AttributeError:
-            ln = inspect.currentframe().f_back.f_lineno
-        self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
-        sys.exit(self)
+	def __init__(self, msg):
+		try:
+			ln = sys.exc_info()[-1].tb_lineno
+		except AttributeError:
+			ln = inspect.currentframe().f_back.f_lineno
+		self.args = "{0.__name__} (line {1}): {2}".format(type(self), ln, msg),
+		sys.exit(self)
 
 class NeedMoreInfo(NoTraceBackWithLineNumber):
-    pass
+	pass
 
 
 class GetInformationBamFiles:
