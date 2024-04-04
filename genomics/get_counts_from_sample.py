@@ -147,12 +147,11 @@ def remove_at(i, s):
 
 def define_read_in(reads, pos_set, splice_pos, overlap_in):
 	for read in reads:
-		split_read = read.split('\t')
-		name = split_read[0]
-		strand = set_strand_read(split_read[1])
-		start = int(split_read[3])
-		seq = split_read[9]
-		cigar = split_read[5]
+		name = read.query_name
+		strand = '+' if read.is_forward else '-'
+		start = read.reference_start + 1
+		seq = read.query_sequence
+		cigar = read.cigarstring
 
 		rang_, splices_sites, indels = get_ranges(cigar, start, len(seq))
 
@@ -199,13 +198,19 @@ def get_depth_with_view(
 			set_names_reads.add(name)
 			return percentage_overlap
 
-	if library == 'unstranded' or sens == 'unstranded':
-		try:
-			count_1 = pysam.view("-F0X100", bam_file, region_to_query).split('\n')
-		except pysam.utils.SamtoolsError:
-			return -1
+	bam = pysam.AlignmentFile(bam_file, mode = 'rb')
 
-		reads = [read for read in count_1 if len(read) > 0]
+	try:
+		reads = bam.fetch(region=region_to_query)
+	except pysam.utils.SamtoolsError:
+		return -1
+
+	reads = (read for read in reads if not read.is_unmapped)
+	# equivalent to samtools view flag '-F0X4'
+
+	if library == 'unstranded' or sens == 'unstranded':
+		reads = (read for read in reads if not read.is_secondary)
+		# equivalent to samtools view flag '-F0X100'
 
 		reads_overlaping_area = list(define_read_in(reads, pos_set, splice_pos, overlap))
 		reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
@@ -226,19 +231,13 @@ def get_depth_with_view(
 			contReads_to_return.append(contReads)
 
 	elif library == 'single-end':
-
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
-			try:
-				count_1 = pysam.view("-F0X110", bam_file, region_to_query).split('\n')
-			except pysam.utils.SamtoolsError:
-				return -1
-		elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
-			try:
-				count_1 = pysam.view("-F0X100", "-f0X10", bam_file, region_to_query).split('\n')
-			except pysam.utils.SamtoolsError:
-				return -1
+			reads = (read for read in reads if not read.is_secondary and read.is_forward)
+			# equivalent to samtools view flag '-F0X110'
 
-		reads = [read for read in count_1 if len(read) > 0]
+		elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
+			reads = (read for read in reads if not read.is_secondary and read.is_reverse)
+			# equivalent to samtools view flags '-F0X100' and '-f0X10'
 
 		reads_overlaping_area = list(define_read_in(reads, pos_set, splice_pos, overlap))
 		reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
@@ -255,22 +254,20 @@ def get_depth_with_view(
 			contReads_to_return.append(contReads)
 
 	elif library == 'pair-end':
+		reads = [read for read in reads if not read.is_secondary]
+		# equivalent to samtools view flag '-F0X100'
+
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
-			try:
-				count_1 = pysam.view("-F0X100", "-f0X60", bam_file, region_to_query).split('\n')
-				count_2 = pysam.view("-F0X100", "-f0X90", bam_file, region_to_query).split('\n')
-			except pysam.utils.SamtoolsError:
-				return -1
+			reads_1 = (read for read in reads if read.is_read1 and read.mate_is_reverse)
+			# equivalent to samtools view flag '-f0X60'
+			reads_2 = (read for read in reads if read.is_read2 and read.is_reverse)
+			# equivalent to samtools view flag '-f0X90'
 
 		elif ((strand == '-' and sens == 'forward') or (strand == '+' and sens == 'reverse')):
-			try:
-				count_1 = pysam.view("-F0X100", "-f0X50", bam_file, region_to_query).split('\n')
-				count_2 = pysam.view("-F0X100", "-f0XA0", bam_file, region_to_query).split('\n')
-			except pysam.utils.SamtoolsError:
-				return -1
-
-		reads_1 = [read for read in count_1 if len(read) > 0]
-		reads_2 = [read for read in count_1 if len(read) > 0]
+			reads_1 = (read for read in reads if read.is_read1 and read.is_reverse)
+			# equivalent to samtools view flag '-f0X50'
+			reads_2 = (read for read in reads if read.is_read2 and read.mate_is_reverse)
+			# equivalent to samtools view flag '-f0XA0'
 
 		reads_overlaping_area_count_1 = list(define_read_in(reads_1, pos_set, splice_pos, overlap))
 		reads_overlaping_area_count_1.sort(key=itemgetter(-1), reverse=True)
@@ -297,6 +294,8 @@ def get_depth_with_view(
 
 			contReads = sum_overlap_seq + sum_overlap_rcmcs
 			contReads_to_return.append(contReads)
+
+	bam.close()
 
 	# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
 	return contReads_to_return
