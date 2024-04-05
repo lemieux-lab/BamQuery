@@ -227,7 +227,7 @@ def get_depth_with_view(
 		overlap
 	):
 
-	contReads_to_return = []
+	count_reads_to_return = []
 
 	library = library.lower()
 	sens = sens.lower()
@@ -256,7 +256,7 @@ def get_depth_with_view(
 		reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
 
 		for seq in sequences:
-			contReads = 0
+			count_reads = 0
 			set_names_reads = set()
 			rcmcs = uf.reverseComplement(seq)
 
@@ -266,9 +266,9 @@ def get_depth_with_view(
 			sum_overlap_rcmcs= list(map(set_count, reads_overlaping_area, repeat(rcmcs)))
 			sum_overlap_rcmcs = sum(list(filter(None, sum_overlap_rcmcs)))
 
-			contReads = sum_overlap_seq + sum_overlap_rcmcs
+			count_reads = sum_overlap_seq + sum_overlap_rcmcs
 
-			contReads_to_return.append(contReads)
+			count_reads_to_return.append(count_reads)
 
 	elif library == 'single-end':
 		if ((strand == '+' and sens == 'forward') or (strand == '-' and sens == 'reverse')):
@@ -286,12 +286,12 @@ def get_depth_with_view(
 			if strand == '-':
 				seq = uf.reverseComplement(seq)
 
-			contReads = 0
+			count_reads = 0
 			set_names_reads = set()
 			sum_overlap_seq = list(map(set_count, reads_overlaping_area, repeat(seq)))
-			contReads = sum(list(filter(None, sum_overlap_seq)))
+			count_reads = sum(list(filter(None, sum_overlap_seq)))
 
-			contReads_to_return.append(contReads)
+			count_reads_to_return.append(count_reads)
 
 	elif library == 'pair-end':
 		reads = [read for read in reads if not read.is_secondary]
@@ -316,7 +316,7 @@ def get_depth_with_view(
 		reads_overlaping_area_count_2.sort(key=itemgetter(-1), reverse=True)
 
 		for seq in sequences:
-			contReads = 0
+			count_reads = 0
 			set_names_reads = set()
 			rcmcs_aux = uf.reverseComplement(seq)
 
@@ -332,8 +332,8 @@ def get_depth_with_view(
 			sum_overlap_rcmcs= list(map(set_count, reads_overlaping_area_count_2, repeat(rcmcs)))
 			sum_overlap_rcmcs = sum(list(filter(None, sum_overlap_rcmcs)))
 
-			contReads = sum_overlap_seq + sum_overlap_rcmcs
-			contReads_to_return.append(contReads)
+			count_reads = sum_overlap_seq + sum_overlap_rcmcs
+			count_reads_to_return.append(count_reads)
 
 	# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
-	return contReads_to_return
+	return count_reads_to_return
