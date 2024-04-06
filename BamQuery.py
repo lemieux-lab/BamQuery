@@ -127,7 +127,7 @@ class BamQuery:
 			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
 			
-			writer.save()
+			writer.close()
 			self.super_logger.info('========== Get Norm RNA : Done! ============ ')
 
 		elif (not self.light and not exists_normal and exists_light):
@@ -165,7 +165,7 @@ class BamQuery:
 				df_all_alignments_rna.to_csv(writer, index=False, header = 0)
 			df_counts_rna.to_excel(writer, sheet_name='Read count RNA-seq by peptide',index=False)
 			def_norm_rna.to_excel(writer, sheet_name='log10(RPHM) RNA-seq by peptide',index=False)
-			writer.save()
+			writer.close()
 			
 			plots.get_heat_map(df_counts_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/', self.mode, path_temps_file, self.name_exp, '_rna_counts', False, self.th_out)
 			plots.get_heat_map(def_norm_rna, self.path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/', self.mode, path_temps_file, self.name_exp, '_rna_norm', True, self.th_out)
@@ -219,7 +219,7 @@ class BamQuery:
 			df_counts_ribo.to_excel(writer, sheet_name='Read count Ribo-seq by peptide',index=False)
 			def_norm_ribo.to_excel(writer, sheet_name='log10(RPHM) Ribo-seq by peptide',index=False)
 			
-			writer.save()
+			writer.close()
 			self.super_logger.info('========== Get Norm Ribo : Done! ============ ')
 			
 

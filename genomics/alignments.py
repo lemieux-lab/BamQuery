@@ -333,7 +333,7 @@ def write_xls_with_alignments_info(path_to_output_folder_alignments, name_exp, d
 		writer.book.use_zip64()
 		df1.to_excel(writer, sheet_name='Perfect Alignments', index=None)
 		df3.to_excel(writer, sheet_name='COSMIC Information', index=None)
-		writer.save()
+		writer.close()
 	else:
 		df1.to_csv(path_to_output_folder_alignments+name_exp+'_info_alignments.csv', index=None)
 		df3.to_csv(path_to_output_folder_alignments+name_exp+'_cosmic_information.csv', index=None)
