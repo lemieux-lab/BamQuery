@@ -232,13 +232,16 @@ def get_depth_with_view(
 	library = library.lower()
 	sens = sens.lower()
 
-	def set_count(info_read, cs):
+	def set_count(reads_overlaping_area, cs_list):
+		set_names_reads = set()
 
-		name, strand, seq_overlap, percentage_overlap = info_read
+		for info_read in reads_overlaping_area:
+			name, strand, seq_overlap, percentage_overlap = info_read
 
-		if seq_overlap in cs and name not in set_names_reads:
-			set_names_reads.add(name)
-			return percentage_overlap
+			for cs in cs_list:
+				if (name not in set_names_reads) and (seq_overlap in cs):
+					set_names_reads.add(name)
+					yield percentage_overlap
 
 	try:
 		reads = bam.fetch(region=region_to_query)
@@ -253,21 +256,11 @@ def get_depth_with_view(
 		# equivalent to samtools view flag '-F0X100'
 
 		reads_overlaping_area = list(define_read_in(reads, pos_set, splice_pos, overlap))
-		reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
+		#reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
 
 		for seq in sequences:
-			count_reads = 0
-			set_names_reads = set()
 			rcmcs = uf.reverseComplement(seq)
-
-			sum_overlap_seq = list(map(set_count, reads_overlaping_area, repeat(seq)))
-			sum_overlap_seq = sum(list(filter(None, sum_overlap_seq)))
-
-			sum_overlap_rcmcs= list(map(set_count, reads_overlaping_area, repeat(rcmcs)))
-			sum_overlap_rcmcs = sum(list(filter(None, sum_overlap_rcmcs)))
-
-			count_reads = sum_overlap_seq + sum_overlap_rcmcs
-
+			count_reads = sum(set_count(reads_overlaping_area, [seq, rcmcs]))
 			count_reads_to_return.append(count_reads)
 
 	elif library == 'single-end':
@@ -280,17 +273,12 @@ def get_depth_with_view(
 			# equivalent to samtools view flags '-F0X100' and '-f0X10'
 
 		reads_overlaping_area = list(define_read_in(reads, pos_set, splice_pos, overlap))
-		reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
+		#reads_overlaping_area.sort(key=itemgetter(-1), reverse=True)
 
 		for seq in sequences:
 			if strand == '-':
 				seq = uf.reverseComplement(seq)
-
-			count_reads = 0
-			set_names_reads = set()
-			sum_overlap_seq = list(map(set_count, reads_overlaping_area, repeat(seq)))
-			count_reads = sum(list(filter(None, sum_overlap_seq)))
-
+			count_reads = sum(set_count(reads_overlaping_area, [seq]))
 			count_reads_to_return.append(count_reads)
 
 	elif library == 'pair-end':
@@ -310,29 +298,17 @@ def get_depth_with_view(
 			# equivalent to samtools view flag '-f0XA0'
 
 		reads_overlaping_area_count_1 = list(define_read_in(reads_1, pos_set, splice_pos, overlap))
-		reads_overlaping_area_count_1.sort(key=itemgetter(-1), reverse=True)
+		#reads_overlaping_area_count_1.sort(key=itemgetter(-1), reverse=True)
 
 		reads_overlaping_area_count_2 = list(define_read_in(reads_2, pos_set, splice_pos, overlap))
-		reads_overlaping_area_count_2.sort(key=itemgetter(-1), reverse=True)
+		#reads_overlaping_area_count_2.sort(key=itemgetter(-1), reverse=True)
+
+		reads_overlaping_area = reads_overlaping_area_count_1 + reads_overlaping_area_count_2
 
 		for seq in sequences:
-			count_reads = 0
-			set_names_reads = set()
-			rcmcs_aux = uf.reverseComplement(seq)
-
 			if strand == '-':
-				seq = rcmcs_aux
-				rcmcs = rcmcs_aux
-			else:
-				rcmcs = seq
-
-			sum_overlap_seq = list(map(set_count, reads_overlaping_area_count_1, repeat(seq)))
-			sum_overlap_seq = sum(list(filter(None, sum_overlap_seq)))
-
-			sum_overlap_rcmcs= list(map(set_count, reads_overlaping_area_count_2, repeat(rcmcs)))
-			sum_overlap_rcmcs = sum(list(filter(None, sum_overlap_rcmcs)))
-
-			count_reads = sum_overlap_seq + sum_overlap_rcmcs
+				seq = uf.reverseComplement(seq)
+			count_reads = sum(set_count(reads_overlaping_area, [seq]))
 			count_reads_to_return.append(count_reads)
 
 	# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
