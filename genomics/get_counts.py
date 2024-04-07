@@ -247,7 +247,7 @@ class GetCounts:
 				to_write_list.append(to_add)
 
 			df_alignments = pd.DataFrame(to_write_list, columns=header)
-			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum().reset_index()
+			df_counts = df_alignments.groupby(['Peptide Type', 'Peptide']).sum(numeric_only=True).reset_index()
 			df_counts.sort_values(by=['Peptide Type'])
 			df_counts.to_csv(self.count_path, header=True, index=False)
 
