@@ -11,10 +11,29 @@ import re
 import sys
 import time
 import warnings
+from concurrent.futures.process import _chain_from_iterable_of_lists
 from pathos.multiprocessing import ProcessPool
 
 import utils.useful_functions as uf
 from genomics.get_counts_from_sample import get_counts_sample
+
+if sys.version_info.minor >= 12:
+	from itertools import batched
+
+else:
+	from itertools import islice
+
+	def batched(iterable, n):
+		if n < 1:
+			raise ValueError('n must be at least one')
+		it = iter(iterable)
+		# starting from python v3.8, can use:
+		# while batch := tuple(islice(it, n)):
+		#	yield batch
+		batch = tuple(itertools.islice(it, n))
+		while batch:
+			yield batch
+			batch = tuple(islice(it, n))
 
 warnings.filterwarnings("ignore")
 os.environ["REF_PATH"] = "/dev/null"
@@ -207,14 +226,18 @@ class GetCounts:
 						bam_file_path
 					)
 
-					results = pool.map(
+					chunksize=100
+
+					iresults = pool.imap(
 						get_counts_sample,
 						itertools.repeat(bam_file),
-						keys,
-						values,
+						batched(keys, chunksize),
+						batched(values, chunksize),
 						itertools.repeat(reference),
 						itertools.repeat(overlap)
 					)
+
+					results = list(_chain_from_iterable_of_lists(iresults))
 
 					message = "was successfully processed"
 

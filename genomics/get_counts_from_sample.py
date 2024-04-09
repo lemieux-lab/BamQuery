@@ -14,19 +14,51 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 	library = bam[1][1]
 	sens = bam[1][2]
 
+	bam_handle = pysam.AlignmentFile(bam_file, mode = 'rb')
+
+	ires = map(
+		_get_counts_sample,
+		repeat(name_sample),
+		repeat(library),
+		repeat(sens),
+		repeat(bam_handle),
+		peptide_alignment,
+		sequences,
+		repeat(references),
+		repeat(overlap)
+	)
+
+	res = [list(x) for x in ires]
+
+	bam_handle.close()
+
+	return res
+
+def _get_counts_sample(
+		name_sample,
+		library,
+		sens,
+		bam_handle,
+		peptide_alignment,
+		sequences,
+		references,
+		overlap
+	):
+
 	count = 0
 	peptide = peptide_alignment.split('_')[0]
 	alignment = peptide_alignment.split('_')[1]
 	strand = peptide_alignment.split('_')[2]
-	to_return = [[peptide, alignment, name_sample, strand]]
+
+	yield [peptide, alignment, name_sample, strand]
 
 	chr = alignment.split(':')[0]
 	try:
 		chr = references[chr]
 	except:
 		for sequence in sequences:
-			to_return.append([0, sequence])
-		return to_return
+			yield [0, sequence]
+		return
 
 	region_to_query = chr+':'+alignment.split(':')[1].split('-')[0]+'-'+alignment.split(':')[1].split('-')[-1]
 
@@ -47,7 +79,7 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 
 	counts = get_depth_with_view(
 		region_to_query,
-		bam_file,
+		bam_handle,
 		library,
 		sens,
 		strand,
@@ -62,8 +94,7 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 			count = counts[index]
 		except TypeError:
 			count = -1
-		to_return.append([count, sequence])
-	return to_return
+		yield [count, sequence]
 
 
 def set_strand_read(strand):
@@ -179,7 +210,7 @@ def define_read_in(reads, pos_set, splice_pos, overlap_in):
 
 def get_depth_with_view(
 		region_to_query,
-		bam_file,
+		bam,
 		library,
 		sens,
 		strand,
@@ -201,8 +232,6 @@ def get_depth_with_view(
 		if seq_overlap in cs and name not in set_names_reads:
 			set_names_reads.add(name)
 			return percentage_overlap
-
-	bam = pysam.AlignmentFile(bam_file, mode = 'rb')
 
 	try:
 		reads = bam.fetch(region=region_to_query)
@@ -298,8 +327,6 @@ def get_depth_with_view(
 
 			contReads = sum_overlap_seq + sum_overlap_rcmcs
 			contReads_to_return.append(contReads)
-
-	bam.close()
 
 	# reading htslib https://github.com/DecodeGenetics/graphtyper/issues/57
 	return contReads_to_return
