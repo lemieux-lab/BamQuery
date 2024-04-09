@@ -1,6 +1,7 @@
 import utils.useful_functions as uf
 import pysam, time
 import re
+from collections import defaultdict
 from itertools import repeat
 from operator import itemgetter
 
@@ -181,6 +182,8 @@ def remove_at(i, s):
 	return s[:i] + s[i+1:]
 
 def define_read_in(reads, pos_set, splice_pos, overlap_in):
+	reads_dct = defaultdict(list)
+
 	for read in reads:
 		name = read.query_name
 		strand = '+' if read.is_forward else '-'
@@ -188,6 +191,9 @@ def define_read_in(reads, pos_set, splice_pos, overlap_in):
 		seq = read.query_sequence
 		cigar = tuple(read.cigartuples)
 
+		reads_dct[(strand, start, seq, cigar)].append(name)
+
+	for (strand, start, seq, cigar), names in reads_dct.items():
 		rang_, splices_sites, indels = get_ranges(cigar, start, len(seq))
 
 		splices_sites = splices_sites - splice_pos
@@ -206,7 +212,8 @@ def define_read_in(reads, pos_set, splice_pos, overlap_in):
 				percentage_overlap = 1.0
 
 			if percentage_overlap == 1.0:
-				yield name, strand, seq_overlap, percentage_overlap
+				for name in names:
+					yield name, strand, seq_overlap, percentage_overlap
 
 def get_depth_with_view(
 		region_to_query,
