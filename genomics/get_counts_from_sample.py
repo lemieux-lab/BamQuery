@@ -168,13 +168,11 @@ def define_read_in(reads, pos_set, splice_pos, overlap_in):
 			index_ini = rang_.index(min(overlap))
 			index_fin = rang_.index(max(overlap)) + 1
 			seq_overlap = seq[index_ini:index_fin]
-			if overlap_in:
-				if percentage_overlap >= 0.6 :
-					yield name, strand, seq_overlap, 1
-			else:
-				if percentage_overlap == 1.0 :
-					yield name, strand, seq_overlap, percentage_overlap
+			if overlap_in and percentage_overlap >= 0.6 :
+				percentage_overlap = 1.0
 
+			if percentage_overlap == 1.0:
+				yield name, strand, seq_overlap, percentage_overlap
 
 def get_depth_with_view(
 		region_to_query,
