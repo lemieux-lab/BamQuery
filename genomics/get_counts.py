@@ -1,4 +1,3 @@
-import copy
 import itertools
 import gc
 import logging
@@ -248,7 +247,6 @@ class GetCounts:
 								alignment = count_align[1]
 								sample = count_align[2]
 								strand = count_align[3]
-								to_print = [peptide, alignment, sample]
 
 							else:
 								count = count_align[0]
@@ -256,8 +254,6 @@ class GetCounts:
 									message = "couldn't be processed. Failed to open, permission denied"
 
 								sequence = count_align[1]
-								to_print_aux = copy.deepcopy(to_print)
-								to_print_aux.append(count)
 
 								index_sample = get_index(sample)
 
