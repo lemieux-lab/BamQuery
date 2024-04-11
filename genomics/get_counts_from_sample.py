@@ -10,7 +10,6 @@ __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
 
 
 def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
-	name_sample = bam[0]
 	bam_file = bam[1][0]
 	library = bam[1][1]
 	sens = bam[1][2]
@@ -19,7 +18,6 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 
 	ires = map(
 		_get_counts_sample,
-		repeat(name_sample),
 		repeat(library),
 		repeat(sens),
 		repeat(bam_handle),
@@ -36,7 +34,6 @@ def get_counts_sample(bam, peptide_alignment, sequences, references, overlap):
 	return res
 
 def _get_counts_sample(
-		name_sample,
 		library,
 		sens,
 		bam_handle,
@@ -47,11 +44,7 @@ def _get_counts_sample(
 	):
 
 	count = 0
-	peptide = peptide_alignment.split('_')[0]
-	alignment = peptide_alignment.split('_')[1]
-	strand = peptide_alignment.split('_')[2]
-
-	yield [peptide, alignment, name_sample, strand]
+	peptide, alignment, strand = peptide_alignment.split('_')
 
 	chr = alignment.split(':')[0]
 	try:

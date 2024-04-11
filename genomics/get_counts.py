@@ -238,30 +238,22 @@ class GetCounts:
 
 					results = list(_chain_from_iterable_of_lists(iresults))
 
+					sample = bam_file[0]
+
 					message = "was successfully processed"
+					for peptide_alignment, res in zip(keys, results):
+						peptide, alignment, strand = peptide_alignment.split('_')
 
-					for res in results:
-						for index, count_align in enumerate(res):
-							if index == 0:
-								peptide = count_align[0]
-								alignment = count_align[1]
-								sample = count_align[2]
-								strand = count_align[3]
-
-							else:
-								count = count_align[0]
+						for count, sequence in res:
+							if True:
 								if count == -1:
 									message = "couldn't be processed. Failed to open, permission denied"
-
-								sequence = count_align[1]
-
-								index_sample = get_index(sample)
-
 								key = peptide+'_'+alignment+'_'+sequence
+
 								if len(alignment_information[key][-1]) == 0:
 									alignment_information[key][-1] = [0]*total_samples
 
-								alignment_information[key][-1][index_sample-1] = count
+								alignment_information[key][-1][idx] = count
 
 					pool.clear()
 
