@@ -245,15 +245,14 @@ class GetCounts:
 						peptide, alignment, strand = peptide_alignment.split('_')
 
 						for count, sequence in res:
-							if True:
-								if count == -1:
-									message = "couldn't be processed. Failed to open, permission denied"
-								key = peptide+'_'+alignment+'_'+sequence
+							if count == -1:
+								message = "couldn't be processed. Failed to open, permission denied"
+							key = peptide+'_'+alignment+'_'+sequence
 
-								if len(alignment_information[key][-1]) == 0:
-									alignment_information[key][-1] = [0]*total_samples
+							if len(alignment_information[key][-1]) == 0:
+								alignment_information[key][-1] = [0]*total_samples
 
-								alignment_information[key][-1][idx] = count
+							alignment_information[key][-1][idx] = count
 
 					pool.clear()
 
