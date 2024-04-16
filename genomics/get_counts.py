@@ -204,47 +204,46 @@ class GetCounts:
 					)
 
 			def process_bam(bam_file):
-				if True:
-					t0_bam_file = time.time()
+				t0_bam_file = time.time()
 
-					bam_file_path = bam_file[1][0]
-					try:
-						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb")
-						references = bam_file_ref.header.references
-						bam_file_ref.close()
-					except ValueError as e:
-						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb", check_sq=False)
-						references = set()
-						for alignment in bam_file_ref.fetch():
-							references.add(bam_file_ref.getrname(alignment.reference_id))
-						bam_file_ref.close()
+				bam_file_path = bam_file[1][0]
+				try:
+					bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb")
+					references = bam_file_ref.header.references
+					bam_file_ref.close()
+				except ValueError as e:
+					bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb", check_sq=False)
+					references = set()
+					for alignment in bam_file_ref.fetch():
+						references.add(bam_file_ref.getrname(alignment.reference_id))
+					bam_file_ref.close()
 
-					reference = self.get_corresponding_references(
-						list(references),
-						references_chrs,
-						digits_bam_file_BQ_reference,
-						bam_file_path
-					)
+				reference = self.get_corresponding_references(
+					list(references),
+					references_chrs,
+					digits_bam_file_BQ_reference,
+					bam_file_path
+				)
 
-					chunksize=100
+				chunksize=100
 
-					iresults = pool.imap(
-						get_counts_sample,
-						itertools.repeat(bam_file),
-						batched(keys, chunksize),
-						batched(values, chunksize),
-						itertools.repeat(reference),
-						itertools.repeat(overlap)
-					)
+				iresults = pool.imap(
+					get_counts_sample,
+					itertools.repeat(bam_file),
+					batched(keys, chunksize),
+					batched(values, chunksize),
+					itertools.repeat(reference),
+					itertools.repeat(overlap)
+				)
 
-					results = list(_chain_from_iterable_of_lists(iresults))
+				results = list(_chain_from_iterable_of_lists(iresults))
 
-					pool.clear()
+				pool.clear()
 
-					gc.collect()
+				gc.collect()
 
-					t1_bam_file = time.time()
-					time_final = (t1_bam_file-t0_bam_file)/60.0
+				t1_bam_file = time.time()
+				time_final = (t1_bam_file-t0_bam_file)/60.0
 
 				return results, time_final, bam_file[0]
 
@@ -255,41 +254,40 @@ class GetCounts:
 
 				times.append(time_final)
 
-				if True:
-					t0_bam_agg = time.time()
+				t0_bam_agg = time.time()
 
-					message = "was successfully processed"
-					for peptide_alignment, res in zip(keys, results):
-						peptide, alignment, strand = peptide_alignment.split('_')
+				message = "was successfully processed"
+				for peptide_alignment, res in zip(keys, results):
+					peptide, alignment, strand = peptide_alignment.split('_')
 
-						for count, sequence in res:
-							if count == -1:
-								message = "couldn't be processed. Failed to open, permission denied"
-							key = peptide+'_'+alignment+'_'+sequence
+					for count, sequence in res:
+						if count == -1:
+							message = "couldn't be processed. Failed to open, permission denied"
+						key = peptide+'_'+alignment+'_'+sequence
 
-							if len(alignment_information[key][-1]) == 0:
-								alignment_information[key][-1] = [0]*total_samples
+						if len(alignment_information[key][-1]) == 0:
+							alignment_information[key][-1] = [0]*total_samples
 
-							alignment_information[key][-1][idx] = count
+						alignment_information[key][-1][idx] = count
 
-					time_agg = (time.time() - t0_bam_agg)/60.0
+				time_agg = (time.time() - t0_bam_agg)/60.0
 
-					t_agg.append(time_agg)
+				t_agg.append(time_agg)
 
-					self.super_logger.info(
-						'Bam File : %s %s %s. Time : %f min',
-						str(idx), sample, message, time_final
-					)
+				self.super_logger.info(
+					'Bam File : %s %s %s. Time : %f min',
+					str(idx), sample, message, time_final
+				)
 
-					if (idx % 50 == 0) and (idx != 0):
-						self.super_logger.info('Saving information for Bam Files processed')
-						print(str(idx), 'Bam Files processed')
+				if (idx % 50 == 0) and (idx != 0):
+					self.super_logger.info('Saving information for Bam Files processed')
+					print(str(idx), 'Bam Files processed')
 
-						with open(self.last_treated_bam_file, 'wb') as f:
-							pickle.dump(idx, f)
+					with open(self.last_treated_bam_file, 'wb') as f:
+						pickle.dump(idx, f)
 
-						with open(self.alignment_information_path, 'wb') as handle:
-							pickle.dump(alignment_information, handle, protocol=pickle.HIGHEST_PROTOCOL)
+					with open(self.alignment_information_path, 'wb') as handle:
+						pickle.dump(alignment_information, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			if len(info_bams)-1 != last_treated_bam_file:
 				pool.close()
