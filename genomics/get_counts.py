@@ -209,11 +209,11 @@ class GetCounts:
 						str(idx), bam_file[0]
 					)
 
-			if remaining_bams:
-				pool = ProcessPool(nodes=self.threads)
-
-			def process_bam(bam_file):
+			def process_bam(bam_file, pool, chunksize=None):
 				t0_bam_file = time.time()
+
+				if not chunksize:
+					chunksize = len(keys)
 
 				bam_file_path = bam_file[1][0]
 				try:
@@ -233,8 +233,6 @@ class GetCounts:
 					digits_bam_file_BQ_reference,
 					bam_file_path
 				)
-
-				chunksize=100
 
 				iresults = pool.imap(
 					get_counts_sample,
@@ -294,9 +292,28 @@ class GetCounts:
 				with open(self.processed_bams_file, 'wb') as f:
 					pickle.dump(processed_bams, f)
 
-			gc.collect()
+			if remaining_bams:
+				pool = ProcessPool(nodes=self.threads)
 
-			remaining_bams_results = map(process_bam, remaining_bams)
+			if not remaining_bams:
+				message = "All bams have completed processing"
+				remaining_bams_results = iter([])
+
+			else:
+				message = "Parallelizing by peptide chunk"
+
+				chunksize = 100
+
+				remaining_bams_results = map(
+					process_bam,
+					remaining_bams,
+					itertools.repeat(pool),
+					itertools.repeat(chunksize)
+				)
+
+			self.super_logger.info(message)
+
+			gc.collect()
 
 			for sample, message, time_final, time_dump in remaining_bams_results:
 				checkpoint(sample, message, time_final, time_dump)
