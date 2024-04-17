@@ -95,9 +95,12 @@ class GetInformationBamFiles:
 	def grant_access_to_bam_files_info_dic(self, timeout=300):
 		start_time = time.time()
 
-		while (time.time() - start_time < timeout) :
-			permission_granted = False
+		timeout_warning = " ".join((
+			"Timeout to grant access to Bam_files_info.dic.",
+			"Another BamQuery process may be using the dictionary."
+		))
 
+		while (time.time() - start_time < timeout) :
 			with open(self.path_to_lock_file, 'r+') as file:
 				fcntl.flock(file.fileno(), fcntl.LOCK_EX)
 				first_line = file.readline()
@@ -108,12 +111,15 @@ class GetInformationBamFiles:
 					file.write(first_line)
 					file.truncate()
 					fcntl.flock(file.fileno(), fcntl.LOCK_UN)
-					permission_granted = True
-				if permission_granted:
 					return True
+
+			if time.time() - start_time <= 20:
+				print(timeout_warning)
+				time.sleep(4)
+
 			time.sleep(1)
-			
-		raise NeedMoreInfo("\nTimeout to grant access to Bam_files_info.dic. Another BamQuery process may be using the dictionary." )
+
+		raise NeedMoreInfo("\nFATAL: " + timeout_warning)
 
 
 	def get_info_bamfiles(self, bam_files, strandedness, path_to_output_folder):

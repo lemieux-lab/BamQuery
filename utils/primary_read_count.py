@@ -45,6 +45,10 @@ class GetPrimaryReadCountBamFiles:
 		start_time = time.time()
 		with open(path_to_lock_file, 'r') as file:
 			first_line = file.readline().strip()
+		timeout_warning = " ".join((
+			"Timeout to grant access to Bam_files_info.dic.",
+			"Another BamQuery process may be using the dictionary."
+		))
 		while (time.time() - start_time < timeout) and first_line != path_to_input_folder:
 			try:
 				with open(path_to_lock_file, 'r') as file:
@@ -54,10 +58,13 @@ class GetPrimaryReadCountBamFiles:
 						file.write(path_to_input_folder)
 					file.close()
 					return True
-				time.sleep(1)
 			except IOError:
 				pass
-		raise Exception ("\nTimeout to grant access to Bam_files_info.dic. Another BamQuery process may be using the dictionary." )
+			if time.time() - start_time <= 20:
+				print(timeout_warning)
+				time.sleep(4)
+			time.sleep(1)
+		raise Exception(timeout_warning)
 
 
 	def set_values(self, path_to_lib, bam_files_list, threads):
@@ -118,7 +125,6 @@ def main(argv):
 			path_to_output_folder = arg
 		elif opt in ("-t", "--threads"):
 			threads = int(arg)
-
 	
 	global path_to_lib
 	path_to_lib = '/'.join(os.path.abspath(__file__).split('/')[:-3])+'/lib/'

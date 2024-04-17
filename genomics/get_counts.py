@@ -168,7 +168,8 @@ class GetCounts:
 					references = [reference] * len(keys)
 					bams = [bam_file] * len(keys)
 					results = pool.map(get_counts_sample.get_counts_sample, bams, keys, values, references, [overlap]*len(values))
-					not_permission = False
+
+					message = "was successfully processed"
 
 					for res in results:
 
@@ -183,7 +184,7 @@ class GetCounts:
 							else:
 								count = count_align[0]
 								if count == -1:
-									not_permission = True
+									message = "couldn't be processed. Failed to open, permission denied"
 
 								sequence = count_align[1]
 								to_print_aux = copy.deepcopy(to_print)
@@ -202,10 +203,10 @@ class GetCounts:
 					time_final = (t1_bam_file-t0_bam_file)/60.0
 					times.append(time_final)
 
-					if not_permission:
-						self.super_logger.info('Bam File : %s %s couldn\'t be processed. Failed to open, permission denied. Time : %f min', str(idx), bam_file[0], time_final)
-					else:
-						self.super_logger.info('Processed Bam File : %s %s. Time : %f min', str(idx), bam_file[0], time_final)
+					self.super_logger.info(
+						'Bam File : %s %s %s. Time : %f min',
+						str(idx), bam_file[0], message, time_final
+					)
 
 					if (idx % 50 == 0) and (idx != 0):
 						self.super_logger.info('Saving information for Bam Files processed')
