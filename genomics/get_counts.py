@@ -108,12 +108,11 @@ class GetCounts:
 		last_treated_bam_file = os.path.exists(self.last_treated_bam_file)
 
 		if last_treated_bam_file:
-
 			with open(self.last_treated_bam_file , 'rb') as fp:
 				last_treated_bam_file = pickle.load(fp)
 
-		else:
-			last_treated_bam_file = -1
+		if not last_treated_bam_file:
+			last_treated_bam_file = set()
 
 		if not exists_count :
 			t_0 = time.time()
@@ -189,14 +188,11 @@ class GetCounts:
 
 			t0_bam_total = time.time()
 
-			if len(info_bams)-1 != last_treated_bam_file:
-				pool = ProcessPool(nodes=self.threads)
-
 			remaining_idxs = []
 			remaining_bams = []
 
 			for idx, bam_file in enumerate(info_bams):
-				if idx > last_treated_bam_file:
+				if idx not in last_treated_bam_file:
 					remaining_idxs.append(idx)
 					remaining_bams.append(bam_file)
 				else:
@@ -204,6 +200,9 @@ class GetCounts:
 						'Bam File already processed: %s %s.',
 						str(idx), bam_file[0]
 					)
+
+			if remaining_bams:
+				pool = ProcessPool(nodes=self.threads)
 
 			def process_bam(bam_file):
 				t0_bam_file = time.time()
@@ -274,8 +273,10 @@ class GetCounts:
 				with gzip.open(outfile, 'wb') as handle:
 					pickle.dump(counts_dct, handle)
 
-				with open(self.last_treated_bam_file, 'wb') as f:
-					pickle.dump(idx, f)
+				last_treated_bam_file.add(idx)
+
+				with open(self.last_treated_bam_file_file, 'wb') as f:
+					pickle.dump(last_treated_bam_file, f)
 
 				time_agg = (time.time() - t0_bam_agg)/60.0
 
@@ -286,7 +287,7 @@ class GetCounts:
 					str(idx), sample, message, time_final
 				)
 
-			if len(info_bams)-1 != last_treated_bam_file:
+			if remaining_bams:
 				pool.close()
 				pool.join()
 				pool.clear()
