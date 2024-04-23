@@ -68,14 +68,14 @@ class GetCounts:
 		self.cache_path = os.path.join(self.path_to_output_temps_folder, 'cache')
 		self.count_path = self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv'
 		self.count_all_alignments_path = self.path_to_output_temps_folder+self.name_exp+'_rna_count_All_alignments.csv'
-		self.last_treated_bam_file = self.path_to_output_folder_alignments+'info_treated_bam_files.pkl'
+		self.processed_bams_file = self.path_to_output_folder_alignments+'info_treated_bam_files.pkl'
 
 		if self.mode == 'translation':
 			self.path_to_output_temps_folder = path_to_output_folder+'res_translation/temps_files/'
 			self.path_to_output_bed_folder = path_to_output_folder+'res_translation/BED_files/'
 			self.count_path = self.path_to_output_temps_folder+self.name_exp+'_ribo_counts.csv'
 			self.count_all_alignments_path = self.path_to_output_temps_folder+self.name_exp+'_ribo_count_All_alignments.csv'
-			self.last_treated_bam_file = self.path_to_output_folder_alignments+'info_treated_ribo_bam_files.pkl'
+			self.processed_bams_file = self.path_to_output_folder_alignments+'info_treated_ribo_bam_files.pkl'
 			if self.light:
 				self.alignment_information_path = self.path_to_output_folder_alignments+'Alignments_information_light_ribo.dic'
 			else:
@@ -105,14 +105,14 @@ class GetCounts:
 		exists_count = os.path.exists(self.count_path)
 		exists_alignment_information = os.path.exists(self.alignment_information_path)
 
-		last_treated_bam_file = os.path.exists(self.last_treated_bam_file)
+		processed_bams = os.path.exists(self.processed_bams_file)
 
-		if last_treated_bam_file:
-			with open(self.last_treated_bam_file , 'rb') as fp:
-				last_treated_bam_file = pickle.load(fp)
+		if processed_bams:
+			with open(self.processed_bams_file , 'rb') as fp:
+				processed_bams = pickle.load(fp)
 
-		if not last_treated_bam_file:
-			last_treated_bam_file = set()
+		if not processed_bams:
+			processed_bams = set()
 
 		if not exists_count :
 			t_0 = time.time()
@@ -192,7 +192,7 @@ class GetCounts:
 			remaining_bams = []
 
 			for idx, bam_file in enumerate(info_bams):
-				if idx not in last_treated_bam_file:
+				if idx not in processed_bams:
 					remaining_idxs.append(idx)
 					remaining_bams.append(bam_file)
 				else:
@@ -273,10 +273,10 @@ class GetCounts:
 				with gzip.open(outfile, 'wb') as handle:
 					pickle.dump(counts_dct, handle)
 
-				last_treated_bam_file.add(idx)
+				processed_bams.add(idx)
 
-				with open(self.last_treated_bam_file_file, 'wb') as f:
-					pickle.dump(last_treated_bam_file, f)
+				with open(self.processed_bams_file, 'wb') as f:
+					pickle.dump(processed_bams, f)
 
 				time_agg = (time.time() - t0_bam_agg)/60.0
 
