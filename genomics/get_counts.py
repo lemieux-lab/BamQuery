@@ -209,13 +209,9 @@ class GetCounts:
 						str(idx), bam_file[0]
 					)
 
-			def process_bam(bam_file, pool, chunksize=None):
-				t0_bam_file = time.time()
-
-				if not chunksize:
-					chunksize = len(keys)
-
+			def get_reference(bam_file):
 				bam_file_path = bam_file[1][0]
+
 				try:
 					bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb")
 					references = bam_file_ref.header.references
@@ -233,6 +229,14 @@ class GetCounts:
 					digits_bam_file_BQ_reference,
 					bam_file_path
 				)
+
+				return reference
+
+			def process_bam(bam_file, reference, pool, chunksize=None):
+				t0_bam_file = time.time()
+
+				if not chunksize:
+					chunksize = len(keys)
 
 				iresults = pool.imap(
 					get_counts_sample,
@@ -295,6 +299,11 @@ class GetCounts:
 			if remaining_bams:
 				pool = ProcessPool(nodes=self.threads)
 
+			references = map(get_reference, remaining_bams)
+
+			temp_folder = self.path_to_output_temps_folder
+			outfiles = (os.path.join(temp_folder, str(idx) + '.p.gz') for idx in remaining_idxs)
+
 			if not remaining_bams:
 				message = "All bams have completed processing"
 				remaining_bams_results = iter([])
@@ -307,6 +316,7 @@ class GetCounts:
 				remaining_bams_results = map(
 					process_bam,
 					remaining_bams,
+					references,
 					itertools.repeat(pool),
 					itertools.repeat(chunksize)
 				)
