@@ -1,5 +1,4 @@
 import itertools
-import gc
 import gzip
 import logging
 import numpy as np
@@ -12,6 +11,7 @@ import sys
 import time
 import warnings
 from concurrent.futures.process import _chain_from_iterable_of_lists
+from multiprocess import get_context
 from pathos.multiprocessing import ProcessPool
 
 import utils.useful_functions as uf
@@ -265,8 +265,6 @@ class GetCounts:
 
 				pool.clear()
 
-				gc.collect()
-
 				outfile = os.path.join(self.cache_path, str(idx) + '.p.gz')
 
 				t1_bam_file = time.time()
@@ -297,7 +295,7 @@ class GetCounts:
 					pickle.dump(processed_bams, f)
 
 			if remaining_bams:
-				pool = ProcessPool(nodes=self.threads)
+				pool = ProcessPool(nodes=self.threads, context=get_context('spawn'))
 
 			references = map(get_reference, remaining_bams)
 
@@ -323,8 +321,6 @@ class GetCounts:
 
 			self.super_logger.info(message)
 
-			gc.collect()
-
 			for sample, message, time_final, time_dump in remaining_bams_results:
 				checkpoint(sample, message, time_final, time_dump)
 
@@ -332,8 +328,6 @@ class GetCounts:
 				pool.close()
 				pool.join()
 				pool.clear()
-
-			gc.collect()
 
 			time_bam_total = (time.time() - t0_bam_total)/60
 
