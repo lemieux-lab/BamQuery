@@ -98,6 +98,7 @@ class GetCounts:
 	def get_counts(self, perfect_alignments, bam_files_list, overlap):
 
 		times = []
+		t_agg = []
 		df_counts = pd.DataFrame()
 
 		exists_count = os.path.exists(self.count_path)
@@ -184,6 +185,8 @@ class GetCounts:
 					key = chr
 				digits_bam_file_BQ_reference.append(key)
 
+			t0_bam_total = time.time()
+
 			if len(info_bams)-1 != last_treated_bam_file:
 				pool = ProcessPool(nodes=self.threads)
 
@@ -200,12 +203,10 @@ class GetCounts:
 						str(idx), bam_file[0]
 					)
 
-			gc.collect()
-
-			for idx, bam_file in zip(remaining_idxs, remaining_bams):
+			def process_bam(bam_file):
 				if True:
-
 					t0_bam_file = time.time()
+
 					bam_file_path = bam_file[1][0]
 					try:
 						bam_file_ref = pysam.AlignmentFile(bam_file_path, "rb")
@@ -238,7 +239,24 @@ class GetCounts:
 
 					results = list(_chain_from_iterable_of_lists(iresults))
 
-					sample = bam_file[0]
+					pool.clear()
+
+					gc.collect()
+
+					t1_bam_file = time.time()
+					time_final = (t1_bam_file-t0_bam_file)/60.0
+
+				return results, time_final, bam_file[0]
+
+			gc.collect()
+
+			for idx, bam_file in zip(remaining_idxs, remaining_bams):
+				results, time_final, sample = process_bam(bam_file)
+
+				times.append(time_final)
+
+				if True:
+					t0_bam_agg = time.time()
 
 					message = "was successfully processed"
 					for peptide_alignment, res in zip(keys, results):
@@ -254,17 +272,13 @@ class GetCounts:
 
 							alignment_information[key][-1][idx] = count
 
-					pool.clear()
+					time_agg = (time.time() - t0_bam_agg)/60.0
 
-					gc.collect()
-
-					t1_bam_file = time.time()
-					time_final = (t1_bam_file-t0_bam_file)/60.0
-					times.append(time_final)
+					t_agg.append(time_agg)
 
 					self.super_logger.info(
 						'Bam File : %s %s %s. Time : %f min',
-						str(idx), bam_file[0], message, time_final
+						str(idx), sample, message, time_final
 					)
 
 					if (idx % 50 == 0) and (idx != 0):
@@ -284,7 +298,11 @@ class GetCounts:
 
 			gc.collect()
 
-			self.super_logger.info('Average time to process a BamFile : %f min', np.mean(times))
+			time_bam_total = (time.time() - t0_bam_total)/60
+
+			self.super_logger.info('Average time processing a BamFile : %f min', np.mean(times))
+			self.super_logger.info('Time aggregating bam results : %f min', np.sum(t_agg))
+			self.super_logger.info('Total time processing all bam files : %f min', time_bam_total)
 
 			with open(self.last_treated_bam_file, 'wb') as f:
 				pickle.dump(idx, f)
