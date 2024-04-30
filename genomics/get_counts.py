@@ -237,25 +237,7 @@ class GetCounts:
 					itertools.repeat(overlap)
 				)
 
-				results = list(_chain_from_iterable_of_lists(iresults))
-
-				pool.clear()
-
-				gc.collect()
-
-				t1_bam_file = time.time()
-				time_final = (t1_bam_file-t0_bam_file)/60.0
-
-				return results, time_final, bam_file[0]
-
-			gc.collect()
-
-			for idx, bam_file in zip(remaining_idxs, remaining_bams):
-				results, time_final, sample = process_bam(bam_file)
-
-				times.append(time_final)
-
-				t0_bam_agg = time.time()
+				results = _chain_from_iterable_of_lists(iresults)
 
 				counts_dct = {}
 				message = "was successfully processed"
@@ -268,10 +250,29 @@ class GetCounts:
 						key = peptide+'_'+alignment+'_'+sequence
 						counts_dct[key] = count
 
+				pool.clear()
+
+				gc.collect()
+
+				t1_bam_file = time.time()
+				time_final = (t1_bam_file-t0_bam_file)/60.0
+
+				return counts_dct, message, time_final
+
+			gc.collect()
+
+			remaining_bams_results = map(process_bam, remaining_bams)
+
+			for idx, (counts, message, time_final) in zip(remaining_idxs, remaining_bams_results):
+				times.append(time_final)
+
+				t0_bam_agg = time.time()
+
+
 				outfile = os.path.join(self.cache_path, str(idx) + '.p.gz')
 
 				with gzip.open(outfile, 'wb') as handle:
-					pickle.dump(counts_dct, handle)
+					pickle.dump(counts, handle)
 
 				processed_bams.add(idx)
 
@@ -284,7 +285,7 @@ class GetCounts:
 
 				self.super_logger.info(
 					'Bam File : %s %s %s. Time : %f min',
-					str(idx), sample, message, time_final
+					str(idx), list_bam_files_order[idx], message, time_final
 				)
 
 			if remaining_bams:
