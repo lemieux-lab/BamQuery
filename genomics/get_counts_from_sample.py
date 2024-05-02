@@ -115,28 +115,32 @@ def get_ranges(cigar, start, len_seq):
 
 	rang = []
 	splices_sites = set()
-	rx = re.findall('(\d+)([MISDNX=])?', cigar)
+	#rx = re.findall('(\d+)([MISDNX=])?', cigar)
+	# M == 0
+	# I == 1
+	# D == 2
+	# N == 3
+	# S == 4
+	# = == 7
+	# X == 8
 	indels = []
 
-	for index in rx:
-		operation = index[1]
-		length = int(index[0])
-
-		if ('S' in operation):
+	for operation, length in cigar:
+		if operation == 4:
 			end = length
 			rang.extend([0]*length)
 
-		elif ('M' in index) or ('=' in index) or ('X' in index) :
+		elif operation == 0 or operation == 7 or operation == 8:
 			end = start + length
 			rang.extend(range(start,end))
 			start += length
 
-		elif ('N' in index) or ('D' in index):
+		elif operation == 3 or operation == 2:
 			splices_sites.add(start)
 			start = start + length
 			splices_sites.add(start)
 
-		elif ('I' in index):
+		elif operation == 1:
 			indels.extend([len(rang)+i for i in range(0, length)])
 			rang.extend([0]*length)
 
@@ -151,7 +155,7 @@ def define_read_in(reads, pos_set, splice_pos, overlap_in):
 		strand = '+' if read.is_forward else '-'
 		start = read.reference_start + 1
 		seq = read.query_sequence
-		cigar = read.cigarstring
+		cigar = tuple(read.cigartuples)
 
 		rang_, splices_sites, indels = get_ranges(cigar, start, len(seq))
 
