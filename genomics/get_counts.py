@@ -95,11 +95,19 @@ class GetCounts:
 
 		return alignment_information
 
+	@staticmethod
+	def dump(idx, counts, outfile):
+		t0 = time.time()
+
+		with gzip.open(outfile, 'wb') as handle:
+			pickle.dump(counts, handle)
+
+		return idx, (time.time() - t0)/60
+
 
 	def get_counts(self, perfect_alignments, bam_files_list, overlap):
 
 		times = []
-		t_agg = []
 		df_counts = pd.DataFrame()
 
 		exists_count = os.path.exists(self.count_path)
@@ -250,43 +258,45 @@ class GetCounts:
 						key = peptide+'_'+alignment+'_'+sequence
 						counts_dct[key] = count
 
+				sample = bam_file[0]
+				idx = get_index(sample) - 1
+
 				pool.clear()
 
 				gc.collect()
 
+				outfile = os.path.join(self.cache_path, str(idx) + '.p.gz')
+
+				self.dump(idx, counts_dct, outfile)
+
 				t1_bam_file = time.time()
 				time_final = (t1_bam_file-t0_bam_file)/60.0
 
-				return counts_dct, message, time_final
+				return sample, message, time_final
 
-			gc.collect()
+			def checkpoint(sample, message, time_final):
+				idx = get_index(sample) - 1
 
-			remaining_bams_results = map(process_bam, remaining_bams)
+				processed_bams.add(idx)
 
-			for idx, (counts, message, time_final) in zip(remaining_idxs, remaining_bams_results):
 				times.append(time_final)
 
-				t0_bam_agg = time.time()
-
-
-				outfile = os.path.join(self.cache_path, str(idx) + '.p.gz')
-
-				with gzip.open(outfile, 'wb') as handle:
-					pickle.dump(counts, handle)
+				self.super_logger.info(
+					'Bam File : %d %s %s. Time : %f min',
+					idx, sample, message, time_final
+				)
 
 				processed_bams.add(idx)
 
 				with open(self.processed_bams_file, 'wb') as f:
 					pickle.dump(processed_bams, f)
 
-				time_agg = (time.time() - t0_bam_agg)/60.0
+			gc.collect()
 
-				t_agg.append(time_agg)
+			remaining_bams_results = map(process_bam, remaining_bams)
 
-				self.super_logger.info(
-					'Bam File : %s %s %s. Time : %f min',
-					str(idx), list_bam_files_order[idx], message, time_final
-				)
+			for sample, message, time_final in remaining_bams_results:
+				checkpoint(sample, message, time_final)
 
 			if remaining_bams:
 				pool.close()
@@ -298,7 +308,6 @@ class GetCounts:
 			time_bam_total = (time.time() - t0_bam_total)/60
 
 			self.super_logger.info('Average time processing a BamFile : %f min', np.mean(times))
-			self.super_logger.info('Time aggregating bam results : %f min', np.sum(t_agg))
 			self.super_logger.info('Total time processing all bam files : %f min', time_bam_total)
 
 			for idx in range(len(info_bams)):
