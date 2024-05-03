@@ -78,6 +78,8 @@ def _get_counts_sample(
 		if len(pos) > 1 and i != len(pos) -1:
 			splice_pos.add(fini)
 
+	pos_set = sorted(pos_set)
+
 	counts = get_depth_with_view(
 		region_to_query,
 		bam_handle,
@@ -204,7 +206,7 @@ def define_read_in(reads, pos_set, splice_pos, overlap_in):
 			for indel in indels:
 				seq = remove_at(indel, seq)
 
-		if len(splices_sites.intersection(sorted(pos_set)[1:-1])) == 0 and percentage_overlap >= 0.6:
+		if len(splices_sites.intersection(pos_set[1:-1])) == 0 and percentage_overlap >= 0.6:
 			index_ini = rang_.index(min(overlap))
 			index_fin = rang_.index(max(overlap)) + 1
 			seq_overlap = seq[index_ini:index_fin]
