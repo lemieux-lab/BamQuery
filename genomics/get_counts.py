@@ -237,7 +237,12 @@ class GetCounts:
 
 			def process_bam(
 					bam_file,
+					idx,
 					reference,
+					outfile,
+					keys,
+					values,
+					overlap,
 					pool,
 					chunksize=None):
 
@@ -269,9 +274,6 @@ class GetCounts:
 						counts_dct[key] = count
 
 				sample = bam_file[0]
-				idx = get_index(sample) - 1
-
-				outfile = os.path.join(self.cache_path, str(idx) + '.p.gz')
 
 				t1_bam_file = time.time()
 				time_final = (t1_bam_file-t0_bam_file)/60.0
@@ -344,8 +346,7 @@ class GetCounts:
 
 			references = map(get_reference, remaining_bams)
 
-			temp_folder = self.path_to_output_temps_folder
-			outfiles = (os.path.join(temp_folder, str(idx) + '.p.gz') for idx in remaining_idxs)
+			outfiles = (os.path.join(self.cache_path, str(idx)+'.p.gz') for idx in remaining_idxs)
 
 			if not remaining_bams:
 				message = "All bams have completed processing"
@@ -366,7 +367,12 @@ class GetCounts:
 				remaining_bams_results = mpool.uimap(
 					process_bam,
 					remaining_bams,
+					remaining_idxs,
 					references,
+					outfiles,
+					itertools.repeat(keys),
+					itertools.repeat(values),
+					itertools.repeat(overlap),
 					itertools.repeat(spool),
 					itertools.repeat(chunksize)
 				)
@@ -391,7 +397,12 @@ class GetCounts:
 				remaining_bams_results = spool.imap(
 					process_bam,
 					remaining_bams,
+					remaining_idxs,
 					references,
+					outfiles,
+					itertools.repeat(keys),
+					itertools.repeat(values),
+					itertools.repeat(overlap),
 					itertools.repeat(mpool),
 					itertools.repeat(chunksize)
 				)
