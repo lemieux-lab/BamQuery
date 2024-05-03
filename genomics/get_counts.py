@@ -1,5 +1,6 @@
 import itertools
 import gc
+import gzip
 import logging
 import numpy as np
 import os
@@ -64,10 +65,10 @@ class GetCounts:
 			self.path_to_output_temps_folder = path_to_output_folder+'res/temps_files/'
 			self.alignment_information_path = self.path_to_output_folder_alignments+'Alignments_information_rna.dic'
 
+		self.cache_path = os.path.join(self.path_to_output_temps_folder, 'cache')
 		self.count_path = self.path_to_output_temps_folder+self.name_exp+'_rna_count.csv'
 		self.count_all_alignments_path = self.path_to_output_temps_folder+self.name_exp+'_rna_count_All_alignments.csv'
 		self.last_treated_bam_file = self.path_to_output_folder_alignments+'info_treated_bam_files.pkl'
-
 
 		if self.mode == 'translation':
 			self.path_to_output_temps_folder = path_to_output_folder+'res_translation/temps_files/'
@@ -114,7 +115,6 @@ class GetCounts:
 		else:
 			last_treated_bam_file = -1
 
-
 		if not exists_count :
 			t_0 = time.time()
 
@@ -137,6 +137,8 @@ class GetCounts:
 				):
 				info_bams.append((name_sample,info_bam))
 				list_bam_files_order.append(name_sample)
+
+			assert len(list_bam_files_order) == len(set(list_bam_files_order))
 
 			def get_index(sample):
 				index = list_bam_files_order.index(sample)
@@ -256,6 +258,7 @@ class GetCounts:
 
 				t0_bam_agg = time.time()
 
+				counts_dct = {}
 				message = "was successfully processed"
 				for peptide_alignment, res in zip(keys, results):
 					peptide, alignment, strand = peptide_alignment.split('_')
@@ -264,11 +267,15 @@ class GetCounts:
 						if count == -1:
 							message = "couldn't be processed. Failed to open, permission denied"
 						key = peptide+'_'+alignment+'_'+sequence
+						counts_dct[key] = count
 
-						if len(alignment_information[key][-1]) == 0:
-							alignment_information[key][-1] = [0]*total_samples
+				outfile = os.path.join(self.cache_path, str(idx) + '.p.gz')
 
-						alignment_information[key][-1][idx] = count
+				with gzip.open(outfile, 'wb') as handle:
+					pickle.dump(counts_dct, handle)
+
+				with open(self.last_treated_bam_file, 'wb') as f:
+					pickle.dump(idx, f)
 
 				time_agg = (time.time() - t0_bam_agg)/60.0
 
@@ -278,16 +285,6 @@ class GetCounts:
 					'Bam File : %s %s %s. Time : %f min',
 					str(idx), sample, message, time_final
 				)
-
-				if (idx % 50 == 0) and (idx != 0):
-					self.super_logger.info('Saving information for Bam Files processed')
-					print(str(idx), 'Bam Files processed')
-
-					with open(self.last_treated_bam_file, 'wb') as f:
-						pickle.dump(idx, f)
-
-					with open(self.alignment_information_path, 'wb') as handle:
-						pickle.dump(alignment_information, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 			if len(info_bams)-1 != last_treated_bam_file:
 				pool.close()
@@ -302,11 +299,24 @@ class GetCounts:
 			self.super_logger.info('Time aggregating bam results : %f min', np.sum(t_agg))
 			self.super_logger.info('Total time processing all bam files : %f min', time_bam_total)
 
-			with open(self.last_treated_bam_file, 'wb') as f:
-				pickle.dump(idx, f)
+			for idx in range(len(info_bams)):
+				infile = os.path.join(self.cache_path, str(idx) + '.p.gz')
+
+				with gzip.open(infile, 'rb') as handle:
+					counts = pickle.load(handle)
+
+				for key, count in counts.items():
+					if len(alignment_information[key][-1]) == 0:
+						alignment_information[key][-1] = [0]*total_samples
+
+					alignment_information[key][-1][idx] = count
 
 			with open(self.alignment_information_path, 'wb') as handle:
-				pickle.dump(alignment_information, handle, protocol=pickle.HIGHEST_PROTOCOL)
+				pickle.dump(
+					alignment_information,
+					handle,
+					protocol=pickle.HIGHEST_PROTOCOL
+				)
 
 			header = ['Peptide Type', 'Peptide', 'Position', 'MCS', 'Strand']
 			header.extend(list_bam_files_order)
