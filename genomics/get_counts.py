@@ -11,8 +11,10 @@ import sys
 import time
 import warnings
 from concurrent.futures.process import _chain_from_iterable_of_lists
+from functools import partial
 from multiprocess import get_context
 from pathos.multiprocessing import ProcessPool
+from pathos.serial import SerialPool
 from pathos.threading import ThreadPool
 
 import utils.useful_functions as uf
@@ -274,8 +276,20 @@ class GetCounts:
 				t1_bam_file = time.time()
 				time_final = (t1_bam_file-t0_bam_file)/60.0
 
-				p = pool.apipe(self.dump, idx, counts_dct, outfile)
-				dumps[p] = [time_final, message]
+				func = partial(self.dump, idx, counts_dct, outfile)
+
+				try:
+					# the current function is running in serial mode
+					proc = pool.apipe(func)
+					time_dump = None
+				except NotImplementedError:
+					# the current function is running inside a process
+					proc = pool.pipe(func)
+					t = proc[1]
+					proc = None
+					time_dump = (time.time()-t1_bam_file)/60.0
+
+				return sample, message, time_final, time_dump, proc
 
 			def checkpoint(sample, message, time_final, time_dump):
 				idx = get_index(sample) - 1
@@ -316,6 +330,16 @@ class GetCounts:
 					time.sleep(10)
 					empty_dumps()
 
+			# Pseudo-arbitrary conditions
+			if len(info_bams) > 150:
+				by_bam = True
+			elif len(keys) < 5000 and len(info_bams) > 5:
+				by_bam = True
+			elif len(info_bams) / len(keys) > 0.01:
+				by_bam = True
+			else:
+				by_bam = False
+
 			pools = []
 
 			references = map(get_reference, remaining_bams)
@@ -328,22 +352,43 @@ class GetCounts:
 
 				remaining_bams_results = iter([])
 
+			elif by_bam:
+				message = "Parallelizing by bam file"
+
+				chunksize = None
+
+				mpool = ProcessPool(nodes=self.threads, context=get_context('spawn'))
+				spool = SerialPool()
+
+				pools.append(mpool)
+				pools.append(spool)
+
+				remaining_bams_results = mpool.uimap(
+					process_bam,
+					remaining_bams,
+					references,
+					itertools.repeat(spool),
+					itertools.repeat(chunksize)
+				)
+
 			else:
 				message = "Parallelizing by peptide chunk"
 
 				chunksize = 100
 
 				mpool = ProcessPool(nodes=self.threads, context=get_context('spawn'))
+				spool = SerialPool()
 				tpool = ThreadPool(nodes=1)
 
 				pools.append(mpool)
+				pools.append(spool)
 				pools.append(tpool)
 
 				dumps = {}
 				STOP = False
 				watcher = tpool.apipe(watch)
 
-				remaining_bams_results = map(
+				remaining_bams_results = spool.imap(
 					process_bam,
 					remaining_bams,
 					references,
@@ -353,9 +398,13 @@ class GetCounts:
 
 			self.super_logger.info(message)
 
-			list(remaining_bams_results)
+			for sample, message, time_final, time_dump, proc in remaining_bams_results:
+				if proc is None:  # running in parallel
+					checkpoint(sample, message, time_final, time_dump)
+				else:  # running in serial mode
+					dumps[proc] = [time_final, message]
 
-			if remaining_bams:
+			if remaining_bams and not by_bam:
 				STOP = True
 				watcher.get()
 
