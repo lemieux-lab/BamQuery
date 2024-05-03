@@ -49,18 +49,30 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 	bam_files_logger, handler_bam_files_logger = setup_logger('Bam_Files_Logger', nameLog, 'a')
 
 	if mode == 'translation':
-		paths = [path_to_output_folder+'res_translation/temps_files/',
-		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/total_translation_expression_heatmap/',
-		path_to_output_folder+'plots/heat_maps/translation_evidence_heatmap/average_translation_expression_heatmap/',
-		path_to_output_folder+'res_translation/BED_files/', path_to_output_folder+'res_translation/AUX_files/']
+		paths = [
+			os.path.join(path_to_output_folder,
+				'res_translation',
+				'temps_files'),
+			os.path.join(path_to_output_folder,
+				'plots',
+				'heat_maps',
+				'translation_evidence_heatmap',
+				'total_translation_expression_heatmap'),
+			os.path.join(path_to_output_folder,
+				'plots',
+				'heat_maps',
+				'translation_evidence_heatmap',
+				'average_translation_expression_heatmap'),
+			os.path.join(path_to_output_folder,
+				'res_translation',
+				'BED_files'),
+			os.path.join(path_to_output_folder,
+				'res_translation',
+				'AUX_files')
+		]
 
-		for path in paths:
-			try:
-				os.makedirs(path)
-			except OSError:
-				pass
 	elif sc:
-		paths = [path_to_output_folder+'res/temps_files/']
+		paths = [os.path.join(path_to_output_folder, 'res', 'temps_files')]
 
 		for path in paths:
 			try:
@@ -70,32 +82,68 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 
 	elif not light :
 
-		paths = [path_to_output_folder+'res/BED_files/',
-		path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/total_transcription_expression_heatmap/',
-		path_to_output_folder+'plots/heat_maps/transcription_evidence_heatmap/average_transcription_expression_heatmap/',
-		path_to_output_folder+'plots/biotypes/biotype_by_sample_group/all_peptides/',
-		path_to_output_folder+'plots/biotypes/biotype_by_sample_group/by_peptide_type/',
-		path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/all_peptides/',
-		path_to_output_folder+'plots/biotypes/genome_and_ERE_annotation/by_peptide_type/',
-		path_to_output_folder+'res/biotype_classification/full_info_biotypes/',
-		path_to_output_folder+'res/biotype_classification/summary_info_biotypes/',
-		path_to_output_folder+'res/temps_files/',
-		path_to_output_folder+'res/AUX_files/']
-
-		for path in paths:
-			try:
-				os.makedirs(path)
-			except OSError:
-				pass
+		paths = [
+			os.path.join(path_to_output_folder,
+				'res',
+				'BED_files'),
+			os.path.join(
+				path_to_output_folder,
+				'plots',
+				'heat_maps',
+				'transcription_evidence_heatmap',
+				'total_transcription_expression_heatmap'),
+			os.path.join(path_to_output_folder,
+				'plots',
+				'heat_maps',
+				'transcription_evidence_heatmap',
+				'average_transcription_expression_heatmap'),
+			os.path.join(path_to_output_folder,
+				'plots',
+				'biotypes',
+				'biotype_by_sample_group',
+				'all_peptides'),
+			os.path.join(path_to_output_folder,
+				'plots',
+				'biotypes',
+				'biotype_by_sample_group',
+				'by_peptide_type'),
+			os.path.join(path_to_output_folder,
+				'plots',
+				'biotypes',
+				'genome_and_ERE_annotation',
+				'all_peptides'),
+			os.path.join(path_to_output_folder,
+				'plots',
+				'biotypes',
+				'genome_and_ERE_annotation',
+				'by_peptide_type'),
+			os.path.join(path_to_output_folder,
+				'res',
+				'biotype_classification',
+				'full_info_biotypes'),
+			os.path.join(path_to_output_folder,
+				'res',
+				'biotype_classification',
+				'summary_info_biotypes'),
+			os.path.join(path_to_output_folder,
+				'res',
+				'temps_files'),
+			os.path.join(path_to_output_folder,
+				'res',
+				'AUX_files')
+		]
 
 	else:
-		paths = [path_to_output_folder+'res_light/temps_files/', path_to_output_folder+'res_light/AUX_files/']
+		paths = [
+			os.path.join(path_to_output_folder, 'res_light', 'temps_files'),
+			os.path.join(path_to_output_folder, 'res_light', 'AUX_files')
+		]
 
-		for path in paths:
-			try:
-				os.makedirs(path)
-			except OSError:
-				pass
+	for path in paths:
+		try:
+			os.makedirs(path)
+		except OSError:
+			pass
 
 	if not os.path.exists(path_to_output_folder+'alignments/Alignments_information_light.dic')	:
 		path_to_genome_alignment_folder = path_to_output_folder+'genome_alignments/'
@@ -109,8 +157,6 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 		os.mkdir(path_to_alignment_folder)
 	except OSError:
 		pass
-
-
 
 	super_logger.info('Path to input folder : %s ', path_to_input_folder)
 	super_logger.info('Path to output folder : %s ', path_to_output_folder)
