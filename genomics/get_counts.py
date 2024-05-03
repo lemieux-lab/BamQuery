@@ -267,23 +267,26 @@ class GetCounts:
 
 				outfile = os.path.join(self.cache_path, str(idx) + '.p.gz')
 
-				self.dump(idx, counts_dct, outfile)
-
 				t1_bam_file = time.time()
 				time_final = (t1_bam_file-t0_bam_file)/60.0
 
-				return sample, message, time_final
+				p = self.dump(idx, counts_dct, outfile)
+				time_dump = p[1]
 
-			def checkpoint(sample, message, time_final):
+				return sample, message, time_final, time_dump
+
+			def checkpoint(sample, message, time_final, time_dump):
 				idx = get_index(sample) - 1
+
+				time_total = time_final + time_dump
 
 				processed_bams.add(idx)
 
-				times.append(time_final)
+				times.append(time_total)
 
 				self.super_logger.info(
-					'Bam File : %d %s %s. Time : %f min',
-					idx, sample, message, time_final
+					'Bam File : %d %s %s. Time : %f min. Time incl. save : %f min',
+					idx, sample, message, time_final, time_total
 				)
 
 				processed_bams.add(idx)
@@ -295,8 +298,8 @@ class GetCounts:
 
 			remaining_bams_results = map(process_bam, remaining_bams)
 
-			for sample, message, time_final in remaining_bams_results:
-				checkpoint(sample, message, time_final)
+			for sample, message, time_final, time_dump in remaining_bams_results:
+				checkpoint(sample, message, time_final, time_dump)
 
 			if remaining_bams:
 				pool.close()
