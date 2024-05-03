@@ -52,7 +52,8 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 		paths = [
 			os.path.join(path_to_output_folder,
 				'res_translation',
-				'temps_files'),
+				'temps_files',
+				'cache'),
 			os.path.join(path_to_output_folder,
 				'plots',
 				'heat_maps',
@@ -72,7 +73,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 		]
 
 	elif sc:
-		paths = [os.path.join(path_to_output_folder, 'res', 'temps_files')]
+		paths = [os.path.join(path_to_output_folder, 'res', 'temps_files', 'cache')]
 
 		for path in paths:
 			try:
@@ -127,7 +128,8 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 				'summary_info_biotypes'),
 			os.path.join(path_to_output_folder,
 				'res',
-				'temps_files'),
+				'temps_files',
+				'cache'),
 			os.path.join(path_to_output_folder,
 				'res',
 				'AUX_files')
@@ -135,7 +137,7 @@ def directories_creation(path_to_input_folder, name_exp, mode, light, sc):
 
 	else:
 		paths = [
-			os.path.join(path_to_output_folder, 'res_light', 'temps_files'),
+			os.path.join(path_to_output_folder, 'res_light', 'temps_files', 'cache'),
 			os.path.join(path_to_output_folder, 'res_light', 'AUX_files')
 		]
 
