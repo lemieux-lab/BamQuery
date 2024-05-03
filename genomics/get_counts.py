@@ -107,6 +107,68 @@ class GetCounts:
 
 		return idx, (time.time() - t0)/60
 
+	@classmethod
+	def process_bam(
+			cls,
+			bam_file,
+			idx,
+			reference,
+			outfile,
+			keys,
+			values,
+			overlap,
+			pool,
+			chunksize=None):
+
+		t0_bam_file = time.time()
+
+		if not chunksize:
+			chunksize = len(keys)
+
+		iresults = pool.imap(
+			get_counts_sample,
+			itertools.repeat(bam_file),
+			batched(keys, chunksize),
+			batched(values, chunksize),
+			itertools.repeat(reference),
+			itertools.repeat(overlap)
+		)
+
+		results = _chain_from_iterable_of_lists(iresults)
+
+		counts_dct = {}
+		message = "was successfully processed"
+		for peptide_alignment, res in zip(keys, results):
+			peptide, alignment, strand = peptide_alignment.split('_')
+
+			for count, sequence in res:
+				if count == -1:
+					message = "couldn't be processed. Failed to open, permission denied"
+				key = peptide+'_'+alignment+'_'+sequence
+				counts_dct[key] = count
+
+		sample = bam_file[0]
+
+		t1_bam_file = time.time()
+		time_final = (t1_bam_file-t0_bam_file)/60.0
+
+		func = partial(cls.dump, idx, counts_dct, outfile)
+
+		if type(pool) is ProcessPool:
+			# the current function is running in serial mode
+			proc = pool.apipe(func)
+			time_dump = None
+		elif type(pool) is SerialPool:
+			# the current function is running inside a process
+			proc = pool.pipe(func)
+			t = proc[1]
+			proc = None
+			time_dump = (time.time()-t1_bam_file)/60.0
+		else:
+			raise TypeError('Unknown pool type')
+
+		return sample, message, time_final, time_dump, proc
+
 
 	def get_counts(self, perfect_alignments, bam_files_list, overlap):
 
@@ -235,64 +297,6 @@ class GetCounts:
 
 				return reference
 
-			def process_bam(
-					bam_file,
-					idx,
-					reference,
-					outfile,
-					keys,
-					values,
-					overlap,
-					pool,
-					chunksize=None):
-
-				t0_bam_file = time.time()
-
-				if not chunksize:
-					chunksize = len(keys)
-
-				iresults = pool.imap(
-					get_counts_sample,
-					itertools.repeat(bam_file),
-					batched(keys, chunksize),
-					batched(values, chunksize),
-					itertools.repeat(reference),
-					itertools.repeat(overlap)
-				)
-
-				results = _chain_from_iterable_of_lists(iresults)
-
-				counts_dct = {}
-				message = "was successfully processed"
-				for peptide_alignment, res in zip(keys, results):
-					peptide, alignment, strand = peptide_alignment.split('_')
-
-					for count, sequence in res:
-						if count == -1:
-							message = "couldn't be processed. Failed to open, permission denied"
-						key = peptide+'_'+alignment+'_'+sequence
-						counts_dct[key] = count
-
-				sample = bam_file[0]
-
-				t1_bam_file = time.time()
-				time_final = (t1_bam_file-t0_bam_file)/60.0
-
-				func = partial(self.dump, idx, counts_dct, outfile)
-
-				try:
-					# the current function is running in serial mode
-					proc = pool.apipe(func)
-					time_dump = None
-				except NotImplementedError:
-					# the current function is running inside a process
-					proc = pool.pipe(func)
-					t = proc[1]
-					proc = None
-					time_dump = (time.time()-t1_bam_file)/60.0
-
-				return sample, message, time_final, time_dump, proc
-
 			def checkpoint(sample, message, time_final, time_dump):
 				idx = get_index(sample) - 1
 
@@ -333,7 +337,7 @@ class GetCounts:
 					empty_dumps()
 
 			# Pseudo-arbitrary conditions
-			if len(info_bams) > 150:
+			if len(info_bams) >= 150:
 				by_bam = True
 			elif len(keys) < 5000 and len(info_bams) > 5:
 				by_bam = True
@@ -365,7 +369,7 @@ class GetCounts:
 				pools.append(spool)
 
 				remaining_bams_results = mpool.uimap(
-					process_bam,
+					self.process_bam,
 					remaining_bams,
 					remaining_idxs,
 					references,
@@ -395,7 +399,7 @@ class GetCounts:
 				watcher = tpool.apipe(watch)
 
 				remaining_bams_results = spool.imap(
-					process_bam,
+					self.process_bam,
 					remaining_bams,
 					remaining_idxs,
 					references,
