@@ -9,8 +9,12 @@ import numpy as np
 import pysam
 import re
 
+
+os.environ["REF_PATH"] = "/dev/null"
+
 __author__ = "Maria Virginia Ruiz Cuevas"
 __email__ = "maria.virginia.ruiz.cuevas@umontreal.ca"
+
 
 class GetCounts:
 
