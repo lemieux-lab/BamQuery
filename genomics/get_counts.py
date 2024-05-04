@@ -13,6 +13,7 @@ import warnings
 from concurrent.futures.process import _chain_from_iterable_of_lists
 from multiprocess import get_context
 from pathos.multiprocessing import ProcessPool
+from pathos.threading import ThreadPool
 
 import utils.useful_functions as uf
 from genomics.get_counts_from_sample import get_counts_sample
@@ -232,7 +233,12 @@ class GetCounts:
 
 				return reference
 
-			def process_bam(bam_file, reference, pool, chunksize=None):
+			def process_bam(
+					bam_file,
+					reference,
+					pool,
+					chunksize=None):
+
 				t0_bam_file = time.time()
 
 				if not chunksize:
@@ -263,17 +269,13 @@ class GetCounts:
 				sample = bam_file[0]
 				idx = get_index(sample) - 1
 
-				pool.clear()
-
 				outfile = os.path.join(self.cache_path, str(idx) + '.p.gz')
 
 				t1_bam_file = time.time()
 				time_final = (t1_bam_file-t0_bam_file)/60.0
 
-				p = self.dump(idx, counts_dct, outfile)
-				time_dump = p[1]
-
-				return sample, message, time_final, time_dump
+				p = pool.apipe(self.dump, idx, counts_dct, outfile)
+				dumps[p] = [time_final, message]
 
 			def checkpoint(sample, message, time_final, time_dump):
 				idx = get_index(sample) - 1
@@ -294,8 +296,27 @@ class GetCounts:
 				with open(self.processed_bams_file, 'wb') as f:
 					pickle.dump(processed_bams, f)
 
-			if remaining_bams:
-				pool = ProcessPool(nodes=self.threads, context=get_context('spawn'))
+			def empty_dumps():
+				dumps_ = {}
+				while dumps:
+					p = dumps.keys().__iter__().__next__()
+					time_final, message = dumps[p]
+					del dumps[p]
+
+					if p.ready():
+						idx, time_dump = p.get()
+						sample = list_bam_files_order[idx]
+						checkpoint(sample, message, time_final, time_dump)
+					else:
+						dumps_[p] = [time_final, message]
+				dumps.update(dumps_)
+
+			def watch():
+				while not STOP:
+					time.sleep(10)
+					empty_dumps()
+
+			pools = []
 
 			references = map(get_reference, remaining_bams)
 
@@ -304,6 +325,7 @@ class GetCounts:
 
 			if not remaining_bams:
 				message = "All bams have completed processing"
+
 				remaining_bams_results = iter([])
 
 			else:
@@ -311,20 +333,42 @@ class GetCounts:
 
 				chunksize = 100
 
+				mpool = ProcessPool(nodes=self.threads, context=get_context('spawn'))
+				tpool = ThreadPool(nodes=1)
+
+				pools.append(mpool)
+				pools.append(tpool)
+
+				dumps = {}
+				STOP = False
+				watcher = tpool.apipe(watch)
+
 				remaining_bams_results = map(
 					process_bam,
 					remaining_bams,
 					references,
-					itertools.repeat(pool),
+					itertools.repeat(mpool),
 					itertools.repeat(chunksize)
 				)
 
 			self.super_logger.info(message)
 
-			for sample, message, time_final, time_dump in remaining_bams_results:
-				checkpoint(sample, message, time_final, time_dump)
+			list(remaining_bams_results)
 
 			if remaining_bams:
+				STOP = True
+				watcher.get()
+
+				while dumps:
+					p = dumps.keys().__iter__().__next__()
+					time_final, message = dumps[p]
+					del dumps[p]
+
+					idx, time_dump = p.get()
+					sample = list_bam_files_order[idx]
+					checkpoint(sample, message, time_final, time_dump)
+
+			for pool in pools:
 				pool.close()
 				pool.join()
 				pool.clear()
