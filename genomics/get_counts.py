@@ -1,11 +1,13 @@
 import copy
 import itertools
+import logging
 import numpy as np
 import os
 import pandas as pd
 import pickle
 import pysam
 import re
+import sys
 import time
 import warnings
 from pathos.multiprocessing import ProcessPool
@@ -31,6 +33,9 @@ class GetCounts:
 		self.peptides_by_type = peptides_by_type
 		self.super_logger = super_logger
 		self.threads = threads
+
+		self.stdout_handler = logging.StreamHandler(sys.stdout)
+		self.super_logger.addHandler(self.stdout_handler)
 
 		if self.light:
 			self.path_to_output_temps_folder = path_to_output_folder+'res_light/temps_files/'
@@ -118,7 +123,7 @@ class GetCounts:
 				return index + 1
 
 			total_samples = len(list_bam_files_order)
-			print ('Getting counts for ',str(total_samples), ' samples')
+			self.super_logger.info('Getting counts for %s samples', str(total_samples))
 
 			keys = alignment_information.keys()
 			self.super_logger.info('Total MCS mapped : %s ', str(len(keys)))
@@ -306,6 +311,9 @@ class GetCounts:
 				alignment_information = pickle.load(fp)
 
 			df_alignments = pd.read_csv(self.count_all_alignments_path)
+
+		self.super_logger.removeHandler(self.stdout_handler)
+		self.stdout_handler.close()
 
 		return df_counts, alignment_information, df_alignments
 
