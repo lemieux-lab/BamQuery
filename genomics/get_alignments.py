@@ -2,7 +2,8 @@ import warnings
 warnings.filterwarnings("ignore")
 import time, os
 import pysam, re, sys
-from itertools import groupby
+import gc
+from itertools import chain, groupby
 from operator import itemgetter
 import utils.useful_functions as uf
 import pickle
@@ -164,6 +165,7 @@ def read_sam_file(sam_file):
 
 
 def get_alignments_chromosome(chr):
+	gc.collect()
 
 	positions_mcs_peptides_perfect_alignment = {}
 	
@@ -547,36 +549,33 @@ def get_alignments(sam_file, path_to_output_folder_alignments_aux, dbSNP, common
 	total_peptides_in = set()
 	
 	if common or dbSNP == 149 or dbSNP == 0:
-		pool = ProcessPool(nodes=threads)
+		pool = ProcessPool(nodes=min(8, threads))
+
 		results = pool.map(get_alignments_chromosome, chrs_order)
 	
 		for res in results:
 			positions_mcs_peptides_perfect_alignment.update(res[0])
 			total_peptides_in = total_peptides_in.union(res[1])
 	else:
-		for chr in ['chr1', 'chr2', 'chr3', 'chr4', 'chr5']:
-			if chr in chrs_order:
-				try:
-					res = get_alignments_chromosome(chr)
-					positions_mcs_peptides_perfect_alignment.update(res[0])
-					total_peptides_in = total_peptides_in.union(res[1])
-				except ValueError:
-					pass
-		
-		chrs_order = sorted(list(set(chrs_order) - set(['chr1', 'chr2', 'chr3', 'chr4', 'chr5'])))
-		nodes = int(threads/2)
-		cont = 0
-		for i in range(0,len(chrs_order),nodes):
-			pool = ProcessPool(nodes=nodes)
-			cont += nodes
-			results = pool.map(get_alignments_chromosome, chrs_order[i:cont])
+		pool = ProcessPool(nodes=min(4, threads))
 
-			for res in results:
-				positions_mcs_peptides_perfect_alignment.update(res[0])
-				total_peptides_in = total_peptides_in.union(res[1])
+		large_chrs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5']
+		large_chrs = sorted(list(set(large_chrs).intersection(set(chrs_order))))
 
-			pool.close()
-			pool.clear()
+		def sequential_pipe(chr_list):
+			return list(map(get_alignments_chromosome, chr_list))
+
+		results_large = pool.apipe(sequential_pipe, large_chrs)
+
+		chrs_to_submit = sorted(list(set(chrs_order) - set(large_chrs)))
+		results = pool.imap(get_alignments_chromosome, chrs_to_submit)
+
+		for res in chain(results, results_large.get()):
+			positions_mcs_peptides_perfect_alignment.update(res[0])
+			total_peptides_in = total_peptides_in.union(res[1])
+
+	pool.close()
+	pool.clear()
 	
 	t_2 = time.time()
 	total = t_2-t_0
