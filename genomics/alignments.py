@@ -3,6 +3,8 @@ import genomics.get_alignments as get_alig
 import collections
 import pandas as pd
 import billiard as mp
+from itertools import repeat
+from multiprocess import get_context
 from pathos.multiprocessing import ProcessPool
 import re, sys, inspect
 
@@ -26,7 +28,6 @@ class NeedMoreInfo(NoTraceBackWithLineNumber):
     pass
 
 def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light, dbSNP, common, super_logger, var, maxmm, genome_version, mode, mouse, threads):
-	global splice_junctions_annotated
 	path_to_output_folder_genome_alignments = path_to_output_folder+'genome_alignments/'
 	path_to_output_folder_alignments = path_to_output_folder+'alignments/'
 
@@ -114,10 +115,6 @@ def alignment_cs_to_genome(set_peptides, path_to_output_folder, name_exp, light,
 	else:
 		super_logger.info('Alignment file already exists in the output folder : %s --> Skipping this step!', path_to_output_folder_genome_alignments+'/Aligned.out.sam')
 	
-	perfect_alignments = get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse, threads)
-	return perfect_alignments
-
-def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_to_output_folder_alignments, name_exp, light, dbSNP, common, super_logger, var, genome_version, mode, mouse, threads):
 	t_0 = time.time()
 	sam_file = path_to_output_folder_genome_alignments+'/Aligned.out.sam'
 	exists = os.path.exists(path_to_output_folder_alignments+'/Alignments_information.dic')
@@ -152,10 +149,14 @@ def get_alignments(set_peptides, path_to_output_folder_genome_alignments, path_t
 							'Mutation CDS', 'Mutation AA', 'Description',
 							'Mutation Strand', 'Resistance', 'Score', 'Prediction', 'Status' ]
 
-			pool = ProcessPool(nodes=threads)
+			pool = ProcessPool(nodes=threads, context=get_context('spawn'))
 			keys = perfect_alignments.keys()
 			values = perfect_alignments.values()
-			results = pool.map(generation_alignments_information, keys, values)
+			results = pool.map(
+				generation_alignments_information,
+				keys,
+				values,
+				repeat(splice_junctions_annotated))
 			perfect_alignments_to_print = []
 			info_cosmic = {}
 			for res in results:
@@ -243,7 +244,7 @@ def filter_peptides_from_alignments_information_light(peptides, path_to_alignmen
 	return perfect_alignments, peptides_with_alignments
 
 
-def generation_alignments_information(peptide_info, info_alignment):
+def generation_alignments_information(peptide_info, info_alignment, splice_junctions_annotated):
 
 	row_info = []
 	info_cosmic = {}
